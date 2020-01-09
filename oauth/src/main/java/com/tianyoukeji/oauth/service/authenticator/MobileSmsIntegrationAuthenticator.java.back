@@ -1,0 +1,66 @@
+package com.utopia.tokensart.auth.service.authenticator;
+
+import java.util.Calendar;
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.stereotype.Component;
+
+import com.liyang.jpa.restful.core.exception.Business503Exception;
+import com.utopia.tokensart.auth.service.IntegrationAuthentication;
+import com.utopia.tokensart.common.modules.base.models.User;
+import com.utopia.tokensart.common.modules.base.repository.UserRepository;
+
+/**
+ * 集成验证码认证
+ * @author LIQIU
+ * @date 2018-3-31
+ **/
+//@Component
+//public class MobileSmsIntegrationAuthenticator extends UsernamePasswordAuthenticator {
+//
+//    private final static String VERIFICATION_CODE_AUTH_TYPE = "sms";
+//
+//	@Autowired
+//	private UserRepository userRepository;
+//	
+//	@Autowired
+//	private RedisTemplate redisTemplate;
+//
+//    @Override
+//    public User authenticate(IntegrationAuthentication integrationAuthentication) {
+//    	User user = userRepository.findByMobile(integrationAuthentication.getUsername());
+//    	user.setPassword(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(integrationAuthentication.getAuthParameter("password")));
+//        return user;
+//    }
+//
+//    @Override
+//    public boolean support(IntegrationAuthentication integrationAuthentication) {
+//        return VERIFICATION_CODE_AUTH_TYPE.equals(integrationAuthentication.getAuthType());
+//    }
+//    
+//    
+//    @Override
+//    public void prepare(IntegrationAuthentication integrationAuthentication) {
+//    	
+//    	if( integrationAuthentication.getAuthParameter("password")==null) {
+//    		throw new Business503Exception(2071, "验证码必填", null);
+//    	}
+//    	
+//    	String key = "login-" + integrationAuthentication.getAuthParameter("password")+ "-" + integrationAuthentication.getAuthParameter("username");
+//    	Object codeObject = redisTemplate.opsForValue().get(key);
+//    	if (codeObject == null) {
+//			throw new Business503Exception(2073, "验证码无效", null);
+//		}
+//		Date smsCodeTime = (Date) (codeObject);
+//		Calendar calendar = Calendar.getInstance();
+//		calendar.add(Calendar.MINUTE, -10);
+//		if (calendar.getTime().getTime() > smsCodeTime.getTime()) {
+//			throw new Business503Exception(2072, "验证码超时", null);
+//		}
+//		
+//    }
+//
+//}
