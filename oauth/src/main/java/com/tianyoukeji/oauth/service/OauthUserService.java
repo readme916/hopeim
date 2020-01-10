@@ -1,180 +1,68 @@
 package com.tianyoukeji.oauth.service;
-
-import com.liyang.jpa.restful.core.exception.Business503Exception;
-import com.utopia.tokensart.common.modules.base.init.GlobalType;
-import com.utopia.tokensart.common.modules.base.models.*;
-import com.utopia.tokensart.common.modules.base.repository.*;
-import com.utopia.tokensart.common.service.*;
-import com.utopia.tokensart.common.utils.AvatarUtils;
-import com.utopia.tokensart.common.utils.Region;
-import com.utopia.tokensart.common.utils.SnowflakeIdWorker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.tianyoukeji.parent.common.AvatarUtils;
+import com.tianyoukeji.parent.common.BusinessException;
+import com.tianyoukeji.parent.entity.User;
+import com.tianyoukeji.parent.entity.Userinfo;
+import com.tianyoukeji.parent.entity.UserinfoRepository;
+import com.tianyoukeji.parent.entity.UserRepository;
+import com.tianyoukeji.parent.service.BaseService;
+
 import java.util.*;
 
+import javax.annotation.PostConstruct;
+
 @Service
-public class OauthUserService {
+public class OauthUserService extends BaseService<User>{
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private UserMobileRepository userMobileRepository;
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private MnemonicService mnemonicService;
-    @Autowired
-    private VerificationCode verificationCode;
-    @Autowired
-    private UserInfoRepository userInfoRepository;
+    private UserinfoRepository userInfoRepository;
 
-    @Autowired
-    private RegionService regionService;
-    @Autowired
-    private UserAccountService accountService;
-    @Autowired
-    private UserLevelRepository userLevelRepository;
-    @Autowired
-    private SiteRepository siteRepository;
-
-    @Autowired
-    private TokenRepository tokenRepository;
-    @Autowired
-    private UserLevelService userLevelService;
-    @Autowired
-    private UserService userService;
-
-    @Transactional
-    public User loginRegister(String mobile, String smsCode, String callingCode, String siteUuid, String referrerCode) {
-        User user = userRepository.findFirstByUserMobilesCallingCodeAndUserMobilesMobileAndUserMobilesIsCertifiedAndUserMobilesState(callingCode, mobile, true, true);
-        if (user != null) {
-            //这说明是权限问题
-            return null;
-        }
-        Optional<Site> siteOptional = siteRepository.findById(siteUuid);
-        if (!siteOptional.isPresent()) {
-            throw new Business503Exception(1, "子站没有找到", null);
-        }
-
-        Token fiatToken = tokenRepository.findByUniqueCode(siteOptional.get().getCurrencyCode());
-        user = register(UUID.randomUUID().toString(), smsCode, fiatToken);
-        addMobile(mobile, smsCode, callingCode, user);
-
-        //引荐人加两积分
-        if (!StringUtils.isEmpty(referrerCode)) {
-            userService.firstUseReferrerCode(user, referrerCode);
-        }
-
-
-        return user;
-
+    @PostConstruct
+    private void init() {
+    	if(this.count()==0) {
+    		_register("admin","admin");
+    	}
     }
+    
 
+    
+    
+    /**
+     * 私有方法
+     * @param username
+     * @param password
+     * @return
+     */
     @Transactional
-    public User register(String username, String password, Token fiatToken) {
-
-        if (userRepository.findByUsername(username) != null) {
-            throw new Business503Exception(2000, "用户名已存在", null);
+    private User _register(String username, String password) {
+        if (userRepository.findByUserinfoMobile(username) != null) {
+            throw new BusinessException(1000, "用户名已存在");
         }
-
-        Region region = regionService.getRegion();
-        Role roleRegister = roleRepository.findByRoleCode(GlobalType.RoleCode.REGISTER);
         User user = new User();
-        user.setFirstLogin(true);
-        user.setUsername(username);
-        user.setDefaultFiatToken(fiatToken);
-
-        UserInfo userInfo = new UserInfo();
-        userInfo.setPassword(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(password));
-        userInfo.setMnemonic(String.join(" ", mnemonicService.getMnemonic()));
-        userInfoRepository.saveAndFlush(userInfo);
-
-        user.setUserInfo(userInfo);
         user.setEnabled(true);
-        user.setRoles(Collections.singleton(roleRegister));
+        save(user);
+        
+        //根据id生成用户名
+        user.setNickname("用户"+gen(user.getUuid()));
+        Userinfo userInfo = new Userinfo();
+        userInfo.setMobile(username);
+        userInfo.setPassword(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(password));
+        userInfoRepository.save(userInfo);
 
-        if (region != null) {
-            user.setCountry(region.getCountry());
-            user.setProvine(region.getProvine());
-            user.setCity(region.getCity());
-            user.setDistrict(region.getDistrict());
-        }
-
-        user.setAvatarUrl(AvatarUtils.generatorUserAvatar(username));
-
-
-        //默认的用户级别
-        UserLevel normalLevel = userLevelRepository.findByLevel(GlobalType.UserLevel.NORMAL);
-        user.setUserLevel(normalLevel);
-
-        //唯一的推荐码
-        String referrerCode = null;
-        for (int i = 0; i < 3; i++) {
-            referrerCode = gen(SnowflakeIdWorker.getInstance().nextId());
-            Integer count = userRepository.countAllByReferrerCode(referrerCode);
-            if (count > 0) {
-                referrerCode = null;
-                continue;
-            }
-            break;
-        }
-
-        user.setReferrerCode(referrerCode);
-
+        user.setUserinfo(userInfo);
+        user.setHeadimgurl(AvatarUtils.generatorUserAvatar(username));
         userRepository.save(user);
-
-        accountService.generateBasicAccountByOrgOrUser(null, user);
-
         return user;
-
-    }
-
-    @Transactional
-    public UserMobile addMobile(String mobile, String code, String callingCode, User user) {
-        if (!verificationCode.validMobileCode(callingCode, mobile, code)) {
-            throw new Business503Exception(2001, "短信验证码错误", null);
-        }
-
-        if (userMobileRepository.findByCallingCodeAndMobileAndIsCertifiedTrueAndStateTrue(callingCode,
-                mobile) != null) {
-            throw new Business503Exception(2009, "手机号已被占用", null);
-        }
-
-        // 把其它手机状态改为不可用
-        userMobileRepository.updateStateFalseByUser(user);
-
-        UserMobile userMobile = new UserMobile();
-        userMobile.setUser(user);
-        userMobile.setCallingCode(callingCode);
-        userMobile.setIsCertified(true);
-        userMobile.setState(true);
-        userMobile.setMobile(mobile);
-        return userMobileRepository.save(userMobile);
     }
 
 
-    public void resetPassword(String password, String code, String mobile, String callingCode) {
-
-        User user = null;
-
-        if (!verificationCode.validMobileCode(callingCode, mobile, code)) {
-            throw new Business503Exception(2001, "短信验证码错误", null);
-        }
-        UserMobile userMobile = userMobileRepository
-                .findByCallingCodeAndMobileAndIsCertifiedTrueAndStateTrue(callingCode, mobile);
-        user = userMobile != null ? userMobile.getUser() : null;
-
-
-        if (user == null) {
-            throw new Business503Exception(2007, "密码重置失败", null);
-        }
-
-        user.getUserInfo().setPassword(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(password));
-        userInfoRepository.save(user.getUserInfo());
-    }
 
     /**
      * 随机字符串

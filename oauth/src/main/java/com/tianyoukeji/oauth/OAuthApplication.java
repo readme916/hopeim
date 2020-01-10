@@ -10,8 +10,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = {"com.tianyoukeji.base.entity"})
-@EntityScan(basePackages= {"com.tianyoukeji.base.entity"})
+@EnableJpaRepositories(basePackages = {"com.tianyoukeji.parent.entity"})
+@EntityScan(basePackages= {"com.tianyoukeji.parent.entity"})
 @EnableJpaAuditing
 public class OAuthApplication {
 	protected final static Logger logger = LoggerFactory.getLogger(OAuthApplication.class);

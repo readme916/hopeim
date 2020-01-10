@@ -12,9 +12,9 @@ import javax.annotation.PostConstruct;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import com.tianyoukeji.base.common.ContextUtils;
-import com.tianyoukeji.base.entity.Region;
-import com.tianyoukeji.base.service.BaseService;
+import com.tianyoukeji.parent.common.ContextUtils;
+import com.tianyoukeji.parent.entity.Region;
+import com.tianyoukeji.parent.service.BaseService;
 
 @Service
 public class RegionService extends BaseService<Region> {

@@ -1,0 +1,48 @@
+<h1>统一登录页面</h1>
+
+
+<h2>内部系统的手机 ，密码登录，使用oauth2的 password模式登录，添加type参数，默认mobile</p>
+
+<p>username = 手机号</p>
+
+<p>password = 密码</p>
+
+<p>type = mobile</p>
+
+<h2>手机，验证码直接登录</h2>
+
+<p>使用oauth2的password模式登录，添加type参数</p>
+
+<p>username = 手机号</p>
+
+<p>password = 验证码</p>
+
+<p>type = sms </p>
+
+
+<h2>第三方用户登录</h2>
+<p>申请通过后，获得client_id和client_secret</p>
+<p>使用oauth2的code模式登录,在我们网站上登录后跳回对方页面，登录页面/unionLogin</p>
+
+<h2>登录频率限制,每分钟登录3次</h2>
+
+<h2>第三方统一登录的授权后使用的登录表单，填写密码</vh2>
+<form action="/login" method="post">
+  <p>username: <input type="text" name="username"  value = "username"/></p>
+  <p>password: <input type="text" name="password" value="password"/></p>
+  <input type="submit" value="Submit" />
+</form>
+
+
+<h2>第三方统一登录的授权后使用的登录表单，填写验证码,双方的提交地址不同,提交字段一致,请右键查看源码</vh2>
+<form action="/smsLogin" method="post">
+  <p>username: <input type="text" name="username"  value = "username"/></p>
+  <p>sms_password: <input type="text" name="password" value="password"/></p>
+  <input type="submit" value="Submit" />
+</form>
+
+<h2>获取登录验证码</h2>
+<form action="/sms" method="post">
+  <p>username: <input type="text" name="username"  value = "13700000001"/></p>
+  <input type="submit" value="Submit" />
+</form>

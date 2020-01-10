@@ -14,8 +14,8 @@ import com.liyang.jpa.smart.query.annotation.EnableJpaSmartQuery;
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableJpaSmartQuery
-@EnableJpaRepositories(basePackages = {"com.tianyoukeji.base.entity"})
-@EntityScan(basePackages= {"com.tianyoukeji.base.entity"})
+@EnableJpaRepositories(basePackages = {"com.tianyoukeji.parent.entity"})
+@EntityScan(basePackages= {"com.tianyoukeji.parent.entity"})
 public class PlatformApplication {
 	protected final static Logger logger = LoggerFactory.getLogger(PlatformApplication.class);
 	public static void main(String[] args) {
