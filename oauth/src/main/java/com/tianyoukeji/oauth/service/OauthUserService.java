@@ -27,7 +27,7 @@ public class OauthUserService extends BaseService<User>{
     @PostConstruct
     private void init() {
     	if(this.count()==0) {
-    		_register("admin","admin");
+    		register("admin","admin");
     	}
     }
     
@@ -35,13 +35,13 @@ public class OauthUserService extends BaseService<User>{
     
     
     /**
-     * 私有方法
+     * 简单注册
      * @param username
      * @param password
      * @return
      */
     @Transactional
-    private User _register(String username, String password) {
+    public User register(String username, String password) {
         if (userRepository.findByUserinfoMobile(username) != null) {
             throw new BusinessException(1000, "用户名已存在");
         }

@@ -15,6 +15,6 @@ public class TestController {
 	
 	@GetMapping(path = "/")
 	public Object test() {
-		return SmartQuery.fetchOne("student", "uuid=1&fields=*,school");
+		return SmartQuery.fetchList("user", "");
 	}
 }

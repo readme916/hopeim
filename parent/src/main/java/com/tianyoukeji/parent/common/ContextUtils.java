@@ -3,6 +3,7 @@ package com.tianyoukeji.parent.common;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Map;
+import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -149,6 +150,17 @@ public class ContextUtils {
 		mappedObject = objectMapper.readValue(str, Map.class);
 
 		return mappedObject;
+	}
+	
+	public static String randomInt(int width) {
+		Random random = new Random();
+		String result="";
+		for (int i=0;i<width;i++)
+		{
+			result+=random.nextInt(10);
+
+		}
+		return result;
 	}
 
 }
