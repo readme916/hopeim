@@ -14,7 +14,6 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 @EnableJpaRepositories(basePackages = {"com.tianyoukeji.parent.entity"})
 @EntityScan(basePackages= {"com.tianyoukeji.parent.entity"})
 @EnableJpaAuditing
-@EnableAuthorizationServer
 public class OAuthApplication {
 	protected final static Logger logger = LoggerFactory.getLogger(OAuthApplication.class);
 

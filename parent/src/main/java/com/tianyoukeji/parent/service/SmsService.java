@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.tianyoukeji.parent.common.ContextUtils;
+import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 import com.tianyoukeji.parent.service.RateLimiterService.RateLimiterNamespace;
-import com.tianyoukeji.parent.service.RedisService.RedisNamespace;
 
 /**
  * RedisTemplate操作工具类
@@ -34,7 +34,7 @@ public final class SmsService {
 	private RateLimiterService rateLimiterService;
 	
 	@Autowired 
-	private RedisService redisService;
+	private NamespaceRedisService redisService;
 	
 	public SmsService(Object driver) {
 		this.driver = driver;
@@ -72,7 +72,7 @@ public final class SmsService {
 	private  boolean  _send(final String mobile, final int template , HashMap<String,String> params) {
 		
 		
-		//每个手机号码，发送短信的频率限制10秒一次
+		//每个手机号码，发送短信的频率限制20秒一次
 		RateLimiter rateLimiter = rateLimiterService.get(RateLimiterNamespace.SMS, mobile, 0.05);
 		rateLimiter.acquire();
 		

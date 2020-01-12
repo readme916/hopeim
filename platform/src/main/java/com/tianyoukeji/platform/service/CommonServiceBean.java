@@ -1,21 +1,18 @@
-package com.tianyoukeji.oauth.config;
+package com.tianyoukeji.platform.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 
+import com.tianyoukeji.parent.service.NamespaceRedisService;
 import com.tianyoukeji.parent.service.RateLimiterService;
-import com.tianyoukeji.parent.service.RedisService;
 import com.tianyoukeji.parent.service.SmsService;
 
 @Configuration
-public class ServiceConfig {
+public class CommonServiceBean {
 	
 	@Bean
-	public RedisService redisSerivce() {
-		return new RedisService();
+	public NamespaceRedisService redisSerivce() {
+		return new NamespaceRedisService();
 	}
 	
 	@Bean

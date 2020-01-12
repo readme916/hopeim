@@ -2,18 +2,18 @@ package com.tianyoukeji.parent.common;
 
 public class HttpPostReturnUuid {
 
-	private String uuid;
+	private long uuid;
 	
 	public HttpPostReturnUuid() {
-		this.uuid = null;
+		this.uuid = 0;
 	}
-	public HttpPostReturnUuid(String uuid) {
+	public HttpPostReturnUuid(long uuid) {
 		this.uuid = uuid;
 	}
-	public String getUuid() {
+	public long getUuid() {
 		return uuid;
 	}
-	public void setUuid(String uuid) {
+	public void setUuid(long uuid) {
 		this.uuid = uuid;
 	}
 	

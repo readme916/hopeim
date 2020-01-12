@@ -1,20 +1,29 @@
 package com.tianyoukeji.platform.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.liyang.jpa.smart.query.db.SmartQuery;
+import com.tianyoukeji.parent.controller.DefaultHandler;
 import com.tianyoukeji.platform.service.UserService;
 
+import springfox.documentation.annotations.ApiIgnore;
+
 @RestController
-public class TestController {
+@ApiIgnore
+public class TestController extends DefaultHandler{
 
 	@Autowired
 	private UserService schoolService;
 	
 	@GetMapping(path = "/")
-	public Object test() {
-		return SmartQuery.fetchList("user", "");
+	public Object home(Authentication authentication) {
+		return authentication;
+	}
+	@GetMapping(path = "/test")
+	public Object test(Authentication authentication) {
+		return SmartQuery.fetchList("user", "fields=*");
 	}
 }

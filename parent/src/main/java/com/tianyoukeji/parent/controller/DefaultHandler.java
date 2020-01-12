@@ -23,7 +23,7 @@ public abstract class DefaultHandler {
 
 	@ExceptionHandler(TransactionSystemException.class)
 	@ResponseBody
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public Object validatorHandler(TransactionSystemException ex) {
 		Throwable rootCause = ex.getRootCause();
 		if (rootCause instanceof ConstraintViolationException) {
@@ -45,7 +45,7 @@ public abstract class DefaultHandler {
 	
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	@ResponseBody
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public Object ExceptionHandler(DataIntegrityViolationException ex) {
 		BusinessException business503Exception = new BusinessException(1503,"唯一索引不允许重复");
 		ex.printStackTrace();
@@ -55,7 +55,7 @@ public abstract class DefaultHandler {
 	
 	@ExceptionHandler(IllegalArgumentException.class)
 	@ResponseBody
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public Object ExceptionHandler(IllegalArgumentException ex) {
 		BusinessException business503Exception;
 		if( ex.getCause() instanceof UnrecognizedPropertyException) {
@@ -70,7 +70,7 @@ public abstract class DefaultHandler {
 	
 	@ExceptionHandler(BusinessException.class)
 	@ResponseBody
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public Object BusinessExceptionHandler(BusinessException ex) {
 		ex.printStackTrace();
 		Response response = new Response(ex);
@@ -79,7 +79,7 @@ public abstract class DefaultHandler {
 	
 	@ExceptionHandler(Exception.class)
 	@ResponseBody
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public Object ExceptionHandler(Exception ex) {
 		ex.printStackTrace();
 		Response response = new Response(ex);

@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -17,8 +19,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ContextUtils {
 
-	public static String getClientId() {
+	private static final String REGEX_MOBILE ="((\\+86|0086)?\\s*)((134[0-8]\\d{7})|(((13([0-3]|[5-9]))|(14[5-9])|15([0-3]|[5-9])|(16(2|[5-7]))|17([0-3]|[5-8])|18[0-9]|19(1|[8-9]))\\d{8})|(14(0|1|4)0\\d{7})|(1740([0-5]|[6-9]|[10-12])\\d{7}))";
 
+	
+	/**
+     * 判断是否是手机号
+     * @param tel 手机号
+     * @return boolean true:是  false:否
+     */
+    public static boolean isMobile(String tel) {
+        if (StringUtils.isEmpty(tel)){ return false;}
+        return Pattern.matches(REGEX_MOBILE, tel);
+    }
+	
+    
+    
+    /**
+     * 取得客户端client_id
+     * @return
+     */
+	public static String getClientId() {
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
 				.getRequest();
 		if (request != null) {
@@ -41,22 +61,31 @@ public class ContextUtils {
 	}
 	
 
-//	public static String getCurrentUserName() {
-//
-//		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
-//				.getRequest();
-//		if (request != null) {
-//			Principal principal = request.getUserPrincipal();
-//			if (principal == null) {
-//				return "";
-//			} else {
-//				return principal.getName();
-//			}
-//		} else {
-//			return "";
-//		}
-//	}
+	/**
+	 * 取得当前登录用户名
+	 * @return
+	 */
+	public static String getCurrentUserName() {
 
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+				.getRequest();
+		if (request != null) {
+			Principal principal = request.getUserPrincipal();
+			if (principal == null) {
+				return "";
+			} else {
+				return principal.getName();
+			}
+		} else {
+			return "";
+		}
+	}
+
+	
+	/**
+	 * 获取当前登录人的ip
+	 * @return
+	 */
 	public static String getIPAddress() {
 
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
@@ -96,6 +125,8 @@ public class ContextUtils {
 		}
 		return ip;
 	}
+	
+	
 	
 	public static String objectToString(Object object) throws JsonProcessingException {
 
@@ -152,6 +183,11 @@ public class ContextUtils {
 		return mappedObject;
 	}
 	
+	/**
+	 * 随机一个数字型字符串
+	 * @param width 长度
+	 * @return
+	 */
 	public static String randomInt(int width) {
 		Random random = new Random();
 		String result="";

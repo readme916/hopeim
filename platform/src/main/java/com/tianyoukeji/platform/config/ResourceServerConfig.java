@@ -12,21 +12,36 @@ import org.springframework.security.oauth2.provider.token.store.redis.RedisToken
 @Configuration
 @EnableResourceServer
 public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
-	
 
 	@Autowired
 	RedisConnectionFactory redisConnectionFactory;
-	
+
 	@Override
 	public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
-	    resources.resourceId("platform"); //重点，设置资源id
-	    resources.tokenStore(new RedisTokenStore(redisConnectionFactory));
+		resources.resourceId("platform"); // 重点，设置资源id
+		resources.tokenStore(new RedisTokenStore(redisConnectionFactory));
 	}
 
 	@Override
 	public void configure(HttpSecurity http) throws Exception {
-		http.csrf().disable().authorizeRequests().mvcMatchers("/swagger-ui.html").permitAll().anyRequest().authenticated();
+		http.csrf().disable().authorizeRequests()
+		
+				.antMatchers("/swagger-ui.html").permitAll()
+
+				.antMatchers("/swagger-resources/**").permitAll()
+
+				.antMatchers("/images/**").permitAll()
+
+				.antMatchers("/webjars/**").permitAll()
+
+				.antMatchers("/v2/api-docs").permitAll()
+
+				.antMatchers("/configuration/ui").permitAll()
+
+				.antMatchers("/configuration/security").permitAll()
+
+				.anyRequest().authenticated();
 
 	}
-	
+
 }

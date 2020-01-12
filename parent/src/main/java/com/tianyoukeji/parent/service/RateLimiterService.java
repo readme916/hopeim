@@ -41,6 +41,6 @@ public final class RateLimiterService {
 	}
 	
 	public enum RateLimiterNamespace{
-		SMS,LOGIN
+		SMS,LOGIN,FRESH_TOKEN
 	}
 }
