@@ -24,16 +24,27 @@ public class OauthClientService extends BaseService<Oauth2Client>{
     @PostConstruct
     private void init() {
     	if(this.count()==0) {
-    		Oauth2Client oauth2Client = new Oauth2Client();
-    		oauth2Client.setAccessTokenValidity(86400*30);
-    		oauth2Client.setAutoapprove("true");
-    		oauth2Client.setAuthorizedGrantTypes("authorization_code,refresh_token,password");
-    		oauth2Client.setClientId("platform");
-    		oauth2Client.setClientSecret(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("tianyoukeji@platform"));
-    		oauth2Client.setRefreshTokenValidity(86400*365);
-    		oauth2Client.setResourceIds("platform");
-    		oauth2Client.setScope("all");
-    		save(oauth2Client);
+    		Oauth2Client oauth2ClientPlatform = new Oauth2Client();
+    		oauth2ClientPlatform.setAccessTokenValidity(86400*30);
+    		oauth2ClientPlatform.setAutoapprove("true");
+    		oauth2ClientPlatform.setAuthorizedGrantTypes("refresh_token,password");
+    		oauth2ClientPlatform.setClientId("platform");
+    		oauth2ClientPlatform.setClientSecret(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("tianyoukeji@platform"));
+    		oauth2ClientPlatform.setRefreshTokenValidity(86400*365);
+    		oauth2ClientPlatform.setResourceIds("platform");
+    		oauth2ClientPlatform.setScope("all");
+    		save(oauth2ClientPlatform);
+    		Oauth2Client oauth2ClientApp = new Oauth2Client();
+    		oauth2ClientApp.setAccessTokenValidity(86400*30);
+    		oauth2ClientApp.setAutoapprove("true");
+    		oauth2ClientApp.setAuthorizedGrantTypes("refresh_token,password");
+    		oauth2ClientApp.setClientId("app");
+    		oauth2ClientApp.setClientSecret(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("tianyoukeji@app"));
+    		oauth2ClientApp.setRefreshTokenValidity(86400*365);
+    		oauth2ClientApp.setResourceIds("app");
+    		oauth2ClientApp.setScope("all");
+    		save(oauth2ClientApp);
+    		
     	}
     	
     }

@@ -13,13 +13,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 @Entity
-@Table(name = "userinfo")
+@Table(name = "user_info" , uniqueConstraints= {@UniqueConstraint(columnNames= {"mobile"})})
 public class Userinfo implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

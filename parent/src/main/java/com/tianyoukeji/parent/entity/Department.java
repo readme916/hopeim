@@ -5,22 +5,25 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
-@Table(name="tag")
-@EntityListeners(AuditingEntityListener.class)
-public class Tag implements IEntity{
+@Table(name = "department")
+public class Department implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -38,12 +41,27 @@ public class Tag implements IEntity{
 	@Column(name = "version")
 	private Long version;
 	
-	@ManyToMany(mappedBy="tags")
-	private Set<Student> students;
-
-	@Column(name="name")
+	@Column(name = "name")
 	private String name;
+	
+	@ManyToOne
+	@JoinColumn(name = "org_id")
+	private Org org;
+	
+	@OneToMany(mappedBy = "department")
+	private Set<User> users;
 
+	@ManyToOne
+	@JoinColumn(name = "department_template_id")
+	private DepartmentTemplate departmentTemplate;
+	
+	public DepartmentTemplate getDepartmentTemplate() {
+		return departmentTemplate;
+	}
+
+	public void setDepartmentTemplate(DepartmentTemplate departmentTemplate) {
+		this.departmentTemplate = departmentTemplate;
+	}
 
 	public Long getUuid() {
 		return uuid;
@@ -77,14 +95,6 @@ public class Tag implements IEntity{
 		this.version = version;
 	}
 
-	public Set<Student> getStudents() {
-		return students;
-	}
-
-	public void setStudents(Set<Student> students) {
-		this.students = students;
-	}
-
 	public String getName() {
 		return name;
 	}
@@ -93,5 +103,22 @@ public class Tag implements IEntity{
 		this.name = name;
 	}
 
+	public Org getOrg() {
+		return org;
+	}
 
+	public void setOrg(Org org) {
+		this.org = org;
+	}
+
+	public Set<User> getUsers() {
+		return users;
+	}
+
+	public void setUsers(Set<User> users) {
+		this.users = users;
+	}
+	
+
+	
 }

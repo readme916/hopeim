@@ -59,7 +59,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		// 覆盖了默认配置，不能删除
-		http.csrf().disable().authorizeRequests().antMatchers("/swagger-ui.html").permitAll()
+		http.csrf().disable().authorizeRequests()
+		
+				.antMatchers("/swagger-ui.html").permitAll()
 
 				.antMatchers("/swagger-resources/**").permitAll()
 
@@ -76,6 +78,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/unionLogin", "/login", "/oauth/authorize", "/oauth/token", "/logout", "/sms").permitAll()
 
 				.anyRequest().authenticated().and().formLogin().loginPage("/unionLogin").loginProcessingUrl("/login")
+				
 				.failureHandler(new SimpleAuthenticationFailureHandler()).permitAll().and().logout().permitAll();
 	}
 

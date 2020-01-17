@@ -70,8 +70,8 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
 			throw new BadCredentialsException("密码不能为空");
 		}
 
-		// 每个手机号码，登录的频率限制10秒一次
-		RateLimiter rateLimiter = rateLimiterService.get(RateLimiterNamespace.LOGIN, username, 0.1);
+		// 每个手机号码，登录的频率限制5秒一次
+		RateLimiter rateLimiter = rateLimiterService.get(RateLimiterNamespace.LOGIN, username, 0.2);
 		rateLimiter.acquire();
 
 		User user = null;
