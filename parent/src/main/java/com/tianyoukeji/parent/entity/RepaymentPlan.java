@@ -10,7 +10,9 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
@@ -21,8 +23,8 @@ import com.tianyoukeji.parent.entity.Equipment.PayPeriod;
 import com.tianyoukeji.parent.entity.Equipment.PayType;
 
 @Entity
-@Table(name = "pay_channel")
-public class PayChannel implements IEntity{
+@Table(name = "repayment_plan")
+public class RepaymentPlan implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -39,47 +41,23 @@ public class PayChannel implements IEntity{
 	@Version
 	@Column(name = "version")
 	private Long version;
-
-	@Column(name = "name")
-	private Date name;
-	
-	@Column(name = "icon")
-	private String icon;
-
-	@Column(name="pay_type")
-	@Enumerated(EnumType.STRING)
-	private PayType payType;
 	
 	@Column(name="pay_period")
 	@Enumerated(EnumType.STRING)
 	private PayPeriod payPeriod;
 	
-	@Column(name = "year_rate")
-	private Double yearRate;
+	@Column(name = "repayment_date")
+	private Date repaymentDate;
 	
-	@Column(name = "forward_url")
-	private String forwardUrl;
+	@Column(name = "repayment_amount")
+	private Double repaymentAmount;
 	
+	@Column(name = "is_finish")
+	private Boolean isFinish;
 	
-	//支付渠道规定的产品
-	@ManyToMany(mappedBy = "payChannels")
-	private Set<Product> products;
-	
-	public Set<Product> getProducts() {
-		return products;
-	}
-
-	public void setProducts(Set<Product> products) {
-		this.products = products;
-	}
-
-	public Date getName() {
-		return name;
-	}
-
-	public void setName(Date name) {
-		this.name = name;
-	}
+	@ManyToOne
+	@JoinColumn(name = "equipment_id")
+	private Equipment equipment;
 
 	public Long getUuid() {
 		return uuid;
@@ -113,45 +91,44 @@ public class PayChannel implements IEntity{
 		this.version = version;
 	}
 
-	public String getIcon() {
-		return icon;
-	}
-
-	public void setIcon(String icon) {
-		this.icon = icon;
-	}
-
-	public PayType getPayType() {
-		return payType;
-	}
-
-	public void setPayType(PayType payType) {
-		this.payType = payType;
-	}
-
-
-	public Double getYearRate() {
-		return yearRate;
-	}
-
-	public void setYearRate(Double yearRate) {
-		this.yearRate = yearRate;
-	}
-
-	public String getForwardUrl() {
-		return forwardUrl;
-	}
-
-	public void setForwardUrl(String forwardUrl) {
-		this.forwardUrl = forwardUrl;
-	}
-
 	public PayPeriod getPayPeriod() {
 		return payPeriod;
 	}
 
 	public void setPayPeriod(PayPeriod payPeriod) {
 		this.payPeriod = payPeriod;
+	}
+
+	public Date getRepaymentDate() {
+		return repaymentDate;
+	}
+
+	public void setRepaymentDate(Date repaymentDate) {
+		this.repaymentDate = repaymentDate;
+	}
+
+	public Double getRepaymentAmount() {
+		return repaymentAmount;
+	}
+
+	public void setRepaymentAmount(Double repaymentAmount) {
+		this.repaymentAmount = repaymentAmount;
+	}
+
+	public Boolean getIsFinish() {
+		return isFinish;
+	}
+
+	public void setIsFinish(Boolean isFinish) {
+		this.isFinish = isFinish;
+	}
+
+	public Equipment getEquipment() {
+		return equipment;
+	}
+
+	public void setEquipment(Equipment equipment) {
+		this.equipment = equipment;
 	}
 
 	

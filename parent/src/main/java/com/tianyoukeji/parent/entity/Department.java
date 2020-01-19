@@ -52,9 +52,32 @@ public class Department implements IEntity{
 	private Set<User> users;
 
 	@ManyToOne
+	@JoinColumn(name="parent")
+	private Department parent;
+	
+	@OneToMany(mappedBy = "parent")	
+	private Set<Department> children;
+
+	@ManyToOne
 	@JoinColumn(name = "department_template_id")
 	private DepartmentTemplate departmentTemplate;
 	
+	public Department getParent() {
+		return parent;
+	}
+
+	public void setParent(Department parent) {
+		this.parent = parent;
+	}
+
+	public Set<Department> getChildren() {
+		return children;
+	}
+
+	public void setChildren(Set<Department> children) {
+		this.children = children;
+	}
+
 	public DepartmentTemplate getDepartmentTemplate() {
 		return departmentTemplate;
 	}

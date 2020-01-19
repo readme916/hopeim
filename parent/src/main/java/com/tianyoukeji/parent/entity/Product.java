@@ -50,12 +50,28 @@ public class Product implements IEntity{
 	@OneToMany(mappedBy = "product")
 	private Set<ProductSKU> skus;
 	
+	
+	//每个产品支持的支付渠道
 	@ManyToMany
 	@JoinTable(name="product_pay_channel",joinColumns = { @JoinColumn(name = "product_id") }, inverseJoinColumns = { @JoinColumn(name = "pay_channel_id") })
 	private Set<PayChannel> payChannels;
 	
 
+	//保险渠道
+	@ManyToMany
+	@JoinTable(name="product_insure_channel",joinColumns = { @JoinColumn(name = "product_id") }, inverseJoinColumns = { @JoinColumn(name = "insure_channel_id") })
+	private Set<InsureChannel> insureChannels;
 	
+	
+	
+	public Set<InsureChannel> getInsureChannels() {
+		return insureChannels;
+	}
+
+	public void setInsureChannels(Set<InsureChannel> insureChannels) {
+		this.insureChannels = insureChannels;
+	}
+
 	public Set<PayChannel> getPayChannels() {
 		return payChannels;
 	}

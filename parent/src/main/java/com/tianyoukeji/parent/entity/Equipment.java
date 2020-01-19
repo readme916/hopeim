@@ -80,7 +80,17 @@ public class Equipment implements IEntity{
 	@OneToMany(mappedBy = "equipment")
 	private Set<UserEquipmentRelationship> relativeUsers;
 
+	@OneToMany(mappedBy = "equipment")
+	private Set<RepaymentPlan> repaymentPlans;
 	
+	public Set<RepaymentPlan> getRepaymentPlans() {
+		return repaymentPlans;
+	}
+
+	public void setRepaymentPlans(Set<RepaymentPlan> repaymentPlans) {
+		this.repaymentPlans = repaymentPlans;
+	}
+
 	public User getBoughtUser() {
 		return boughtUser;
 	}

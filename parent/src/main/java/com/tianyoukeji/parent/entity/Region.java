@@ -10,6 +10,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -41,6 +42,7 @@ public class Region implements IEntity{
 	@Column(name = "version")
 	private Long version;
 	
+	//腾讯地图的cid
 	@Column(name="tx_cid")
 	private Integer txCid;
 	
@@ -64,6 +66,22 @@ public class Region implements IEntity{
 	@OneToMany(mappedBy = "parent")
 	private Set<Region> children;
 	
+	@OneToMany(mappedBy = "region")
+	private Set<Org> orgs;
+	
+	//区域内包含的保险渠道
+	@ManyToMany(mappedBy = "regions")
+	private Set<InsureChannel> insureChannels;
+	
+	
+	public Set<Org> getOrgs() {
+		return orgs;
+	}
+
+	public void setOrgs(Set<Org> orgs) {
+		this.orgs = orgs;
+	}
+
 	public Region getParent() {
 		return parent;
 	}

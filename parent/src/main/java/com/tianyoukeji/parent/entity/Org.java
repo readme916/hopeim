@@ -71,8 +71,27 @@ public class Org implements IEntity{
 	@JoinColumn(name="org_template_id")
 	private OrgTemplate orgTemplate;
 	
+	@ManyToOne
+	@JoinColumn(name="region_id")
+	private Region region;
 	
 	
+	public Set<Role> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Set<Role> roles) {
+		this.roles = roles;
+	}
+
+	public Region getRegion() {
+		return region;
+	}
+
+	public void setRegion(Region region) {
+		this.region = region;
+	}
+
 	public Set<Department> getDepartments() {
 		return departments;
 	}

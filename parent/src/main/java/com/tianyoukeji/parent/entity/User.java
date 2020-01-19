@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -71,7 +72,6 @@ public class User implements IEntity{
 	@JoinColumn(name="userinfo_id")
 	private Userinfo userinfo;
 	
-	
 	@ManyToOne
 	@JoinColumn(name= "org_id")
 	private Org org;
@@ -94,6 +94,31 @@ public class User implements IEntity{
 	
 	@OneToMany(mappedBy = "user")
 	private Set<UserEquipmentRelationship> relativeEquipments;
+	
+	//哪些事件发生时候，会通知到这个用户
+	@ManyToMany(mappedBy = "eventNotifyUsers")
+	private Set<Event> noticeEvents;
+	
+	//哪些状态进入时候，会通知到这个用户
+	@ManyToMany(mappedBy = "enterNotifyUsers")
+	private Set<State> noticeStates;
+	
+	
+	public Set<Event> getNoticeEvents() {
+		return noticeEvents;
+	}
+
+	public void setNoticeEvents(Set<Event> noticeEvents) {
+		this.noticeEvents = noticeEvents;
+	}
+
+	public Set<State> getNoticeStates() {
+		return noticeStates;
+	}
+
+	public void setNoticeStates(Set<State> noticeStates) {
+		this.noticeStates = noticeStates;
+	}
 
 	public Set<UserEquipmentRelationship> getRelativeEquipments() {
 		return relativeEquipments;

@@ -49,6 +49,30 @@ public class DepartmentTemplate implements IEntity{
 	private OrgTemplate orgTemplate;
 
 
+	@ManyToOne
+	@JoinColumn(name="parent")
+	private DepartmentTemplate parent;
+	
+	@OneToMany(mappedBy = "parent")	
+	private Set<DepartmentTemplate> children;
+	
+	
+	public DepartmentTemplate getParent() {
+		return parent;
+	}
+
+	public void setParent(DepartmentTemplate parent) {
+		this.parent = parent;
+	}
+
+	public Set<DepartmentTemplate> getChildren() {
+		return children;
+	}
+
+	public void setChildren(Set<DepartmentTemplate> children) {
+		this.children = children;
+	}
+
 	public OrgTemplate getOrgTemplate() {
 		return orgTemplate;
 	}
