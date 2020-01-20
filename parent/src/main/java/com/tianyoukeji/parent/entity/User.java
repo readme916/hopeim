@@ -103,7 +103,40 @@ public class User implements IEntity{
 	@ManyToMany(mappedBy = "enterNotifyUsers")
 	private Set<State> noticeStates;
 	
+	@OneToMany(mappedBy = "from")
+	private Set<Task> publishTasks;
 	
+	@OneToMany(mappedBy = "to")
+	private Set<Task> acceptTasks;
+	
+	@ManyToMany(mappedBy = "cc")
+	private Set<Task> ccTasks;
+	
+	
+	public Set<Task> getPublishTasks() {
+		return publishTasks;
+	}
+
+	public void setPublishTasks(Set<Task> publishTasks) {
+		this.publishTasks = publishTasks;
+	}
+
+	public Set<Task> getAcceptTasks() {
+		return acceptTasks;
+	}
+
+	public void setAcceptTasks(Set<Task> acceptTasks) {
+		this.acceptTasks = acceptTasks;
+	}
+
+	public Set<Task> getCcTasks() {
+		return ccTasks;
+	}
+
+	public void setCcTasks(Set<Task> ccTasks) {
+		this.ccTasks = ccTasks;
+	}
+
 	public Set<Event> getNoticeEvents() {
 		return noticeEvents;
 	}

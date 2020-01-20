@@ -21,6 +21,12 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+/**
+ * parent product 是 child product的组合，每个child product可以有不同的供应商，组合成一个产品，每个parent产品的sku 对应于一个设备 
+ * @author Administrator
+ *
+ */
+
 @Entity
 @Table(name = "product")
 public class Product implements IEntity{
@@ -62,8 +68,30 @@ public class Product implements IEntity{
 	@JoinTable(name="product_insure_channel",joinColumns = { @JoinColumn(name = "product_id") }, inverseJoinColumns = { @JoinColumn(name = "insure_channel_id") })
 	private Set<InsureChannel> insureChannels;
 	
+	@ManyToOne
+	@JoinColumn(name="parent")
+	private Product parent;
+	
+	@OneToMany(mappedBy = "parent")	
+	private Set<Product> children;
 	
 	
+	public Product getParent() {
+		return parent;
+	}
+
+	public void setParent(Product parent) {
+		this.parent = parent;
+	}
+
+	public Set<Product> getChildren() {
+		return children;
+	}
+
+	public void setChildren(Set<Product> children) {
+		this.children = children;
+	}
+
 	public Set<InsureChannel> getInsureChannels() {
 		return insureChannels;
 	}

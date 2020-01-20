@@ -21,6 +21,12 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+
+/**
+ * 设备对应  product sku
+ * @author Administrator
+ *
+ */
 @Entity
 @Table(name = "equipment")
 public class Equipment implements IEntity{
@@ -83,6 +89,29 @@ public class Equipment implements IEntity{
 	@OneToMany(mappedBy = "equipment")
 	private Set<RepaymentPlan> repaymentPlans;
 	
+	@ManyToOne
+	@JoinColumn(name="parent")
+	private Equipment parent;
+	
+	@OneToMany(mappedBy = "parent")	
+	private Set<Equipment> children;
+	
+	public Equipment getParent() {
+		return parent;
+	}
+
+	public void setParent(Equipment parent) {
+		this.parent = parent;
+	}
+
+	public Set<Equipment> getChildren() {
+		return children;
+	}
+
+	public void setChildren(Set<Equipment> children) {
+		this.children = children;
+	}
+
 	public Set<RepaymentPlan> getRepaymentPlans() {
 		return repaymentPlans;
 	}

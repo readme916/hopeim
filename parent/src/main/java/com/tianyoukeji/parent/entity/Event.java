@@ -76,6 +76,29 @@ public class Event implements IEntity{
 	
 	@Column(name = "notify_template")
 	private String notifyTemplate;
+	
+	@Column(name = "time")
+	private Integer timer;
+	
+	@Column(name = "time_once")
+	private Integer timerOnce;
+	
+
+	public Integer getTimer() {
+		return timer;
+	}
+
+	public void setTimer(Integer timer) {
+		this.timer = timer;
+	}
+
+	public Integer getTimerOnce() {
+		return timerOnce;
+	}
+
+	public void setTimerOnce(Integer timerOnce) {
+		this.timerOnce = timerOnce;
+	}
 
 	public Set<State> getSources() {
 		return sources;
