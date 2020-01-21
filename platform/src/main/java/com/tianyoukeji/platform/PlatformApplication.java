@@ -19,7 +19,6 @@ import com.liyang.jpa.smart.query.annotation.EnableJpaSmartQuery;
 public class PlatformApplication {
 	protected final static Logger logger = LoggerFactory.getLogger(PlatformApplication.class);
 	public static void main(String[] args) {
-		logger.info("启动spring-boot-vue");
 		SpringApplication.run(PlatformApplication.class, args);
 	}
 }

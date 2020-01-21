@@ -15,8 +15,6 @@ import springfox.documentation.annotations.ApiIgnore;
 @ApiIgnore
 public class TestController extends DefaultHandler{
 
-	@Autowired
-	private UserService schoolService;
 	
 	@GetMapping(path = "/")
 	public Object home(Authentication authentication) {

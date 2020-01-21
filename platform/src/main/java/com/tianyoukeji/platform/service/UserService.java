@@ -9,13 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tianyoukeji.parent.entity.User;
-import com.tianyoukeji.parent.service.BaseService;
 import com.tianyoukeji.parent.service.NamespaceRedisService;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
+import com.tianyoukeji.parent.service.StateMachineService;
 
 @Service
-
-public class UserService extends BaseService<User> {
+public class UserService extends StateMachineService<User> {
 
 	@Autowired
     private RedisConnectionFactory redisConnectionFactory;

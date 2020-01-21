@@ -24,8 +24,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
-@Table(name = "event", uniqueConstraints= {@UniqueConstraint(columnNames= {"code"})})
-public class Event implements IEntity{
+@Table(name = "timer", uniqueConstraints= {@UniqueConstraint(columnNames= {"code"})})
+public class Timer implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -55,30 +55,51 @@ public class Event implements IEntity{
 	@Column(name = "description")
 	private String description;
 	
-	@ManyToMany(mappedBy = "events")
-	private Set<State> sources;
+	@ManyToOne
+	@JoinColumn(name = "source_state_id")
+	private State source;
 	
 	//内部事件，target为null
 	@ManyToOne
-	@JoinColumn(name = "target")
+	@JoinColumn(name = "target_state_id")
 	private State target;
-	
-	//事件的限制条件spel表达式
-	@Column(name = "guard_spel")
-	private String guardSpel;
 	
 	@Column(name = "action")
 	private String action;
 
+	@Column(name = "time_interval")
+	private Integer timerInterval;
+	
+	@Column(name = "time_once")
+	private Integer timerOnce;
+	
 
-	public Set<State> getSources() {
-		return sources;
+
+	public Integer getTimerOnce() {
+		return timerOnce;
 	}
 
-	public void setSources(Set<State> sources) {
-		this.sources = sources;
+	public void setTimerOnce(Integer timerOnce) {
+		this.timerOnce = timerOnce;
 	}
 
+
+
+	public State getSource() {
+		return source;
+	}
+
+	public void setSource(State source) {
+		this.source = source;
+	}
+
+	public Integer getTimerInterval() {
+		return timerInterval;
+	}
+
+	public void setTimerInterval(Integer timerInterval) {
+		this.timerInterval = timerInterval;
+	}
 
 	public Long getUuid() {
 		return uuid;
@@ -152,13 +173,6 @@ public class Event implements IEntity{
 		this.target = target;
 	}
 
-	public String getGuardSpel() {
-		return guardSpel;
-	}
-
-	public void setGuardSpel(String guardSpel) {
-		this.guardSpel = guardSpel;
-	}
 
 	public String getAction() {
 		return action;

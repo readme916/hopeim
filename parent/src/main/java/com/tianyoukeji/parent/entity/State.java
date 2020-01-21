@@ -55,8 +55,8 @@ public class State implements IEntity{
 	@Column(name = "description")
 	private String description;
 	
-	@Column(name = "is_first")
-	private Boolean isFirst;
+	@Column(name = "is_start")
+	private Boolean isStart;
 	
 	@Column(name = "is_end")
 	private Boolean isEnd;
@@ -66,29 +66,33 @@ public class State implements IEntity{
 	@Column(name = "is_choice")
 	private Boolean isChoice;
 	
-	@Column(name = "first_target")
+	@ManyToOne
+	@JoinColumn(name = "first_target")
 	private State firstTarget;
 	
 	@Column(name = "first_guard_spel")
-	private State firstGuardSpel;
+	private String firstGuardSpel;
 	
-	@Column(name = "then_target")
+	@ManyToOne
+	@JoinColumn(name = "then_target")
 	private State thenTarget;
 	
-	@Column(name = "then_guard_spel")
-	private State thenGuardSpel;
 	
-	@Column(name = "last_target")
+	@Column(name = "then_guard_spel")
+	private String thenGuardSpel;
+	
+	@ManyToOne
+	@JoinColumn(name = "last_target")
 	private State lastTarget;
 	//分支事件结束
-
-	
-	
 
 	//允许的普通事件集合
 	@ManyToMany
 	@JoinTable(name="state_event",joinColumns = { @JoinColumn(name = "state_id") }, inverseJoinColumns = { @JoinColumn(name = "event_id") })
 	private Set<Event> events;
+	
+	@OneToMany(mappedBy = "source")
+	private Set<Timer> timers;
 	
 	@Column(name = "enter_action")
 	private String enterAction;
@@ -96,29 +100,13 @@ public class State implements IEntity{
 	@Column(name = "exit_action")
 	private String exitAction;
 	
-	@ManyToMany
-	@JoinTable(name="state_enter_notify",joinColumns = { @JoinColumn(name = "state_id") }, inverseJoinColumns = { @JoinColumn(name = "user_id") })
-	private Set<User> enterNotifyUsers;
-	
-	@Column(name = "notify_template")
-	private String notifyTemplate;
 
-
-
-	public Set<User> getEnterNotifyUsers() {
-		return enterNotifyUsers;
+	public Set<Timer> getTimers() {
+		return timers;
 	}
 
-	public void setEnterNotifyUsers(Set<User> enterNotifyUsers) {
-		this.enterNotifyUsers = enterNotifyUsers;
-	}
-
-	public String getNotifyTemplate() {
-		return notifyTemplate;
-	}
-
-	public void setNotifyTemplate(String notifyTemplate) {
-		this.notifyTemplate = notifyTemplate;
+	public void setTimers(Set<Timer> timers) {
+		this.timers = timers;
 	}
 
 	public Long getUuid() {
@@ -185,12 +173,21 @@ public class State implements IEntity{
 		this.description = description;
 	}
 
-	public Boolean getIsFirst() {
-		return isFirst;
+
+	public Boolean getIsStart() {
+		return isStart;
 	}
 
-	public void setIsFirst(Boolean isFirst) {
-		this.isFirst = isFirst;
+	public void setIsStart(Boolean isStart) {
+		this.isStart = isStart;
+	}
+
+	public Set<Event> getEvents() {
+		return events;
+	}
+
+	public void setEvents(Set<Event> events) {
+		this.events = events;
 	}
 
 	public Boolean getIsEnd() {
@@ -217,13 +214,6 @@ public class State implements IEntity{
 		this.firstTarget = firstTarget;
 	}
 
-	public State getFirstGuardSpel() {
-		return firstGuardSpel;
-	}
-
-	public void setFirstGuardSpel(State firstGuardSpel) {
-		this.firstGuardSpel = firstGuardSpel;
-	}
 
 	public State getThenTarget() {
 		return thenTarget;
@@ -233,11 +223,21 @@ public class State implements IEntity{
 		this.thenTarget = thenTarget;
 	}
 
-	public State getThenGuardSpel() {
+	
+
+	public String getFirstGuardSpel() {
+		return firstGuardSpel;
+	}
+
+	public void setFirstGuardSpel(String firstGuardSpel) {
+		this.firstGuardSpel = firstGuardSpel;
+	}
+
+	public String getThenGuardSpel() {
 		return thenGuardSpel;
 	}
 
-	public void setThenGuardSpel(State thenGuardSpel) {
+	public void setThenGuardSpel(String thenGuardSpel) {
 		this.thenGuardSpel = thenGuardSpel;
 	}
 

@@ -63,12 +63,12 @@ public class Task implements IEntity{
 	private Set<Task> children;
 	
 	@ManyToOne
-	@JoinColumn(name = "from")
-	private User from;
+	@JoinColumn(name = "from_user")
+	private User fromUser;
 	
 	@ManyToOne
-	@JoinColumn(name = "to")
-	private User to;
+	@JoinColumn(name = "to_user")
+	private User toUser;
 	
 	@ManyToMany
 	@JoinTable(name="cc_task",joinColumns = { @JoinColumn(name = "task_id") }, inverseJoinColumns = { @JoinColumn(name = "user_id") })
@@ -122,20 +122,36 @@ public class Task implements IEntity{
 		this.children = children;
 	}
 
-	public User getFrom() {
-		return from;
+	public String getName() {
+		return name;
 	}
 
-	public void setFrom(User from) {
-		this.from = from;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public User getTo() {
-		return to;
+	public String getDescription() {
+		return description;
 	}
 
-	public void setTo(User to) {
-		this.to = to;
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public User getFromUser() {
+		return fromUser;
+	}
+
+	public void setFromUser(User fromUser) {
+		this.fromUser = fromUser;
+	}
+
+	public User getToUser() {
+		return toUser;
+	}
+
+	public void setToUser(User toUser) {
+		this.toUser = toUser;
 	}
 
 	public Set<User> getCc() {

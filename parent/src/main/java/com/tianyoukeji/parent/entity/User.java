@@ -23,7 +23,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 @Entity
 @Table(name = "user" , uniqueConstraints= {@UniqueConstraint(columnNames= {"union_id"})})
-public class User implements IEntity{
+public class User implements IStateMachineEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -95,24 +95,27 @@ public class User implements IEntity{
 	@OneToMany(mappedBy = "user")
 	private Set<UserEquipmentRelationship> relativeEquipments;
 	
-	//哪些事件发生时候，会通知到这个用户
-	@ManyToMany(mappedBy = "eventNotifyUsers")
-	private Set<Event> noticeEvents;
-	
-	//哪些状态进入时候，会通知到这个用户
-	@ManyToMany(mappedBy = "enterNotifyUsers")
-	private Set<State> noticeStates;
-	
-	@OneToMany(mappedBy = "from")
+	@OneToMany(mappedBy = "fromUser")
 	private Set<Task> publishTasks;
 	
-	@OneToMany(mappedBy = "to")
+	@OneToMany(mappedBy = "toUser")
 	private Set<Task> acceptTasks;
 	
 	@ManyToMany(mappedBy = "cc")
 	private Set<Task> ccTasks;
 	
+	@ManyToOne
+	@JoinColumn(name= "state_id")
+	private State state;
 	
+	public State getState() {
+		return state;
+	}
+
+	public void setState(State state) {
+		this.state = state;
+	}
+
 	public Set<Task> getPublishTasks() {
 		return publishTasks;
 	}
@@ -135,22 +138,6 @@ public class User implements IEntity{
 
 	public void setCcTasks(Set<Task> ccTasks) {
 		this.ccTasks = ccTasks;
-	}
-
-	public Set<Event> getNoticeEvents() {
-		return noticeEvents;
-	}
-
-	public void setNoticeEvents(Set<Event> noticeEvents) {
-		this.noticeEvents = noticeEvents;
-	}
-
-	public Set<State> getNoticeStates() {
-		return noticeStates;
-	}
-
-	public void setNoticeStates(Set<State> noticeStates) {
-		this.noticeStates = noticeStates;
 	}
 
 	public Set<UserEquipmentRelationship> getRelativeEquipments() {
