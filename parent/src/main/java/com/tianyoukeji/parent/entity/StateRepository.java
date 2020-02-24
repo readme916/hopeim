@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface StateRepository extends JpaRepository<State, Long> {
 
 	List<State> findByEntity(String entityName);
+	State findByEntityAndIsStart(String entityName,boolean isStart);
+	State findByEntityAndCode(String entityName , String code);
 }

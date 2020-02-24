@@ -24,7 +24,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
-@Table(name = "state", uniqueConstraints= {@UniqueConstraint(columnNames= {"code"})})
+@Table(name = "state", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
 public class State implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

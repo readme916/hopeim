@@ -1,6 +1,7 @@
 package com.tianyoukeji.parent.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,10 +24,15 @@ public abstract class BaseService<T extends IEntity> {
 
 	/**
 	 *
-	 * @throws javax.persistence.EntityNotFoundException 如果id不存在.
+	 * null 如果id不存在.
 	 */
 	public T findById(Long id) {
-		return jpaRepository.getOne(id);
+		Optional<T> findById = jpaRepository.findById(id);
+		if(findById.isPresent()) {
+			return findById.get();
+		}else {
+			return null;
+		}
 	}
 
 	/**

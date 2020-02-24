@@ -69,7 +69,18 @@ public class Event implements IEntity{
 	
 	@Column(name = "action")
 	private String action;
+	
+	@Column(name = "sort")
+	private Integer sort = 0;
 
+
+	public Integer getSort() {
+		return sort;
+	}
+
+	public void setSort(Integer sort) {
+		this.sort = sort;
+	}
 
 	public Set<State> getSources() {
 		return sources;
