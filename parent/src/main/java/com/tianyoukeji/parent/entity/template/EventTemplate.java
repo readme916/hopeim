@@ -1,4 +1,4 @@
-package com.tianyoukeji.parent.entity;
+package com.tianyoukeji.parent.entity.template;
 
 import java.util.Date;
 import java.util.Set;
@@ -21,11 +21,12 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.IEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
-@Table(name = "timer", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
-public class Timer implements IEntity{
+@Table(name = "event_template", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
+public class EventTemplate implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -55,50 +56,51 @@ public class Timer implements IEntity{
 	@Column(name = "description")
 	private String description;
 	
-	@ManyToOne
-	@JoinColumn(name = "source_state_id")
-	private State source;
+	@ManyToMany(mappedBy = "eventTemplates")
+	private Set<StateTemplate> sourceStateTemplates;
 	
 	//内部事件，target为null
 	@ManyToOne
-	@JoinColumn(name = "target_state_id")
-	private State target;
+	@JoinColumn(name = "target")
+	private StateTemplate target;
+	
+	//事件的限制条件spel表达式
+	@Column(name = "guard_spel")
+	private String guardSpel;
 	
 	@Column(name = "action")
 	private String action;
-
-	@Column(name = "time_interval")
-	private Integer timerInterval;
 	
-	@Column(name = "time_once")
-	private Integer timerOnce;
+	@Column(name = "sort")
+	private Integer sort = 0;
+
+	@ManyToMany(mappedBy = "eventTemplates")
+	private Set<RoleTemplate> roleTemplates;
 	
 
-
-	public Integer getTimerOnce() {
-		return timerOnce;
+	public Set<RoleTemplate> getRoleTemplates() {
+		return roleTemplates;
 	}
 
-	public void setTimerOnce(Integer timerOnce) {
-		this.timerOnce = timerOnce;
+	public void setRoleTemplates(Set<RoleTemplate> roleTemplates) {
+		this.roleTemplates = roleTemplates;
+	}
+
+	public Integer getSort() {
+		return sort;
+	}
+
+	public void setSort(Integer sort) {
+		this.sort = sort;
 	}
 
 
-
-	public State getSource() {
-		return source;
+	public Set<StateTemplate> getSourceStateTemplates() {
+		return sourceStateTemplates;
 	}
 
-	public void setSource(State source) {
-		this.source = source;
-	}
-
-	public Integer getTimerInterval() {
-		return timerInterval;
-	}
-
-	public void setTimerInterval(Integer timerInterval) {
-		this.timerInterval = timerInterval;
+	public void setSourceStateTemplates(Set<StateTemplate> sourceStateTemplates) {
+		this.sourceStateTemplates = sourceStateTemplates;
 	}
 
 	public Long getUuid() {
@@ -165,14 +167,21 @@ public class Timer implements IEntity{
 		this.description = description;
 	}
 
-	public State getTarget() {
+	public StateTemplate getTarget() {
 		return target;
 	}
 
-	public void setTarget(State target) {
+	public void setTarget(StateTemplate target) {
 		this.target = target;
 	}
 
+	public String getGuardSpel() {
+		return guardSpel;
+	}
+
+	public void setGuardSpel(String guardSpel) {
+		this.guardSpel = guardSpel;
+	}
 
 	public String getAction() {
 		return action;

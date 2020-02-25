@@ -99,7 +99,7 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
 			user = userRepository.findByUserinfoMobile(username);
 			if (null == user) {
 				// 这里自动注册
-				user = oauthUserService.register(username, password);
+				user = oauthUserService.registerUser(username, password, "user");
 			} else if (user.getEnabled() == false) {
 				throw new BadCredentialsException("用户被禁用");
 			}
@@ -109,7 +109,7 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
 		}
 
 		UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken(username, password,
-				listUserGrantedAuthorities(1L));
+				listUserGrantedAuthorities(user));
 		result.setDetails(authentication.getDetails());
 		return result;
 	}
@@ -119,12 +119,12 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
 		return (UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication));
 	}
 
-	private Set<GrantedAuthority> listUserGrantedAuthorities(Long uid) {
+	private Set<GrantedAuthority> listUserGrantedAuthorities(User user) {
 		Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
-		if (uid == null) {
+		if (user == null) {
 			return authorities;
 		}
-		authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+		authorities.add(new SimpleGrantedAuthority(user.getRole().getCode()));
 		return authorities;
 	}
 
@@ -144,7 +144,7 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
 			// 每个手机号码，刷新token的频率限制100秒一次
 			RateLimiter rateLimiter = rateLimiterService.get(RateLimiterNamespace.FRESH_TOKEN, un, 0.01);
 			rateLimiter.acquire();
-			return new org.springframework.security.core.userdetails.User(un, "", user.getEnabled(), true, true, true, listUserGrantedAuthorities(user.getUuid()));
+			return new org.springframework.security.core.userdetails.User(un, "", user.getEnabled(), true, true, true, listUserGrantedAuthorities(user));
 		}
 	}
 

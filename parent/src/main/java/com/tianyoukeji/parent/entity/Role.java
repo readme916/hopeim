@@ -25,15 +25,12 @@ import org.springframework.data.annotation.LastModifiedDate;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 
 @Entity
-@Table(name = "role")
+@Table(name = "role", uniqueConstraints= {@UniqueConstraint(columnNames= {"org_id","code"})})
 public class Role implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
 	private Long uuid;
-	
-	@Column(name="union_id")
-	private String unionId;
 	
 	@CreatedDate
 	@Column(name = "created_at")
@@ -51,6 +48,12 @@ public class Role implements IEntity{
 	@JoinColumn(name= "org_id")
 	private Org org;
 	
+	@Column(name = "name")
+	private String name;
+	
+	@Column(name = "code")
+	private String code;
+	
 	@ManyToOne
 	@JoinColumn(name= "role_template_id")
 	private RoleTemplate roleTemplate;
@@ -59,8 +62,41 @@ public class Role implements IEntity{
 	@JoinTable(name="role_menu",joinColumns = { @JoinColumn(name = "role_id") }, inverseJoinColumns = { @JoinColumn(name = "menu_id") })
 	private Set<Menu> menus;
 
+	@ManyToMany
+	@JoinTable(name="role_event",joinColumns = { @JoinColumn(name = "role_id") }, inverseJoinColumns = { @JoinColumn(name = "event_id") })
+	private Set<Event> events;
 	
 	
+	public String getName() {
+		return name;
+	}
+
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+
+	public String getCode() {
+		return code;
+	}
+
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+
+	public Set<Event> getEvents() {
+		return events;
+	}
+
+
+	public void setEvents(Set<Event> events) {
+		this.events = events;
+	}
+
+
 	public Set<Menu> getMenus() {
 		return menus;
 	}
@@ -78,16 +114,6 @@ public class Role implements IEntity{
 
 	public void setUuid(Long uuid) {
 		this.uuid = uuid;
-	}
-
-
-	public String getUnionId() {
-		return unionId;
-	}
-
-
-	public void setUnionId(String unionId) {
-		this.unionId = unionId;
 	}
 
 

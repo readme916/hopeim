@@ -1,4 +1,4 @@
-package com.tianyoukeji.parent.entity;
+package com.tianyoukeji.parent.entity.template;
 
 import java.util.Date;
 import java.util.Set;
@@ -21,11 +21,12 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.IEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
-@Table(name = "timer", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
-public class Timer implements IEntity{
+@Table(name = "timer_template", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
+public class TimerTemplate implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -56,13 +57,13 @@ public class Timer implements IEntity{
 	private String description;
 	
 	@ManyToOne
-	@JoinColumn(name = "source_state_id")
-	private State source;
+	@JoinColumn(name = "source_state_template_id")
+	private StateTemplate source;
 	
 	//内部事件，target为null
 	@ManyToOne
-	@JoinColumn(name = "target_state_id")
-	private State target;
+	@JoinColumn(name = "target_state_template_id")
+	private StateTemplate target;
 	
 	@Column(name = "action")
 	private String action;
@@ -85,11 +86,11 @@ public class Timer implements IEntity{
 
 
 
-	public State getSource() {
+	public StateTemplate getSource() {
 		return source;
 	}
 
-	public void setSource(State source) {
+	public void setSource(StateTemplate source) {
 		this.source = source;
 	}
 
@@ -165,11 +166,11 @@ public class Timer implements IEntity{
 		this.description = description;
 	}
 
-	public State getTarget() {
+	public StateTemplate getTarget() {
 		return target;
 	}
 
-	public void setTarget(State target) {
+	public void setTarget(StateTemplate target) {
 		this.target = target;
 	}
 

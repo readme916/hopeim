@@ -19,6 +19,7 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.Event;
 import com.tianyoukeji.parent.entity.IEntity;
 import com.tianyoukeji.parent.entity.Menu;
 
@@ -59,6 +60,19 @@ public class RoleTemplate implements IEntity{
 	@JoinTable(name="role_template_menu_template",joinColumns = { @JoinColumn(name = "role_template_id") }, inverseJoinColumns = { @JoinColumn(name = "menu_template_id") })
 	private Set<MenuTemplate> menuTemplates;
 	
+	@ManyToMany
+	@JoinTable(name="role_template_event_template",joinColumns = { @JoinColumn(name = "role_template_id") }, inverseJoinColumns = { @JoinColumn(name = "event_template_id") })
+	private Set<EventTemplate> eventTemplates;
+	
+
+
+	public Set<EventTemplate> getEventTemplates() {
+		return eventTemplates;
+	}
+
+	public void setEventTemplates(Set<EventTemplate> eventTemplates) {
+		this.eventTemplates = eventTemplates;
+	}
 
 	public Set<MenuTemplate> getMenuTemplates() {
 		return menuTemplates;

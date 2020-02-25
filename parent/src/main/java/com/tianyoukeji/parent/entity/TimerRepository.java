@@ -3,7 +3,6 @@ package com.tianyoukeji.parent.entity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 
-public interface RoleRepository extends JpaRepository<Role, Long> {
+public interface TimerRepository extends JpaRepository<Timer, Long> {
 
-	Role findByCode(String code);
 }

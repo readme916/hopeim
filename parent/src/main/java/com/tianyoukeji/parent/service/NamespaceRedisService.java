@@ -289,7 +289,7 @@ public class NamespaceRedisService {
 	}
 	
 	public enum RedisNamespace {
-		LOGIN_SMS,USER_TOKEN
+		LOGIN_SMS,USER_TOKEN,TIMER
 	}
 
 }

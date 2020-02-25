@@ -2,6 +2,7 @@ package com.tianyoukeji.parent.common;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Pattern;
@@ -57,6 +58,32 @@ public class ContextUtils {
 			}
 		} else {
 			return "";
+		}
+	}
+	
+	  /**
+     * 取得客户端client_id
+     * @return
+     */
+	public static String getRole() {
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+				.getRequest();
+		if (request != null) {
+			Principal principal = request.getUserPrincipal();
+			if (principal == null) {
+				return "user";
+			} else {
+				Map<String, Object> objectToMap = objectToMap(principal);
+				List authorities = (List) objectToMap.get("authorities");
+				if (authorities != null && !authorities.isEmpty()) {
+					Map role = (Map)authorities.get(0);
+					return role.get("authority").toString();
+				} else {
+					return "user";
+				}
+			}
+		} else {
+			return "user";
 		}
 	}
 	

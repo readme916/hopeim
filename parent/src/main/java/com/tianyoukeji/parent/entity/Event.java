@@ -24,7 +24,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
-@Table(name = "event", uniqueConstraints= {@UniqueConstraint(columnNames= {"code"})})
+@Table(name = "event", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
 public class Event implements IEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,6 +73,17 @@ public class Event implements IEntity{
 	@Column(name = "sort")
 	private Integer sort = 0;
 
+	@ManyToMany(mappedBy = "events")
+	private Set<Role> roles;
+	
+
+	public Set<Role> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Set<Role> roles) {
+		this.roles = roles;
+	}
 
 	public Integer getSort() {
 		return sort;
