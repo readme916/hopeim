@@ -304,7 +304,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 					InternalTransitionConfigurer<String, String> eventTemp1 = builder.configureTransitions()
 							.withInternal().source(state.getCode()).event(event.getCode());
 					if (StringUtils.hasText(event.getAction())) {
-						eventTemp1.action(AuthorizeActionFactory(event.getAction()));
+						eventTemp1.action(AuthorizeActionFactory(event.getAction()),errorAction());
 					}
 					if (StringUtils.hasText(event.getGuardSpel())) {
 						eventTemp1.guard(guardFactory(event.getGuardSpel()));
@@ -315,7 +315,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 							.withExternal().source(state.getCode()).target(event.getTarget().getCode())
 							.event(event.getCode());
 					if (StringUtils.hasText(event.getAction())) {
-						eventTemp2.action(AuthorizeActionFactory(event.getAction()));
+						eventTemp2.action(AuthorizeActionFactory(event.getAction()),errorAction());
 					}
 					if (StringUtils.hasText(event.getGuardSpel())) {
 						eventTemp2.guard(guardFactory(event.getGuardSpel()));
@@ -323,7 +323,9 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				}
 			}
 		}
-		System.out.println(structure.getName() + "状态机初始化完成，开始创建所有带timer的状态的状态机的实例");
+		System.out.println(structure.getName() + "状态机初始化完成");
+		restoreTimerFromRedis();
+		System.out.println(structure.getName() + "Timer状态机从redis恢复");
 
 	}
 
@@ -395,6 +397,23 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	//timer的id从redis里面删除
 	private void timerIdRemoveFromRedis(Long id) {
 		namespaceRedisService.sRemove(RedisNamespace.TIMER, serviceEntity, String.valueOf(id));
+		
+	}
+	
+	private void restoreTimerFromRedis() {
+		
+		Set<String> sMembers = namespaceRedisService.sMembers(RedisNamespace.TIMER, serviceEntity);
+		StateMachine<String, String> build;
+		for (String id : sMembers) {
+			String machineId = this.serviceEntity + id;
+			build = builder.build();
+			try {
+				build = redisStateMachinePersister.restore(build, machineId);
+				timerMachines.put(Long.valueOf(id), build);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 
@@ -443,6 +462,24 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	}
 
+	private Action<String, String> errorAction() {
+		return new Action<String, String>() {
+
+			@Override
+			public void execute(StateContext<String, String> context) {
+				// RuntimeException("MyError") added to context
+				Exception exception = context.getException();
+				if(exception instanceof BusinessException) {
+					throw (BusinessException)exception;
+				}else {
+					exception.printStackTrace();
+					throw new BusinessException(3000, exception.getMessage());
+				}
+			}
+		};
+	}
+	
+	
 	private Action<String, String> UnauthorizeActionFactory(String actionStr) {
 
 		StateMachineService<T> _this = this;
@@ -495,6 +532,22 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				@Override
 				public void execute(StateContext<String, String> context) {
 					try {
+						Long id = context.getExtendedState().get("id", Long.class);
+						T findById = findById(id);
+						String code = findById.getState().getCode();
+						if(!code.equals(state)) {
+							StateMachine<String, String> removed = timerMachines.remove(id);
+							if (removed != null) {
+								timerIdRemoveFromRedis(id);
+								removed.stop();
+							}
+							return;
+						}
+						String machineId = serviceEntity+ state + id;
+						if(namespaceRedisService.exists(RedisNamespace.TIMER_ACTION, machineId)) {
+							return;
+						}
+						namespaceRedisService.set(RedisNamespace.TIMER_ACTION, machineId, "", 9);
 						method.invoke(_this, context.getExtendedState().get("id", Long.class));
 					} catch (IllegalAccessException e) {
 						e.printStackTrace();
@@ -518,6 +571,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		}
 	}
 
+	//spel 内的对象 user entity
 	private Guard<String, String> guardFactory(String spel) {
 		return new Guard<String, String>() {
 			@Override
