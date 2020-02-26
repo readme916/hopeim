@@ -24,6 +24,11 @@ public abstract class BaseService<T extends IEntity> {
 	@Autowired
 	private JpaRepository<T, Long> jpaRepository;
 	
+	/**
+	 * 继承的方法,状态机初始化之前调用，可以插入一些业务的state等到states数据库，完成状态机的设置
+	 */
+	abstract protected void init();
+	
 	public JpaRepository<T, Long> getJpaRepository() {
 		return jpaRepository;
 	}

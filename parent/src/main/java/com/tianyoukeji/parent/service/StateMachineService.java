@@ -18,19 +18,16 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
 import org.quartz.TriggerBuilder;
-import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ResolvableType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
@@ -46,10 +43,7 @@ import org.springframework.statemachine.config.StateMachineBuilder;
 import org.springframework.statemachine.config.StateMachineBuilder.Builder;
 import org.springframework.statemachine.config.configurers.ExternalTransitionConfigurer;
 import org.springframework.statemachine.config.configurers.InternalTransitionConfigurer;
-import org.springframework.statemachine.data.redis.RedisStateMachineContextRepository;
-import org.springframework.statemachine.data.redis.RedisStateMachinePersister;
 import org.springframework.statemachine.guard.Guard;
-import org.springframework.statemachine.persist.RepositoryStateMachinePersist;
 import org.springframework.statemachine.support.DefaultExtendedState;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
@@ -71,7 +65,6 @@ import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.Timer;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
-import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 
 /**
  * 状态机服务基础服务类
@@ -128,27 +121,14 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 * 
 	 * @param id
 	 * @param eventCode
-	 * @return
+	 * @return 仅仅当state和event和设置不一致的时候返回false 
+	 * guard的失败和action抛出异常都不影响返回值
 	 */
 
 	@Transactional
 	public boolean dispatchEvent(Long id, String eventCode) {
 		StateMachine<String, String> acquireStateMachine = this.acquireStateMachine(id);
-		Collection<Transition<String, String>> transitions = acquireStateMachine.getTransitions();
-
 		boolean success = acquireStateMachine.sendEvent(eventCode);
-		if (success) {
-			T findById = findById(id);
-			State findByEntityAndCode = stateRepository.findByEntityAndCode(serviceEntity,
-					acquireStateMachine.getState().getId());
-			if (findByEntityAndCode == null) {
-				throw new BusinessException(1274, "不存在的状态" + acquireStateMachine.getState().getId());
-			}
-			findById.setState(findByEntityAndCode);
-			save(findById);
-		} else {
-			throw new BusinessException(2111, "禁止动作");
-		}
 		return success;
 
 	}
@@ -227,10 +207,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		}
 	}
 
-	/**
-	 * 继承的方法,状态机初始化之前调用，可以插入一些业务的state等到states数据库，完成状态机的设置
-	 */
-	abstract protected void init();
+
 
 	// 内部方法 ----------------------------------------------------------------------
 
@@ -243,7 +220,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 		// 设置服务对应的实例名字
 		serviceEntity = structure.getName();
-
 		builder = StateMachineBuilder.<String, String>builder();
 		List<State> allStates = stateRepository.findByEntity(structure.getName());
 		if (allStates.isEmpty()) {
@@ -351,7 +327,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 * @throws Exception
 	 */
 	private StateMachine<String, String> acquireStateMachine(Long id) {
-
 		StateMachine<String, String> stateMachine = builder.build();
 		T findById = findById(id);
 		if (findById != null) {
@@ -373,6 +348,14 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 													org.springframework.statemachine.state.State<String, String> state,
 													Message<String> message, Transition<String, String> transition,
 													StateMachine<String, String> stateMachine) {
+												State findByEntityAndCode = stateRepository.findByEntityAndCode(serviceEntity,
+														state.getId());
+												if (findByEntityAndCode == null) {
+													throw new BusinessException(1274, "不存在的状态" + stateMachine.getState().getId());
+												}
+												findById.setState(findByEntityAndCode);
+												save(findById);
+												
 												stopJobs(serviceEntity, id);
 												if (timerStates.keySet().contains(state.getId())) {
 													startJobs(serviceEntity, id, timerStates.get(state.getId()));
@@ -391,22 +374,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			throw new BusinessException(1273, "id不存在");
 		}
 	}
-
-//	private void restoreTimerFromRedis() {
-//
-//		Set<String> sMembers = namespaceRedisService.sMembers(RedisNamespace.TIMER, serviceEntity);
-//		StateMachine<String, String> build;
-//		for (String id : sMembers) {
-//			String machineId = this.serviceEntity + id;
-//			build = builder.build();
-//			try {
-//				build = redisStateMachinePersister.restore(build, machineId);
-//				timerMachines.put(Long.valueOf(id), build);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
-//	}
 
 	private Action<String, String> AuthorizeActionFactory(String actionStr) {
 
@@ -569,7 +536,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	// quartz job 的执行函数
 	@Override
 	public void execute(JobExecutionContext context) {
-		String entity = context.getJobDetail().getJobDataMap().get("entity").toString();
 		String id = context.getJobDetail().getJobDataMap().get("id").toString();
 		String action = context.getJobDetail().getJobDataMap().getString("action");
 		try {
