@@ -59,10 +59,6 @@ public class Timer implements IEntity{
 	@JoinColumn(name = "source_state_id")
 	private State source;
 	
-	//内部事件，target为null
-	@ManyToOne
-	@JoinColumn(name = "target_state_id")
-	private State target;
 	
 	@Column(name = "action")
 	private String action;
@@ -163,14 +159,6 @@ public class Timer implements IEntity{
 
 	public void setDescription(String description) {
 		this.description = description;
-	}
-
-	public State getTarget() {
-		return target;
-	}
-
-	public void setTarget(State target) {
-		this.target = target;
 	}
 
 

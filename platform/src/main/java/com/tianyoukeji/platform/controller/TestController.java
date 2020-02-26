@@ -26,17 +26,25 @@ public class TestController extends DefaultHandler{
 //		List<String> executableEvent2 = userService.executableEvent(2l);
 //		System.out.println(executableEvent2);
 	}
-	@GetMapping(path = "/")
-	public Object home(Authentication authentication) {
+	@GetMapping(path = "/test/enable")
+	public Object enable(Authentication authentication) {
 		return userService.dispatchEvent(5l, "enable");
-		
 //		User findById = userService.findById(5l);
 //		State state = findById.getState();
 //		System.out.println(userService.stateExecutableEvent(state));
 //		System.out.println(userService.currentUserStateExecutableEvent(state));
 //		return null;
 	}
-	@GetMapping(path = "/test")
+	@GetMapping(path = "/test/forbid")
+	public Object forbid(Authentication authentication) {
+		return userService.dispatchEvent(5l, "forbid");
+//		User findById = userService.findById(5l);
+//		State state = findById.getState();
+//		System.out.println(userService.stateExecutableEvent(state));
+//		System.out.println(userService.currentUserStateExecutableEvent(state));
+//		return null;
+	}
+	@GetMapping(path = "/test/user")
 	public Object test(Authentication authentication) {
 		return SmartQuery.fetchList("user", "fields=*");
 	}

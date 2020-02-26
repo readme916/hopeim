@@ -1,10 +1,12 @@
 package com.tianyoukeji.platform.service;
 
+import java.util.Date;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,18 +58,20 @@ public class UserService extends StateMachineService<User> {
 	 * @return
 	 */
 	@StateMachineAction
-	public void enable(Long uuid) {
+	public void enable(Long uuid , StateMachine<String,String> stateMachine) {
 		System.out.println("enable  动作");
 	}
 	
 	@StateMachineAction
-	public void forbid(Long uuid) {
+	public void forbid(Long uuid , StateMachine<String,String> stateMachine) {
 		System.out.println("forbid  动作");
 	}
 	
 	@StateMachineAction
-	public void speak(Long uuid) {
-		System.out.println("speak  动作");
+	public void delete(Long uuid , StateMachine<String,String> stateMachine) {
+		System.out.println(new Date());
+		System.out.println(stateMachine.getState().getId());
+		System.out.println("delete  动作");
 	}
 	
 	@Transactional

@@ -13,10 +13,29 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.SimpleTrigger;
+import org.quartz.TriggerBuilder;
+import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ResolvableType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.common.TemplateParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
@@ -50,6 +69,8 @@ import com.tianyoukeji.parent.entity.IStateMachineEntity;
 import com.tianyoukeji.parent.entity.State;
 import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.Timer;
+import com.tianyoukeji.parent.entity.User;
+import com.tianyoukeji.parent.entity.UserRepository;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 
 /**
@@ -62,40 +83,45 @@ import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
  * @param <T>
  */
 
-public abstract class StateMachineService<T extends IStateMachineEntity> extends BaseService<T> {
+public abstract class StateMachineService<T extends IStateMachineEntity> extends BaseService<T> implements Job {
 
 	@Autowired
 	private JpaRepository<T, Long> jpaRepository;
 
 	@Autowired
 	private StateRepository stateRepository;
+	
+	@Autowired
+	private UserRepository userRepository;
 
 	@Autowired
 	private EventRepository eventRepository;
 
-	@Autowired
-	private RedisConnectionFactory connectionFactory;
-	
-	@Autowired
-	private NamespaceRedisService namespaceRedisService;
-	
 	// 没有实际使用，只是用来确定注入的顺序
 	@Autowired
 	private EntityRegister entityRegister;
 
-	private String serviceEntity;
-	private RedisStateMachinePersister<String, String> redisStateMachinePersister;
-	protected Builder<String, String> builder;
+	@Autowired
+	private Scheduler scheduler;
 
-	// 包含timer的状态列表，如果包含timer这种状态的实例，重启服务器时候必须restore这个状态机
-	private Set<String> timerStates = new HashSet<String>();
+	private static String serviceEntity;
+	
+	protected static Builder<String, String> builder;
 
-	// 所有的有定时器的状态的状态机，持久化到内存
-	private HashMap<Long, StateMachine<String, String>> timerMachines = new HashMap<>();
+	// 包含timer的状态列表，如果包含timer这种状态的实例
+	private static HashMap<String, Set<Timer>> timerStates = new HashMap<>();
 
 	public String getServiceEntity() {
 		return serviceEntity;
 	}
+	public JpaRepository<T, Long> getJpaRepository() {
+		if(jpaRepository!=null) {
+			return jpaRepository;
+		}else {
+			return SmartQuery.getStructure(serviceEntity).getJpaRepository();
+		}
+	}
+
 
 	/**
 	 * 返回事件是否成功执行
@@ -211,17 +237,12 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	@PostConstruct
 	private void base_init() throws Exception {
 		this.init();
-		
-		RedisStateMachineContextRepository<String, String> repository = new RedisStateMachineContextRepository<String, String>(connectionFactory);
-		RepositoryStateMachinePersist<String, String> repositoryStateMachinePersist = new RepositoryStateMachinePersist<String, String>(repository);
-		redisStateMachinePersister = new RedisStateMachinePersister<String, String>(repositoryStateMachinePersist);
-		
 		ResolvableType resolvableType = ResolvableType.forClass(jpaRepository.getClass());
 		Class<?> entityClass = resolvableType.as(JpaRepository.class).getGeneric(0).resolve();
 		EntityStructure structure = SmartQuery.getStructure(entityClass);
 
 		// 设置服务对应的实例名字
-		this.serviceEntity = structure.getName();
+		serviceEntity = structure.getName();
 
 		builder = StateMachineBuilder.<String, String>builder();
 		List<State> allStates = stateRepository.findByEntity(structure.getName());
@@ -249,53 +270,48 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				builder.configureTransitions().withChoice().last(state.getLastTarget().getCode());
 			}
 
-			if (StringUtils.hasText(state.getEnterAction()) && StringUtils.hasText(state.getExitAction())) {
-				builder.configureStates().withStates().state(state.getCode(),
-						UnauthorizeActionFactory(state.getEnterAction()),
-						UnauthorizeActionFactory(state.getExitAction()));
-			} else if (StringUtils.hasText(state.getEnterAction())) {
-				builder.configureStates().withStates().state(state.getCode(),
-						UnauthorizeActionFactory(state.getEnterAction()), null);
+			if (StringUtils.hasText(state.getEnterAction())) {
+				builder.configureStates().withStates().stateEntry(state.getCode(),
+						UnauthorizeActionFactory(state.getEnterAction()), errorAction());
 			} else if (StringUtils.hasText(state.getExitAction())) {
-				builder.configureStates().withStates().state(state.getCode(), null,
-						UnauthorizeActionFactory(state.getExitAction()));
+				builder.configureStates().withStates().stateExit(state.getCode(),
+						UnauthorizeActionFactory(state.getExitAction()), errorAction());
 			}
 
 			Set<Timer> timers = state.getTimers();
 			for (Timer timer : timers) {
-
-				// 如果这种状态涉及到timer，把他加入集合中
-				timerStates.add(state.getCode());
-				if (timer.getTarget() == null) {
-					InternalTransitionConfigurer<String, String> eventTemp1 = builder.configureTransitions()
-							.withInternal().source(state.getCode());
-
-					if (timer.getTimerInterval() != null && !timer.getTimerInterval().equals(0)) {
-						if (timer.getTimerInterval() < 10000) {
-							throw new BusinessException(1765, "timer间隔不低于10s");
-						}
-						eventTemp1.timer(timer.getTimerInterval());
-					} else if (timer.getTimerOnce() != null && !timer.getTimerOnce().equals(0)) {
-						eventTemp1.timerOnce(timer.getTimerOnce());
+				if (timer.getTimerInterval() != null && !timer.getTimerInterval().equals(0)) {
+					if (timer.getTimerInterval() < 10) {
+						throw new BusinessException(1765, "timer间隔不低于10s");
 					}
-					if (StringUtils.hasText(timer.getAction())) {
-						eventTemp1.action(TimerUnauthorizeActionFactory(timer.getAction(), state.getCode()));
-					}
-				} else {
-					ExternalTransitionConfigurer<String, String> eventTemp2 = builder.configureTransitions()
-							.withExternal().source(state.getCode()).target(timer.getTarget().getCode());
-					if (timer.getTimerInterval() != null && !timer.getTimerInterval().equals(0)) {
-						if (timer.getTimerInterval() < 10000) {
-							throw new BusinessException(1765, "timer间隔不低于10s");
-						}
-						eventTemp2.timer(timer.getTimerInterval());
-					} else if (timer.getTimerOnce() != null && !timer.getTimerOnce().equals(0)) {
-						eventTemp2.timerOnce(timer.getTimerOnce());
-					}
-					if (StringUtils.hasText(timer.getAction())) {
-						eventTemp2.action(TimerUnauthorizeActionFactory(timer.getAction(), state.getCode()));
+				} else if (timer.getTimerOnce() != null && !timer.getTimerOnce().equals(0)) {
+					if (timer.getTimerInterval() < 10) {
+						throw new BusinessException(1765, "timer间隔不低于10s");
 					}
 				}
+				if (!StringUtils.hasText(timer.getAction())) {
+					throw new BusinessException(1521, "Timer的动作不能为空");
+				}
+				try {
+					Method method = this.getClass().getDeclaredMethod(timer.getAction(), Long.class,
+							StateMachine.class);
+					StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
+					if (annotation == null) {
+						throw new BusinessException(1861,
+								serviceEntity + "服务 ," + timer.getAction() + "的方法，必须使用StateMachineAction注解，才能生效");
+					}
+				} catch (NoSuchMethodException e) {
+					e.printStackTrace();
+					throw new BusinessException(1861, serviceEntity + "服务，没有" + timer.getAction() + "的方法");
+				} catch (SecurityException e) {
+					e.printStackTrace();
+					throw new BusinessException(1861, serviceEntity + "服务，禁止访问" + timer.getAction() + "方法");
+				}
+
+				// 如果这种状态涉及到timer，把他加入集合中
+				Set<Timer> sets = timerStates.getOrDefault(state.getCode(), new HashSet<Timer>());
+				sets.add(timer);
+				timerStates.put(state.getCode(), sets);
 			}
 
 			Set<Event> events = state.getEvents();
@@ -304,7 +320,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 					InternalTransitionConfigurer<String, String> eventTemp1 = builder.configureTransitions()
 							.withInternal().source(state.getCode()).event(event.getCode());
 					if (StringUtils.hasText(event.getAction())) {
-						eventTemp1.action(AuthorizeActionFactory(event.getAction()),errorAction());
+						eventTemp1.action(AuthorizeActionFactory(event.getAction()), errorAction());
 					}
 					if (StringUtils.hasText(event.getGuardSpel())) {
 						eventTemp1.guard(guardFactory(event.getGuardSpel()));
@@ -315,7 +331,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 							.withExternal().source(state.getCode()).target(event.getTarget().getCode())
 							.event(event.getCode());
 					if (StringUtils.hasText(event.getAction())) {
-						eventTemp2.action(AuthorizeActionFactory(event.getAction()),errorAction());
+						eventTemp2.action(AuthorizeActionFactory(event.getAction()), errorAction());
 					}
 					if (StringUtils.hasText(event.getGuardSpel())) {
 						eventTemp2.guard(guardFactory(event.getGuardSpel()));
@@ -324,8 +340,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			}
 		}
 		System.out.println(structure.getName() + "状态机初始化完成");
-		restoreTimerFromRedis();
-		System.out.println(structure.getName() + "Timer状态机从redis恢复");
 
 	}
 
@@ -338,14 +352,13 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 */
 	private StateMachine<String, String> acquireStateMachine(Long id) {
 
-		String machineId = this.serviceEntity + String.valueOf(id);
 		StateMachine<String, String> stateMachine = builder.build();
-		T findById = this.findById(id);
+		T findById = findById(id);
 		if (findById != null) {
 			if (findById.getState() != null) {
 				DefaultExtendedState defaultExtendedState = new DefaultExtendedState();
 				defaultExtendedState.getVariables().put("id", id);
-				defaultExtendedState.getVariables().put("entity", this.serviceEntity);
+				defaultExtendedState.getVariables().put("entity", serviceEntity);
 				DefaultStateMachineContext<String, String> stateMachineContext = new DefaultStateMachineContext<String, String>(
 						findById.getState().getCode(), null, null, defaultExtendedState, null, null);
 				stateMachine.getStateMachineAccessor()
@@ -360,68 +373,46 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 													org.springframework.statemachine.state.State<String, String> state,
 													Message<String> message, Transition<String, String> transition,
 													StateMachine<String, String> stateMachine) {
-												if (timerStates.contains(state.getId())) {
-													timerMachines.put(id, stateMachine);
-													try {
-														redisStateMachinePersister.persist(stateMachine, machineId);
-														timerIdSaveToRedis(id);
-													} catch (Exception e) {
-														e.printStackTrace();
-													}
-												} else {
-													StateMachine<String, String> removed = timerMachines.remove(id);
-													if (removed != null) {
-														timerIdRemoveFromRedis(id);
-														removed.stop();
-													}
+												stopJobs(serviceEntity, id);
+												if (timerStates.keySet().contains(state.getId())) {
+													startJobs(serviceEntity, id, timerStates.get(state.getId()));
 												}
 											}
+
 										});
 							}
 						});
 			}
 			stateMachine.getExtendedState().getVariables().put("id", id);
-			stateMachine.getExtendedState().getVariables().put("entity", this.serviceEntity);
+			stateMachine.getExtendedState().getVariables().put("entity", serviceEntity);
 			stateMachine.start();
 			return stateMachine;
 		} else {
 			throw new BusinessException(1273, "id不存在");
 		}
 	}
-	
-	
-	//timer的id持久化到redis里面，方便重启时候恢复
-	private void timerIdSaveToRedis(Long id) {
-		namespaceRedisService.sAdd(RedisNamespace.TIMER, serviceEntity, String.valueOf(id));
-	}
-	//timer的id从redis里面删除
-	private void timerIdRemoveFromRedis(Long id) {
-		namespaceRedisService.sRemove(RedisNamespace.TIMER, serviceEntity, String.valueOf(id));
-		
-	}
-	
-	private void restoreTimerFromRedis() {
-		
-		Set<String> sMembers = namespaceRedisService.sMembers(RedisNamespace.TIMER, serviceEntity);
-		StateMachine<String, String> build;
-		for (String id : sMembers) {
-			String machineId = this.serviceEntity + id;
-			build = builder.build();
-			try {
-				build = redisStateMachinePersister.restore(build, machineId);
-				timerMachines.put(Long.valueOf(id), build);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
+
+//	private void restoreTimerFromRedis() {
+//
+//		Set<String> sMembers = namespaceRedisService.sMembers(RedisNamespace.TIMER, serviceEntity);
+//		StateMachine<String, String> build;
+//		for (String id : sMembers) {
+//			String machineId = this.serviceEntity + id;
+//			build = builder.build();
+//			try {
+//				build = redisStateMachinePersister.restore(build, machineId);
+//				timerMachines.put(Long.valueOf(id), build);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 
 	private Action<String, String> AuthorizeActionFactory(String actionStr) {
 
 		StateMachineService<T> _this = this;
 		try {
-			Method method = _this.getClass().getDeclaredMethod(actionStr, Long.class);
+			Method method = _this.getClass().getDeclaredMethod(actionStr, Long.class, StateMachine.class);
 			StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
 			if (annotation == null) {
 				throw new BusinessException(1861,
@@ -436,9 +427,9 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 					if (!eventExecutableRole(findByEntityAndCode).contains(ContextUtils.getRole())) {
 						throw new BusinessException(1231, "角色" + ContextUtils.getRole() + "无操作权限");
 					}
-
 					try {
-						method.invoke(_this, context.getExtendedState().get("id", Long.class));
+						method.invoke(_this, context.getExtendedState().get("id", Long.class),
+								context.getStateMachine());
 					} catch (IllegalAccessException e) {
 						e.printStackTrace();
 						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法访问");
@@ -462,124 +453,152 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	}
 
+	private Action<String, String> UnauthorizeActionFactory(String actionStr) {
+
+		StateMachineService<T> _this = this;
+		try {
+			Method method = _this.getClass().getDeclaredMethod(actionStr, Long.class, StateMachine.class);
+			StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
+			if (annotation == null) {
+				throw new BusinessException(1861,
+						serviceEntity + "服务 ," + actionStr + "的方法，必须使用StateMachineAction注解，才能生效");
+			}
+
+			return new Action<String, String>() {
+				@Override
+				public void execute(StateContext<String, String> context) {
+					try {
+						method.invoke(_this, context.getExtendedState().get("id", Long.class),
+								context.getStateMachine());
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法访问");
+					} catch (IllegalArgumentException e) {
+						e.printStackTrace();
+						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法参数");
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+						throw new BusinessException(2000, e.getCause().getMessage());
+					}
+				}
+			};
+
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+			throw new BusinessException(1861, serviceEntity + "服务，没有" + actionStr + "的方法");
+		} catch (SecurityException e) {
+			e.printStackTrace();
+			throw new BusinessException(1861, serviceEntity + "服务，禁止访问" + actionStr + "方法");
+		}
+	}
+
 	private Action<String, String> errorAction() {
 		return new Action<String, String>() {
-
 			@Override
 			public void execute(StateContext<String, String> context) {
-				// RuntimeException("MyError") added to context
 				Exception exception = context.getException();
-				if(exception instanceof BusinessException) {
-					throw (BusinessException)exception;
-				}else {
+				if (exception instanceof BusinessException) {
+					throw (BusinessException) exception;
+				} else {
 					exception.printStackTrace();
 					throw new BusinessException(3000, exception.getMessage());
 				}
 			}
 		};
 	}
-	
-	
-	private Action<String, String> UnauthorizeActionFactory(String actionStr) {
 
-		StateMachineService<T> _this = this;
+	private void stopJobs(String serviceEntity, Long id) {
+		GroupMatcher<JobKey> jobKeyGroupMatcher = GroupMatcher.jobGroupEquals(serviceEntity + id);
+		Set<JobKey> jobKeySet;
 		try {
-			Method method = _this.getClass().getDeclaredMethod(actionStr, Long.class);
-			StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
-			if (annotation == null) {
-				throw new BusinessException(1861,
-						serviceEntity + "服务 ," + actionStr + "的方法，必须使用StateMachineAction注解，才能生效");
+			jobKeySet = scheduler.getJobKeys(jobKeyGroupMatcher);
+			for (JobKey jobKey : jobKeySet) {
+//				JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+//				if (jobDetail == null)
+//					return;
+				scheduler.deleteJob(jobKey);
 			}
-
-			return new Action<String, String>() {
-				@Override
-				public void execute(StateContext<String, String> context) {
-					try {
-						method.invoke(_this, context.getExtendedState().get("id", Long.class));
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法访问");
-					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法参数");
-					} catch (InvocationTargetException e) {
-						e.printStackTrace();
-						throw new BusinessException(2000, e.getCause().getMessage());
-					}
-				}
-			};
-
-		} catch (NoSuchMethodException e) {
+		} catch (SchedulerException e) {
 			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，没有" + actionStr + "的方法");
-		} catch (SecurityException e) {
-			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，禁止访问" + actionStr + "方法");
 		}
+
 	}
 
-	private Action<String, String> TimerUnauthorizeActionFactory(String actionStr, String state) {
-		StateMachineService<T> _this = this;
-		try {
-			Method method = _this.getClass().getDeclaredMethod(actionStr, Long.class);
-			StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
-			if (annotation == null) {
-				throw new BusinessException(1861,
-						serviceEntity + "服务 ," + actionStr + "的方法，必须使用StateMachineAction注解，才能生效");
+	private void startJobs(String serviceEntity, Long id, Set<Timer> timers) {
+		for (Timer timer : timers) {
+			JobDataMap map = new JobDataMap();
+			map.put("entity", serviceEntity);
+			map.put("id", id);
+			map.put("action", timer.getAction());
+			JobDetail jobDetail = JobBuilder.newJob(this.getClass()).withIdentity(timer.getCode(), serviceEntity + id)
+					.usingJobData(map).build();
+			SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule();
+			if (timer.getTimerOnce() != null && timer.getTimerOnce() > 0) {
+				simpleScheduleBuilder.withIntervalInSeconds(timer.getTimerOnce());
+				simpleScheduleBuilder.withRepeatCount(1);
+			} else {
+				simpleScheduleBuilder.withIntervalInSeconds(timer.getTimerInterval()).repeatForever();
+			}
+			SimpleTrigger simpleTrigger = TriggerBuilder.newTrigger().withIdentity(timer.getCode(), serviceEntity + id)
+					.withSchedule(simpleScheduleBuilder).build();
+			try {
+				scheduler.scheduleJob(jobDetail, simpleTrigger);
+			} catch (SchedulerException e) {
+				e.printStackTrace();
 			}
 
-			return new Action<String, String>() {
-				@Override
-				public void execute(StateContext<String, String> context) {
-					try {
-						Long id = context.getExtendedState().get("id", Long.class);
-						T findById = findById(id);
-						String code = findById.getState().getCode();
-						if(!code.equals(state)) {
-							StateMachine<String, String> removed = timerMachines.remove(id);
-							if (removed != null) {
-								timerIdRemoveFromRedis(id);
-								removed.stop();
-							}
-							return;
-						}
-						String machineId = serviceEntity+ state + id;
-						if(namespaceRedisService.exists(RedisNamespace.TIMER_ACTION, machineId)) {
-							return;
-						}
-						namespaceRedisService.set(RedisNamespace.TIMER_ACTION, machineId, "", 9);
-						method.invoke(_this, context.getExtendedState().get("id", Long.class));
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法访问");
-					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法参数");
-					} catch (InvocationTargetException e) {
-						e.printStackTrace();
-						throw new BusinessException(2000, e.getCause().getMessage());
-					}
-				}
-			};
-
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，没有" + actionStr + "的方法");
-		} catch (SecurityException e) {
-			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，禁止访问" + actionStr + "方法");
 		}
 	}
-
-	//spel 内的对象 user entity
+	// spel 内的对象 user entity
 	private Guard<String, String> guardFactory(String spel) {
 		return new Guard<String, String>() {
 			@Override
 			public boolean evaluate(StateContext<String, String> context) {
-				System.out.println(spel);
-				return true;
+				Long id = context.getExtendedState().get("id", Long.class);
+				String username = ContextUtils.getCurrentUserName();
+				User user = userRepository.findByUserinfoMobile(username);
+				T findById = findById(id);
+				ExpressionParser parser = new SpelExpressionParser();
+				EvaluationContext spelContext = new StandardEvaluationContext(); 
+				spelContext.setVariable("user", user);
+				spelContext.setVariable("entity", findById);
+				return parser.parseExpression(spel,new TemplateParserContext()).getValue(spelContext, Boolean.class);
 			}
 		};
+	}
+	// quartz job 的执行函数
+	@Override
+	public void execute(JobExecutionContext context) {
+		String entity = context.getJobDetail().getJobDataMap().get("entity").toString();
+		String id = context.getJobDetail().getJobDataMap().get("id").toString();
+		String action = context.getJobDetail().getJobDataMap().getString("action");
+		try {
+			Method method = this.getClass().getDeclaredMethod(action, Long.class, StateMachine.class);
+			StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
+			if (annotation == null) {
+				throw new BusinessException(1861,
+						serviceEntity + "服务 ," + action + "的方法，必须使用StateMachineAction注解，才能生效");
+			}
+			try {
+				method.invoke(this, Long.valueOf(id),acquireStateMachine(Long.valueOf(id)));
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+				throw new BusinessException(1862, serviceEntity + "服务 ," + action + "的方法，非法访问");
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+				throw new BusinessException(1862, serviceEntity + "服务 ," + action + "的方法，非法参数");
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+				throw new BusinessException(2000, e.getCause().getMessage());
+			}
+
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+			throw new BusinessException(1861, serviceEntity + "服务，没有" + action + "的方法");
+		} catch (SecurityException e) {
+			e.printStackTrace();
+			throw new BusinessException(1861, serviceEntity + "服务，禁止访问" + action + "方法");
+		}
 	}
 
 }

@@ -5,7 +5,9 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.scheduling.quartz.QuartzJobBean;
 
+import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.tianyoukeji.parent.entity.IEntity;
 
 /**
@@ -21,13 +23,16 @@ public abstract class BaseService<T extends IEntity> {
 
 	@Autowired
 	private JpaRepository<T, Long> jpaRepository;
-
+	
+	public JpaRepository<T, Long> getJpaRepository() {
+		return jpaRepository;
+	}
 	/**
 	 *
 	 * null 如果id不存在.
 	 */
 	public T findById(Long id) {
-		Optional<T> findById = jpaRepository.findById(id);
+		Optional<T> findById = getJpaRepository().findById(id);
 		if(findById.isPresent()) {
 			return findById.get();
 		}else {
@@ -41,11 +46,11 @@ public abstract class BaseService<T extends IEntity> {
 	 */
 	
 	public List<T> findAll() {
-		return jpaRepository.findAll();
+		return getJpaRepository().findAll();
 	}
 
 	public Long count() {
-		return jpaRepository.count();
+		return getJpaRepository().count();
 	}
 
 	/**
@@ -54,7 +59,7 @@ public abstract class BaseService<T extends IEntity> {
 	 * @return
 	 */
 	public T save(T entity) {
-		return jpaRepository.save(entity);
+		return getJpaRepository().save(entity);
 	}
 	
 	/**
@@ -63,7 +68,7 @@ public abstract class BaseService<T extends IEntity> {
 	 * @return
 	 */
 	public T saveAndFlush(T entity) {
-		return jpaRepository.saveAndFlush(entity);
+		return getJpaRepository().saveAndFlush(entity);
 	}
 	
 	
@@ -72,6 +77,6 @@ public abstract class BaseService<T extends IEntity> {
 	 * @throws IllegalArgumentException  如果entity不存在
 	 */
 	public void delete(T entity) {
-		jpaRepository.delete(entity);
+		getJpaRepository().delete(entity);
 	}
 }
