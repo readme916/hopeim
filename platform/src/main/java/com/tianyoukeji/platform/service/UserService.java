@@ -59,6 +59,7 @@ public class UserService extends StateMachineService<User> {
 	 */
 	@StateMachineAction
 	public void enable(Long uuid , StateMachine<String,String> stateMachine) {
+		System.out.println(stateMachine.getState().getId());
 		System.out.println("enable  动作");
 	}
 	
@@ -70,7 +71,6 @@ public class UserService extends StateMachineService<User> {
 	@StateMachineAction
 	public void delete(Long uuid , StateMachine<String,String> stateMachine) {
 		System.out.println(new Date());
-		System.out.println(stateMachine.getState().getId());
 		System.out.println("delete  动作");
 	}
 	

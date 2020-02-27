@@ -59,12 +59,13 @@ import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.entity.Event;
 import com.tianyoukeji.parent.entity.EventRepository;
-import com.tianyoukeji.parent.entity.IStateMachineEntity;
 import com.tianyoukeji.parent.entity.State;
 import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.Timer;
+import com.tianyoukeji.parent.entity.TimerRepository;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
+import com.tianyoukeji.parent.entity.base.IStateMachineEntity;
 
 /**
  * 状态机服务基础服务类
@@ -83,12 +84,15 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	@Autowired
 	private StateRepository stateRepository;
-	
+
 	@Autowired
 	private UserRepository userRepository;
 
 	@Autowired
 	private EventRepository eventRepository;
+
+	@Autowired
+	private TimerRepository timerRepository;
 
 	// 没有实际使用，只是用来确定注入的顺序
 	@Autowired
@@ -97,32 +101,17 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	@Autowired
 	private Scheduler scheduler;
 
-	private static String serviceEntity;
-	
 	protected static Builder<String, String> builder;
 
-	// 包含timer的状态列表，如果包含timer这种状态的实例
-	private static HashMap<String, Set<Timer>> timerStates = new HashMap<>();
-
-	public String getServiceEntity() {
-		return serviceEntity;
-	}
-	public JpaRepository<T, Long> getJpaRepository() {
-		if(jpaRepository!=null) {
-			return jpaRepository;
-		}else {
-			return SmartQuery.getStructure(serviceEntity).getJpaRepository();
-		}
-	}
-
+	// key为entity名字
+	private HashMap<String, StateMachine<String, String>> stateMachineManager;
 
 	/**
 	 * 返回事件是否成功执行
 	 * 
 	 * @param id
 	 * @param eventCode
-	 * @return 仅仅当state和event和设置不一致的时候返回false 
-	 * guard的失败和action抛出异常都不影响返回值
+	 * @return 仅仅当state和event和设置不一致的时候返回false guard的失败和action抛出异常都不影响返回值
 	 */
 
 	@Transactional
@@ -149,7 +138,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			}).map(e -> e.getCode()).collect(Collectors.toList());
 			return events;
 		} else {
-			State findByEntityAndIsStart = stateRepository.findByEntityAndIsStart(serviceEntity, true);
+			State findByEntityAndIsStart = stateRepository.findByEntityAndIsStart(getServiceEntity(), true);
 			if (findByEntityAndIsStart != null) {
 				List<String> events = findByEntityAndIsStart.getEvents().stream().sorted(new Comparator<Event>() {
 					@Override
@@ -172,7 +161,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	public List<String> currentUserStateExecutableEvent(State state) {
 
 		if (state == null) {
-			State findByEntityAndIsStart = stateRepository.findByEntityAndIsStart(serviceEntity, true);
+			State findByEntityAndIsStart = stateRepository.findByEntityAndIsStart(getServiceEntity(), true);
 			if (findByEntityAndIsStart != null) {
 				state = findByEntityAndIsStart;
 			}
@@ -207,23 +196,87 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		}
 	}
 
+	/**
+	 * 根据当前实体的id，得到他的状态机
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public StateMachine<String, String> acquireStateMachine(Long id) {
+		StateMachine<String, String> stateMachine = builder.build();
+		T findById = findById(id);
+		if (findById != null) {
+			if (findById.getState() != null) {
+				DefaultExtendedState defaultExtendedState = new DefaultExtendedState();
+				defaultExtendedState.getVariables().put("id", id);
+				defaultExtendedState.getVariables().put("entity", getServiceEntity());
+				DefaultStateMachineContext<String, String> stateMachineContext = new DefaultStateMachineContext<String, String>(
+						findById.getState().getCode(), null, null, defaultExtendedState, null, null);
+				stateMachine.getStateMachineAccessor()
+						.doWithRegion(new StateMachineFunction<StateMachineAccess<String, String>>() {
+							@Override
+							public void apply(StateMachineAccess<String, String> function) {
+								function.resetStateMachine(stateMachineContext);
+								function.addStateMachineInterceptor(
+										new StateMachineInterceptorAdapter<String, String>() {
+											@Override
+											public void postStateChange(
+													org.springframework.statemachine.state.State<String, String> state,
+													Message<String> message, Transition<String, String> transition,
+													StateMachine<String, String> stateMachine) {
+												State findByEntityAndCode = stateRepository
+														.findByEntityAndCode(getServiceEntity(), state.getId());
+												if (findByEntityAndCode == null) {
+													throw new BusinessException(1274,
+															"不存在的状态" + stateMachine.getState().getId());
+												}
+												findById.setState(findByEntityAndCode);
+												save(findById);
 
-
+												stopJobs(getServiceEntity(), id);
+												Set<Timer> timers = timerRepository
+														.findByEntityAndSourceCode(getServiceEntity(), state.getId());
+												if (timers != null && !timers.isEmpty()) {
+													startJobs(getServiceEntity(), id, timers);
+												}
+											}
+										});
+							}
+						});
+			}
+			stateMachine.getExtendedState().getVariables().put("id", id);
+			stateMachine.getExtendedState().getVariables().put("entity", getServiceEntity());
+			stateMachine.start();
+			return stateMachine;
+		} else {
+			throw new BusinessException(1273, "id不存在");
+		}
+	}
 	// 内部方法 ----------------------------------------------------------------------
 
 	@PostConstruct
-	private void base_init() throws Exception {
-		this.init();
-		ResolvableType resolvableType = ResolvableType.forClass(jpaRepository.getClass());
-		Class<?> entityClass = resolvableType.as(JpaRepository.class).getGeneric(0).resolve();
-		EntityStructure structure = SmartQuery.getStructure(entityClass);
+	private void base_init() {
 
-		// 设置服务对应的实例名字
-		serviceEntity = structure.getName();
+		// 解决quartz和spring重复初始化问题
+//		if(builder!=null) {
+//			return;
+//		}
+		this.init();
+		try {
+			this._init_statemachine();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new BusinessException(1284, getServiceEntity()+"状态机初始化失败");
+		}
+
+	}
+
+	private void _init_statemachine() throws Exception{
 		builder = StateMachineBuilder.<String, String>builder();
-		List<State> allStates = stateRepository.findByEntity(structure.getName());
+		List<State> allStates = stateRepository.findByEntity(getServiceEntity());
 		if (allStates.isEmpty()) {
-			throw new BusinessException(1321, structure.getName() + "的states，没有配置");
+			throw new BusinessException(1321, getServiceEntity() + "的states，没有配置");
 		}
 		builder.configureConfiguration().withVerifier().enabled(false);
 		builder.configureStates().withStates()
@@ -261,7 +314,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 						throw new BusinessException(1765, "timer间隔不低于10s");
 					}
 				} else if (timer.getTimerOnce() != null && !timer.getTimerOnce().equals(0)) {
-					if (timer.getTimerInterval() < 10) {
+					if (timer.getTimerOnce() < 10) {
 						throw new BusinessException(1765, "timer间隔不低于10s");
 					}
 				}
@@ -274,20 +327,16 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 					StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
 					if (annotation == null) {
 						throw new BusinessException(1861,
-								serviceEntity + "服务 ," + timer.getAction() + "的方法，必须使用StateMachineAction注解，才能生效");
+								getServiceEntity() + "服务 ," + timer.getAction() + "的方法，必须使用StateMachineAction注解，才能生效");
 					}
 				} catch (NoSuchMethodException e) {
 					e.printStackTrace();
-					throw new BusinessException(1861, serviceEntity + "服务，没有" + timer.getAction() + "的方法");
+					throw new BusinessException(1861, getServiceEntity() + "服务，没有" + timer.getAction() + "的方法");
 				} catch (SecurityException e) {
 					e.printStackTrace();
-					throw new BusinessException(1861, serviceEntity + "服务，禁止访问" + timer.getAction() + "方法");
+					throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + timer.getAction() + "方法");
 				}
 
-				// 如果这种状态涉及到timer，把他加入集合中
-				Set<Timer> sets = timerStates.getOrDefault(state.getCode(), new HashSet<Timer>());
-				sets.add(timer);
-				timerStates.put(state.getCode(), sets);
 			}
 
 			Set<Event> events = state.getEvents();
@@ -315,64 +364,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				}
 			}
 		}
-		System.out.println(structure.getName() + "状态机初始化完成");
-
-	}
-
-	/**
-	 * 根据当前实体的id，得到他的状态机
-	 * 
-	 * @param id
-	 * @return
-	 * @throws Exception
-	 */
-	private StateMachine<String, String> acquireStateMachine(Long id) {
-		StateMachine<String, String> stateMachine = builder.build();
-		T findById = findById(id);
-		if (findById != null) {
-			if (findById.getState() != null) {
-				DefaultExtendedState defaultExtendedState = new DefaultExtendedState();
-				defaultExtendedState.getVariables().put("id", id);
-				defaultExtendedState.getVariables().put("entity", serviceEntity);
-				DefaultStateMachineContext<String, String> stateMachineContext = new DefaultStateMachineContext<String, String>(
-						findById.getState().getCode(), null, null, defaultExtendedState, null, null);
-				stateMachine.getStateMachineAccessor()
-						.doWithRegion(new StateMachineFunction<StateMachineAccess<String, String>>() {
-							@Override
-							public void apply(StateMachineAccess<String, String> function) {
-								function.resetStateMachine(stateMachineContext);
-								function.addStateMachineInterceptor(
-										new StateMachineInterceptorAdapter<String, String>() {
-											@Override
-											public void postStateChange(
-													org.springframework.statemachine.state.State<String, String> state,
-													Message<String> message, Transition<String, String> transition,
-													StateMachine<String, String> stateMachine) {
-												State findByEntityAndCode = stateRepository.findByEntityAndCode(serviceEntity,
-														state.getId());
-												if (findByEntityAndCode == null) {
-													throw new BusinessException(1274, "不存在的状态" + stateMachine.getState().getId());
-												}
-												findById.setState(findByEntityAndCode);
-												save(findById);
-												
-												stopJobs(serviceEntity, id);
-												if (timerStates.keySet().contains(state.getId())) {
-													startJobs(serviceEntity, id, timerStates.get(state.getId()));
-												}
-											}
-
-										});
-							}
-						});
-			}
-			stateMachine.getExtendedState().getVariables().put("id", id);
-			stateMachine.getExtendedState().getVariables().put("entity", serviceEntity);
-			stateMachine.start();
-			return stateMachine;
-		} else {
-			throw new BusinessException(1273, "id不存在");
-		}
+		System.out.println(getServiceEntity() + "状态机初始化完成");
 	}
 
 	private Action<String, String> AuthorizeActionFactory(String actionStr) {
@@ -383,14 +375,14 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
 			if (annotation == null) {
 				throw new BusinessException(1861,
-						serviceEntity + "服务 ," + actionStr + "的方法，必须使用StateMachineAction注解，才能生效");
+						getServiceEntity() + "服务 ," + actionStr + "的方法，必须使用StateMachineAction注解，才能生效");
 			}
 
 			return new Action<String, String>() {
 				@Override
 				public void execute(StateContext<String, String> context) {
 
-					Event findByEntityAndCode = eventRepository.findByEntityAndCode(serviceEntity, actionStr);
+					Event findByEntityAndCode = eventRepository.findByEntityAndCode(getServiceEntity(), actionStr);
 					if (!eventExecutableRole(findByEntityAndCode).contains(ContextUtils.getRole())) {
 						throw new BusinessException(1231, "角色" + ContextUtils.getRole() + "无操作权限");
 					}
@@ -399,10 +391,10 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 								context.getStateMachine());
 					} catch (IllegalAccessException e) {
 						e.printStackTrace();
-						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法访问");
+						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法访问");
 					} catch (IllegalArgumentException e) {
 						e.printStackTrace();
-						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法参数");
+						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法参数");
 					} catch (InvocationTargetException e) {
 						e.printStackTrace();
 						throw new BusinessException(2000, e.getCause().getMessage());
@@ -412,10 +404,10 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，没有" + actionStr + "的方法");
+			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
 		} catch (SecurityException e) {
 			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，禁止访问" + actionStr + "方法");
+			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
 		}
 
 	}
@@ -428,7 +420,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
 			if (annotation == null) {
 				throw new BusinessException(1861,
-						serviceEntity + "服务 ," + actionStr + "的方法，必须使用StateMachineAction注解，才能生效");
+						getServiceEntity() + "服务 ," + actionStr + "的方法，必须使用StateMachineAction注解，才能生效");
 			}
 
 			return new Action<String, String>() {
@@ -439,10 +431,10 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 								context.getStateMachine());
 					} catch (IllegalAccessException e) {
 						e.printStackTrace();
-						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法访问");
+						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法访问");
 					} catch (IllegalArgumentException e) {
 						e.printStackTrace();
-						throw new BusinessException(1862, serviceEntity + "服务 ," + actionStr + "的方法，非法参数");
+						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法参数");
 					} catch (InvocationTargetException e) {
 						e.printStackTrace();
 						throw new BusinessException(2000, e.getCause().getMessage());
@@ -452,10 +444,10 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，没有" + actionStr + "的方法");
+			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
 		} catch (SecurityException e) {
 			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，禁止访问" + actionStr + "方法");
+			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
 		}
 	}
 
@@ -516,6 +508,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 		}
 	}
+
 	// spel 内的对象 user entity
 	private Guard<String, String> guardFactory(String spel) {
 		return new Guard<String, String>() {
@@ -526,13 +519,14 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				User user = userRepository.findByUserinfoMobile(username);
 				T findById = findById(id);
 				ExpressionParser parser = new SpelExpressionParser();
-				EvaluationContext spelContext = new StandardEvaluationContext(); 
+				EvaluationContext spelContext = new StandardEvaluationContext();
 				spelContext.setVariable("user", user);
 				spelContext.setVariable("entity", findById);
-				return parser.parseExpression(spel,new TemplateParserContext()).getValue(spelContext, Boolean.class);
+				return parser.parseExpression(spel, new TemplateParserContext()).getValue(spelContext, Boolean.class);
 			}
 		};
 	}
+
 	// quartz job 的执行函数
 	@Override
 	public void execute(JobExecutionContext context) {
@@ -543,16 +537,16 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
 			if (annotation == null) {
 				throw new BusinessException(1861,
-						serviceEntity + "服务 ," + action + "的方法，必须使用StateMachineAction注解，才能生效");
+						getServiceEntity() + "服务 ," + action + "的方法，必须使用StateMachineAction注解，才能生效");
 			}
 			try {
-				method.invoke(this, Long.valueOf(id),acquireStateMachine(Long.valueOf(id)));
+				method.invoke(this, Long.valueOf(id), acquireStateMachine(Long.valueOf(id)));
 			} catch (IllegalAccessException e) {
 				e.printStackTrace();
-				throw new BusinessException(1862, serviceEntity + "服务 ," + action + "的方法，非法访问");
+				throw new BusinessException(1862, getServiceEntity() + "服务 ," + action + "的方法，非法访问");
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
-				throw new BusinessException(1862, serviceEntity + "服务 ," + action + "的方法，非法参数");
+				throw new BusinessException(1862, getServiceEntity() + "服务 ," + action + "的方法，非法参数");
 			} catch (InvocationTargetException e) {
 				e.printStackTrace();
 				throw new BusinessException(2000, e.getCause().getMessage());
@@ -560,10 +554,10 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，没有" + action + "的方法");
+			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + action + "的方法");
 		} catch (SecurityException e) {
 			e.printStackTrace();
-			throw new BusinessException(1861, serviceEntity + "服务，禁止访问" + action + "方法");
+			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + action + "方法");
 		}
 	}
 

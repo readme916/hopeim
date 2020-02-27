@@ -8,6 +8,8 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
@@ -15,10 +17,13 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
+
 @Entity
 @Table(name="oauth_client_details")
 @EntityListeners(AuditingEntityListener.class)
-public class Oauth2Client implements IEntity{
+public class Oauth2Client implements IOrgEntity{
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -69,6 +74,18 @@ public class Oauth2Client implements IEntity{
 	
 	@Column(name="autoapprove")
 	private String autoapprove;
+	
+	@ManyToOne
+	@JoinColumn(name= "org_id")
+	private Org org;
+
+	public Org getOrg() {
+		return org;
+	}
+
+	public void setOrg(Org org) {
+		this.org = org;
+	}
 
 	public Long getUuid() {
 		return uuid;

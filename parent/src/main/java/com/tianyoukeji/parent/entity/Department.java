@@ -19,11 +19,13 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
 @Table(name = "department")
-public class Department implements IEntity{
+public class Department implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -52,9 +54,13 @@ public class Department implements IEntity{
 	private Set<User> users;
 
 	@ManyToOne
-	@JoinColumn(name="parent")
-	private Department parent;
+	@JoinColumn(name="manager_id")
+	private User manager;
 	
+	@ManyToOne
+	@JoinColumn(name="parent_id")
+	private Department parent;
+		
 	@OneToMany(mappedBy = "parent")	
 	private Set<Department> children;
 
@@ -62,6 +68,14 @@ public class Department implements IEntity{
 	@JoinColumn(name = "department_template_id")
 	private DepartmentTemplate departmentTemplate;
 	
+	public User getManager() {
+		return manager;
+	}
+
+	public void setManager(User manager) {
+		this.manager = manager;
+	}
+
 	public Department getParent() {
 		return parent;
 	}

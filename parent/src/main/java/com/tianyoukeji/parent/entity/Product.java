@@ -21,15 +21,18 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
+
 /**
- * parent product 是 child product的组合，每个child product可以有不同的供应商，组合成一个产品，每个parent产品的sku 对应于一个设备 
+ * 产品和设备的区别，产品是卖出之前，在挂卖的商品，产品卖出后有order
  * @author Administrator
  *
  */
 
 @Entity
 @Table(name = "product")
-public class Product implements IEntity{
+public class Product implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -56,6 +59,9 @@ public class Product implements IEntity{
 	@OneToMany(mappedBy = "product")
 	private Set<ProductSKU> skus;
 	
+	@Column(name = "supplier")
+	private String supplier;
+
 	
 	//每个产品支持的支付渠道
 	@ManyToMany
@@ -69,27 +75,24 @@ public class Product implements IEntity{
 	private Set<InsureChannel> insureChannels;
 	
 	@ManyToOne
-	@JoinColumn(name="parent")
-	private Product parent;
-	
-	@OneToMany(mappedBy = "parent")	
-	private Set<Product> children;
+	@JoinColumn(name= "org_id")
+	private Org org;
 	
 	
-	public Product getParent() {
-		return parent;
+	public Org getOrg() {
+		return org;
 	}
 
-	public void setParent(Product parent) {
-		this.parent = parent;
+	public void setOrg(Org org) {
+		this.org = org;
 	}
 
-	public Set<Product> getChildren() {
-		return children;
+	public String getSupplier() {
+		return supplier;
 	}
 
-	public void setChildren(Set<Product> children) {
-		this.children = children;
+	public void setSupplier(String supplier) {
+		this.supplier = supplier;
 	}
 
 	public Set<InsureChannel> getInsureChannels() {

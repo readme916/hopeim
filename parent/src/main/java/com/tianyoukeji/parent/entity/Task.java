@@ -23,6 +23,10 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
+import com.tianyoukeji.parent.entity.base.IStateMachineEntity;
+
 
 /**
  * 设备对应  product sku
@@ -31,7 +35,7 @@ import org.springframework.data.annotation.LastModifiedDate;
  */
 @Entity
 @Table(name = "task")
-public class Task implements IEntity{
+public class Task implements IOrgEntity,IStateMachineEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -56,23 +60,47 @@ public class Task implements IEntity{
 	private String description;
 	
 	@ManyToOne
-	@JoinColumn(name="parent")
+	@JoinColumn(name="parent_id")
 	private Task parent;
 	
 	@OneToMany(mappedBy = "parent")	
 	private Set<Task> children;
 	
 	@ManyToOne
-	@JoinColumn(name = "from_user")
+	@JoinColumn(name = "from_user_id")
 	private User fromUser;
 	
 	@ManyToOne
-	@JoinColumn(name = "to_user")
+	@JoinColumn(name = "to_user_id")
 	private User toUser;
 	
 	@ManyToMany
 	@JoinTable(name="cc_task",joinColumns = { @JoinColumn(name = "task_id") }, inverseJoinColumns = { @JoinColumn(name = "user_id") })
 	private Set<User> cc;
+
+	@ManyToOne
+	@JoinColumn(name= "org_id")
+	private Org org;
+	
+	@ManyToOne
+	@JoinColumn(name= "state_id")
+	private State state;
+	
+	public Org getOrg() {
+		return org;
+	}
+
+	public void setOrg(Org org) {
+		this.org = org;
+	}
+
+	public State getState() {
+		return state;
+	}
+
+	public void setState(State state) {
+		this.state = state;
+	}
 
 	public Long getUuid() {
 		return uuid;

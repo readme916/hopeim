@@ -21,11 +21,13 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
 @Table(name = "timer", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
-public class Timer implements IEntity{
+public class Timer implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -69,7 +71,17 @@ public class Timer implements IEntity{
 	@Column(name = "time_once")
 	private Integer timerOnce;
 	
+	@ManyToOne
+	@JoinColumn(name= "org_id")
+	private Org org;
 
+	public Org getOrg() {
+		return org;
+	}
+
+	public void setOrg(Org org) {
+		this.org = org;
+	}
 
 	public Integer getTimerOnce() {
 		return timerOnce;

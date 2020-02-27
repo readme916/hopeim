@@ -21,12 +21,12 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.tianyoukeji.parent.entity.IEntity;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
 @Table(name = "timer_template", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
-public class TimerTemplate implements IEntity{
+public class TimerTemplate implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -59,11 +59,6 @@ public class TimerTemplate implements IEntity{
 	@ManyToOne
 	@JoinColumn(name = "source_state_template_id")
 	private StateTemplate source;
-	
-	//内部事件，target为null
-	@ManyToOne
-	@JoinColumn(name = "target_state_template_id")
-	private StateTemplate target;
 	
 	@Column(name = "action")
 	private String action;
@@ -165,15 +160,6 @@ public class TimerTemplate implements IEntity{
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
-	public StateTemplate getTarget() {
-		return target;
-	}
-
-	public void setTarget(StateTemplate target) {
-		this.target = target;
-	}
-
 
 	public String getAction() {
 		return action;

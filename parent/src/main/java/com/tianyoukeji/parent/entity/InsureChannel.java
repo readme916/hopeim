@@ -5,8 +5,6 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -18,13 +16,11 @@ import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
-
-import com.tianyoukeji.parent.entity.Equipment.PayPeriod;
-import com.tianyoukeji.parent.entity.Equipment.PayType;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 
 @Entity
 @Table(name = "insure_channel")
-public class InsureChannel implements IEntity{
+public class InsureChannel implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")

@@ -18,12 +18,14 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.template.MenuTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 
 @Entity
 @Table(name = "menu")
-public class Menu implements IEntity{
+public class Menu implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -60,7 +62,7 @@ public class Menu implements IEntity{
 	private Set<Role> roles;
 
 	@ManyToOne
-	@JoinColumn(name="parent")
+	@JoinColumn(name="parent_id")
 	private Menu parent;
 	
 	@OneToMany(mappedBy = "parent")	
@@ -70,6 +72,18 @@ public class Menu implements IEntity{
 	@JoinColumn(name= "menu_template_id")
 	private MenuTemplate menuTemplate;
 	
+	@ManyToOne
+	@JoinColumn(name= "org_id")
+	private Org org;
+	
+	
+	public Org getOrg() {
+		return org;
+	}
+
+	public void setOrg(Org org) {
+		this.org = org;
+	}
 	public Set<Role> getRoles() {
 		return roles;
 	}

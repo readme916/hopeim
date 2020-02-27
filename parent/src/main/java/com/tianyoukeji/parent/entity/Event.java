@@ -21,11 +21,13 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
 @Table(name = "event", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
-public class Event implements IEntity{
+public class Event implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -60,7 +62,7 @@ public class Event implements IEntity{
 	
 	//内部事件，target为null
 	@ManyToOne
-	@JoinColumn(name = "target")
+	@JoinColumn(name = "target_id")
 	private State target;
 	
 	//事件的限制条件spel表达式
@@ -76,6 +78,18 @@ public class Event implements IEntity{
 	@ManyToMany(mappedBy = "events")
 	private Set<Role> roles;
 	
+	@ManyToOne
+	@JoinColumn(name= "org_id")
+	private Org org;
+	
+	
+	public Org getOrg() {
+		return org;
+	}
+
+	public void setOrg(Org org) {
+		this.org = org;
+	}
 
 	public Set<Role> getRoles() {
 		return roles;

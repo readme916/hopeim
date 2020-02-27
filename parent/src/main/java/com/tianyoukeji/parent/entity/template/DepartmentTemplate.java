@@ -19,11 +19,11 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.tianyoukeji.parent.entity.IEntity;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 
 @Entity
 @Table(name = "department_template")
-public class DepartmentTemplate implements IEntity{
+public class DepartmentTemplate implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -50,7 +50,7 @@ public class DepartmentTemplate implements IEntity{
 
 
 	@ManyToOne
-	@JoinColumn(name="parent")
+	@JoinColumn(name="parent_id")
 	private DepartmentTemplate parent;
 	
 	@OneToMany(mappedBy = "parent")	
