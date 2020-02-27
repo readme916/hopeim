@@ -1,4 +1,4 @@
-package com.tianyoukeji.parent.entity;
+package com.tianyoukeji.parent.entity.base;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -15,15 +15,17 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.tianyoukeji.parent.entity.Department;
+import com.tianyoukeji.parent.entity.Org;
+import com.tianyoukeji.parent.entity.Region;
+
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public interface IEntity extends Serializable{
-	public Long getUuid();
-	public void setUuid(Long uuid);
-	public Date getCreatedAt();
-	public void setCreatedAt(Date createdAt);
-	public Date getUpdatedAt();
-	public void setUpdatedAt(Date updatedAt);
-	public Long getVersion();
-	public void setVersion(Long version);
+public interface IRegionEntity extends IBaseEntity{
+	public Region getCountry();
+	public Region getProvince();
+	public Region getCity();
+	public void setCountry(Region country);
+	public void setProvince(Region province);
+	public void setCity(Region city);
 }

@@ -21,12 +21,12 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.tianyoukeji.parent.entity.IEntity;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
 @Table(name = "state_template", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
-public class StateTemplate implements IEntity{
+public class StateTemplate implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -68,14 +68,14 @@ public class StateTemplate implements IEntity{
 	private Boolean isChoice;
 	
 	@ManyToOne
-	@JoinColumn(name = "first_target")
+	@JoinColumn(name = "first_target_id")
 	private StateTemplate firstTarget;
 	
 	@Column(name = "first_guard_spel")
 	private String firstGuardSpel;
 	
 	@ManyToOne
-	@JoinColumn(name = "then_target")
+	@JoinColumn(name = "then_target_id")
 	private StateTemplate thenTarget;
 	
 	
@@ -83,7 +83,7 @@ public class StateTemplate implements IEntity{
 	private String thenGuardSpel;
 	
 	@ManyToOne
-	@JoinColumn(name = "last_target")
+	@JoinColumn(name = "last_target_id")
 	private StateTemplate lastTarget;
 	//分支事件结束
 

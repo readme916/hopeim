@@ -19,12 +19,13 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.tianyoukeji.parent.entity.Equipment.PayPeriod;
-import com.tianyoukeji.parent.entity.Equipment.PayType;
+import com.tianyoukeji.parent.entity.Order.PayPeriod;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IStateMachineEntity;
 
 @Entity
 @Table(name = "repayment_plan")
-public class RepaymentPlan implements IEntity{
+public class RepaymentPlan implements IStateMachineEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -42,10 +43,6 @@ public class RepaymentPlan implements IEntity{
 	@Column(name = "version")
 	private Long version;
 	
-	@Column(name="pay_period")
-	@Enumerated(EnumType.STRING)
-	private PayPeriod payPeriod;
-	
 	@Column(name = "repayment_date")
 	private Date repaymentDate;
 	
@@ -56,8 +53,22 @@ public class RepaymentPlan implements IEntity{
 	private Boolean isFinish;
 	
 	@ManyToOne
-	@JoinColumn(name = "equipment_id")
-	private Equipment equipment;
+	@JoinColumn(name = "order_id")
+	private Order order;
+	
+	@ManyToOne
+	@JoinColumn(name= "state_id")
+	private State state;
+	
+	
+	
+	public State getState() {
+		return state;
+	}
+
+	public void setState(State state) {
+		this.state = state;
+	}
 
 	public Long getUuid() {
 		return uuid;
@@ -91,14 +102,6 @@ public class RepaymentPlan implements IEntity{
 		this.version = version;
 	}
 
-	public PayPeriod getPayPeriod() {
-		return payPeriod;
-	}
-
-	public void setPayPeriod(PayPeriod payPeriod) {
-		this.payPeriod = payPeriod;
-	}
-
 	public Date getRepaymentDate() {
 		return repaymentDate;
 	}
@@ -123,14 +126,12 @@ public class RepaymentPlan implements IEntity{
 		this.isFinish = isFinish;
 	}
 
-	public Equipment getEquipment() {
-		return equipment;
+	public Order getOrder() {
+		return order;
 	}
 
-	public void setEquipment(Equipment equipment) {
-		this.equipment = equipment;
+	public void setOrder(Order order) {
+		this.order = order;
 	}
-
-	
 	
 }

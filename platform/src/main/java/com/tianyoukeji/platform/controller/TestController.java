@@ -1,5 +1,7 @@
 package com.tianyoukeji.platform.controller;
 
+import java.util.ArrayList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,6 +48,6 @@ public class TestController extends DefaultHandler{
 	}
 	@GetMapping(path = "/test/user")
 	public Object test(Authentication authentication) {
-		return SmartQuery.fetchList("user", "fields=*");
+		return userService.fetchOne("fields=uuid,state&uuid=5");
 	}
 }

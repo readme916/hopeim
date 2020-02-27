@@ -22,11 +22,13 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 
 @Entity
 @Table(name = "role", uniqueConstraints= {@UniqueConstraint(columnNames= {"org_id","code"})})
-public class Role implements IEntity{
+public class Role implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")

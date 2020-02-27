@@ -20,12 +20,12 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import com.tianyoukeji.parent.entity.Event;
-import com.tianyoukeji.parent.entity.IEntity;
 import com.tianyoukeji.parent.entity.Menu;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 
 @Entity
 @Table(name = "role_template" , uniqueConstraints= {@UniqueConstraint(columnNames= {"code"})})
-public class RoleTemplate implements IEntity{
+public class RoleTemplate implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")

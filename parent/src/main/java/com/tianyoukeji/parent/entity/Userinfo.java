@@ -19,9 +19,11 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+
 @Entity
 @Table(name = "user_info" , uniqueConstraints= {@UniqueConstraint(columnNames= {"mobile"})})
-public class Userinfo implements IEntity{
+public class Userinfo implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")

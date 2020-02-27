@@ -21,12 +21,12 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.tianyoukeji.parent.entity.IEntity;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
 @Table(name = "event_template", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
-public class EventTemplate implements IEntity{
+public class EventTemplate implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -61,7 +61,7 @@ public class EventTemplate implements IEntity{
 	
 	//内部事件，target为null
 	@ManyToOne
-	@JoinColumn(name = "target")
+	@JoinColumn(name = "target_id")
 	private StateTemplate target;
 	
 	//事件的限制条件spel表达式

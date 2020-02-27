@@ -19,9 +19,11 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+
 @Entity
 @Table(name = "product_sku")
-public class ProductSKU implements IEntity{
+public class ProductSKU implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -49,7 +51,17 @@ public class ProductSKU implements IEntity{
 	@JoinColumn(name="product_id")
 	private Product product;
 	
+	@Column(name = "stock")
+	private Integer stock;
 	
+	public Integer getStock() {
+		return stock;
+	}
+
+	public void setStock(Integer stock) {
+		this.stock = stock;
+	}
+
 	public Double getPrice() {
 		return price;
 	}

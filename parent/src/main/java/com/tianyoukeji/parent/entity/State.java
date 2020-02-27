@@ -21,11 +21,13 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
 @Table(name = "state", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
-public class State implements IEntity{
+public class State implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -67,14 +69,14 @@ public class State implements IEntity{
 	private Boolean isChoice;
 	
 	@ManyToOne
-	@JoinColumn(name = "first_target")
+	@JoinColumn(name = "first_target_id")
 	private State firstTarget;
 	
 	@Column(name = "first_guard_spel")
 	private String firstGuardSpel;
 	
 	@ManyToOne
-	@JoinColumn(name = "then_target")
+	@JoinColumn(name = "then_target_id")
 	private State thenTarget;
 	
 	
@@ -82,7 +84,7 @@ public class State implements IEntity{
 	private String thenGuardSpel;
 	
 	@ManyToOne
-	@JoinColumn(name = "last_target")
+	@JoinColumn(name = "last_target_id")
 	private State lastTarget;
 	//分支事件结束
 
@@ -100,6 +102,17 @@ public class State implements IEntity{
 	@Column(name = "exit_action")
 	private String exitAction;
 	
+	@ManyToOne
+	@JoinColumn(name= "org_id")
+	private Org org;
+
+	public Org getOrg() {
+		return org;
+	}
+
+	public void setOrg(Org org) {
+		this.org = org;
+	}
 
 	public Set<Timer> getTimers() {
 		return timers;

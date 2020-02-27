@@ -21,19 +21,54 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IDepartmentEntity;
+import com.tianyoukeji.parent.entity.base.IRegionEntity;
+import com.tianyoukeji.parent.entity.base.IStateMachineEntity;
+
 
 /**
+ * 产品和设备的区别，产品是卖出之前，在挂卖的商品，卖出后就变成个人或者公司的设备,设备用于用户扫码绑定使用，用outerid交互
  * 设备对应  product sku
  * @author Administrator
  *
  */
 @Entity
 @Table(name = "equipment")
-public class Equipment implements IEntity{
+public class Equipment implements IStateMachineEntity,IRegionEntity,IDepartmentEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
 	private Long uuid;
+	
+	@ManyToOne
+	@JoinColumn(name="country_id")
+	private Region country;
+	
+	@ManyToOne
+	@JoinColumn(name="province_id")
+	private Region province;
+	
+	@ManyToOne
+	@JoinColumn(name="city_id")
+	private Region city;
+	
+	@ManyToOne
+	@JoinColumn(name= "org_id")
+	private Org org;
+	
+	@ManyToOne
+	@JoinColumn(name= "department_id")
+	private Department department;
+	
+	@ManyToOne
+	@JoinColumn(name= "state_id")
+	private State state;
+	
+	
+	// 外部设备号用于通讯，每个生产商的设备号唯一
+	@Column(name = "outer_id")
+	private String outerId;
 	
 	@CreatedDate
 	@Column(name = "created_at")
@@ -51,97 +86,64 @@ public class Equipment implements IEntity{
 	@JoinColumn(name= "product_sku_id")
 	private ProductSKU productSKU;
 	
-	@ManyToOne
-	@JoinColumn(name= "buy_user_id")
-	private User boughtUser;
-	
-	@ManyToOne
-	@JoinColumn(name= "buy_org_id")
-	private Org boughtOrg;
-	
-	
-	@Column(name= "bought_at")
-	private Date boughtAt;
-	
-	@Column(name="buy_type")
-	@Enumerated(EnumType.STRING)
-	private BuyType buyType;
-	
-	@Column(name="pay_type")
-	@Enumerated(EnumType.STRING)
-	private PayType payType;
-	
-	@Column(name="pay_period")
-	@Enumerated(EnumType.STRING)
-	private PayPeriod payPeriod;
-	
-	@Column(name="pay_state")
-	@Enumerated(EnumType.STRING)
-	private PayState payState = PayState.UNPAID;
-	
-	@ManyToOne
-	@JoinColumn(name= "pay_channel_id")
-	private PayChannel payChannel;
-
 	@OneToMany(mappedBy = "equipment")
 	private Set<UserEquipmentRelationship> relativeUsers;
 
-	@OneToMany(mappedBy = "equipment")
-	private Set<RepaymentPlan> repaymentPlans;
-	
-	@ManyToOne
-	@JoinColumn(name="parent")
-	private Equipment parent;
-	
-	@OneToMany(mappedBy = "parent")	
-	private Set<Equipment> children;
-	
-	public Equipment getParent() {
-		return parent;
+
+	public Region getCountry() {
+		return country;
 	}
 
-	public void setParent(Equipment parent) {
-		this.parent = parent;
+	public void setCountry(Region country) {
+		this.country = country;
 	}
 
-	public Set<Equipment> getChildren() {
-		return children;
+	public Region getProvince() {
+		return province;
 	}
 
-	public void setChildren(Set<Equipment> children) {
-		this.children = children;
+	public void setProvince(Region province) {
+		this.province = province;
 	}
 
-	public Set<RepaymentPlan> getRepaymentPlans() {
-		return repaymentPlans;
+	public Region getCity() {
+		return city;
 	}
 
-	public void setRepaymentPlans(Set<RepaymentPlan> repaymentPlans) {
-		this.repaymentPlans = repaymentPlans;
+	public void setCity(Region city) {
+		this.city = city;
 	}
 
-	public User getBoughtUser() {
-		return boughtUser;
+	public Org getOrg() {
+		return org;
 	}
 
-	public void setBoughtUser(User boughtUser) {
-		this.boughtUser = boughtUser;
+	public void setOrg(Org org) {
+		this.org = org;
 	}
 
-	public Org getBoughtOrg() {
-		return boughtOrg;
+	public Department getDepartment() {
+		return department;
 	}
 
-	public void setBoughtOrg(Org boughtOrg) {
-		this.boughtOrg = boughtOrg;
+	public void setDepartment(Department department) {
+		this.department = department;
 	}
 
-	public Date getBoughtAt() {
-		return boughtAt;
+	public State getState() {
+		return state;
 	}
 
-	public void setBoughtAt(Date boughtAt) {
-		this.boughtAt = boughtAt;
+	public void setState(State state) {
+		this.state = state;
+	}
+
+	public String getOuterId() {
+		return outerId;
+	}
+
+	public void setOuterId(String outerId) {
+		this.outerId = outerId;
 	}
 
 	public Set<UserEquipmentRelationship> getRelativeUsers() {
@@ -152,53 +154,12 @@ public class Equipment implements IEntity{
 		this.relativeUsers = relativeUsers;
 	}
 
-	public PayPeriod getPayPeriod() {
-		return payPeriod;
-	}
-
-	public void setPayPeriod(PayPeriod payPeriod) {
-		this.payPeriod = payPeriod;
-	}
-
 	public ProductSKU getProductSKU() {
 		return productSKU;
 	}
 
 	public void setProductSKU(ProductSKU productSKU) {
 		this.productSKU = productSKU;
-	}
-
-	public BuyType getBuyType() {
-		return buyType;
-	}
-
-	public void setBuyType(BuyType buyType) {
-		this.buyType = buyType;
-	}
-
-	public PayType getPayType() {
-		return payType;
-	}
-
-	public void setPayType(PayType payType) {
-		this.payType = payType;
-	}
-
-
-	public PayState getPayState() {
-		return payState;
-	}
-
-	public void setPayState(PayState payState) {
-		this.payState = payState;
-	}
-
-	public PayChannel getPayChannel() {
-		return payChannel;
-	}
-
-	public void setPayChannel(PayChannel payChannel) {
-		this.payChannel = payChannel;
 	}
 
 	public Long getUuid() {
@@ -233,17 +194,4 @@ public class Equipment implements IEntity{
 		this.version = version;
 	}
 
-	public enum BuyType{
-		BUY,RENT
-	}
-	public enum PayType{
-		ONCE,PERIOD
-	}
-	public enum PayPeriod{
-		DAY_1,DAY_7,DAY_30,DAY_365
-	}
-	public enum PayState{
-		UNPAID, PAID, PEROID_PAYING
-	}
-	
 }

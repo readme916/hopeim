@@ -19,11 +19,11 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.tianyoukeji.parent.entity.IEntity;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 
 @Entity
 @Table(name = "org_template")
-public class OrgTemplate implements IEntity{
+public class OrgTemplate implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")

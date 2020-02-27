@@ -17,12 +17,13 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.tianyoukeji.parent.entity.Equipment.PayPeriod;
-import com.tianyoukeji.parent.entity.Equipment.PayType;
+import com.tianyoukeji.parent.entity.Order.PayPeriod;
+import com.tianyoukeji.parent.entity.Order.PayType;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 
 @Entity
 @Table(name = "pay_channel")
-public class PayChannel implements IEntity{
+public class PayChannel implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")

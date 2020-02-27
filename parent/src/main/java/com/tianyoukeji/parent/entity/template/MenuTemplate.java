@@ -21,12 +21,12 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.tianyoukeji.parent.entity.IEntity;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 
 @Entity
 @Table(name = "menu_template")
-public class MenuTemplate implements IEntity{
+public class MenuTemplate implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -63,7 +63,7 @@ public class MenuTemplate implements IEntity{
 	private Set<RoleTemplate> roleTemplates;
 
 	@ManyToOne
-	@JoinColumn(name="parent")
+	@JoinColumn(name="parent_id")
 	private MenuTemplate parent;
 	
 	@OneToMany(mappedBy = "parent")	

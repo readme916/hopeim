@@ -1,14 +1,17 @@
 package com.tianyoukeji.parent.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ResolvableType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.liyang.jpa.smart.query.db.SmartQuery;
-import com.tianyoukeji.parent.entity.IEntity;
+import com.liyang.jpa.smart.query.db.structure.EntityStructure;
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 
 /**
  * 	抽象基础服务类
@@ -19,7 +22,7 @@ import com.tianyoukeji.parent.entity.IEntity;
  * @param <T>
  */
 
-public abstract class BaseService<T extends IEntity> {
+public abstract class BaseService<T extends IBaseEntity> {
 
 	@Autowired
 	private JpaRepository<T, Long> jpaRepository;
@@ -29,9 +32,21 @@ public abstract class BaseService<T extends IEntity> {
 	 */
 	abstract protected void init();
 	
+	public String getServiceEntity() {
+		ResolvableType resolvableType = ResolvableType.forClass(jpaRepository.getClass());
+		Class<?> entityClass = resolvableType.as(JpaRepository.class).getGeneric(0).resolve();
+		EntityStructure structure = SmartQuery.getStructure(entityClass);
+		return structure.getName();
+	}
+	
 	public JpaRepository<T, Long> getJpaRepository() {
 		return jpaRepository;
 	}
+	
+	public Map fetchOne(String queryString) {		
+		return SmartQuery.fetchOne(getServiceEntity(), queryString);
+	}
+	
 	/**
 	 *
 	 * null 如果id不存在.

@@ -21,10 +21,12 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
+
 @Entity
 @Table(name="region")
 @EntityListeners(AuditingEntityListener.class)
-public class Region implements IEntity{
+public class Region implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")

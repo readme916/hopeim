@@ -19,11 +19,12 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.template.OrgTemplate;
 
 @Entity
 @Table(name = "org")
-public class Org implements IEntity{
+public class Org implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -63,9 +64,6 @@ public class Org implements IEntity{
 	
 	@OneToMany(mappedBy = "parent")
 	private Set<Org> children;
-	
-	@OneToMany(mappedBy = "boughtOrg")
-	private Set<Equipment> boughtEquipments;
 	
 	@ManyToOne
 	@JoinColumn(name="org_template_id")
@@ -114,14 +112,6 @@ public class Org implements IEntity{
 
 	public void setChildren(Set<Org> children) {
 		this.children = children;
-	}
-
-	public Set<Equipment> getBoughtEquipments() {
-		return boughtEquipments;
-	}
-
-	public void setBoughtEquipments(Set<Equipment> boughtEquipments) {
-		this.boughtEquipments = boughtEquipments;
 	}
 
 	public OrgTemplate getOrgTemplate() {

@@ -8,7 +8,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -21,13 +20,41 @@ import javax.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import com.tianyoukeji.parent.entity.base.IDepartmentEntity;
+import com.tianyoukeji.parent.entity.base.IRegionEntity;
+import com.tianyoukeji.parent.entity.base.IStateMachineEntity;
+
 @Entity
 @Table(name = "user" , uniqueConstraints= {@UniqueConstraint(columnNames= {"union_id"})})
-public class User implements IStateMachineEntity{
+public class User implements IStateMachineEntity,IRegionEntity,IDepartmentEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
 	private Long uuid;
+	
+	@ManyToOne
+	@JoinColumn(name="country_id")
+	private Region country;
+	
+	@ManyToOne
+	@JoinColumn(name="province_id")
+	private Region province;
+	
+	@ManyToOne
+	@JoinColumn(name="city_id")
+	private Region city;
+	
+	@ManyToOne
+	@JoinColumn(name= "org_id")
+	private Org org;
+	
+	@ManyToOne
+	@JoinColumn(name= "department_id")
+	private Department department;
+	
+	@ManyToOne
+	@JoinColumn(name= "state_id")
+	private State state;
 	
 	@Column(name="union_id")
 	private String unionId;
@@ -56,38 +83,16 @@ public class User implements IStateMachineEntity{
 	@Column(name="headimgurl")
 	private String headimgurl;
 	
-	@ManyToOne
-	@JoinColumn(name="country_id")
-	private Region country;
-	
-	@ManyToOne
-	@JoinColumn(name="province_id")
-	private Region province;
-	
-	@ManyToOne
-	@JoinColumn(name="city_id")
-	private Region city;
-	
 	@OneToOne
 	@JoinColumn(name="userinfo_id")
 	private Userinfo userinfo;
 	
 	@ManyToOne
-	@JoinColumn(name= "org_id")
-	private Org org;
-	
-	@ManyToOne
-	@JoinColumn(name= "department_id")
-	private Department department;
-	
-	@ManyToOne
 	@JoinColumn(name= "role_id")
 	private Role role;
 	
-	
-	@OneToMany(mappedBy = "boughtUser")
-	private Set<Equipment> boughtEquipments;
-	
+	@OneToMany(mappedBy = "buyer")
+	private Set<Order> orders;
 	
 	@OneToOne(mappedBy = "owner")
 	private Org OwnedOrg;
@@ -104,10 +109,16 @@ public class User implements IStateMachineEntity{
 	@ManyToMany(mappedBy = "cc")
 	private Set<Task> ccTasks;
 	
-	@ManyToOne
-	@JoinColumn(name= "state_id")
-	private State state;
+
 	
+	public Set<Order> getOrders() {
+		return orders;
+	}
+
+	public void setOrders(Set<Order> orders) {
+		this.orders = orders;
+	}
+
 	public State getState() {
 		return state;
 	}
@@ -170,14 +181,6 @@ public class User implements IStateMachineEntity{
 
 	public void setRole(Role role) {
 		this.role = role;
-	}
-
-	public Set<Equipment> getBoughtEquipments() {
-		return boughtEquipments;
-	}
-
-	public void setBoughtEquipments(Set<Equipment> boughtEquipments) {
-		this.boughtEquipments = boughtEquipments;
 	}
 
 	public Org getOwnedOrg() {
