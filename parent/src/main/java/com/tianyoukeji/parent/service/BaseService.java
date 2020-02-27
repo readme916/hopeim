@@ -3,6 +3,8 @@ package com.tianyoukeji.parent.service;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.scheduling.quartz.QuartzJobBean;
@@ -27,6 +29,7 @@ public abstract class BaseService<T extends IEntity> {
 	/**
 	 * 继承的方法,状态机初始化之前调用，可以插入一些业务的state等到states数据库，完成状态机的设置
 	 */
+	@PostConstruct
 	abstract protected void init();
 	
 	public JpaRepository<T, Long> getJpaRepository() {
