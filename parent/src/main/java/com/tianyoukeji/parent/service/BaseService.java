@@ -13,6 +13,9 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.liyang.jpa.smart.query.db.structure.EntityStructure;
+import com.tianyoukeji.parent.common.ContextUtils;
+import com.tianyoukeji.parent.entity.User;
+import com.tianyoukeji.parent.entity.UserRepository;
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
 
 /**
@@ -29,11 +32,20 @@ public abstract class BaseService<T extends IBaseEntity> {
 	@Autowired
 	private JpaRepository<T, Long> jpaRepository;
 	
+	@Autowired
+	private UserRepository userRepository;
+	
 	/**
 	 * 继承的方法,状态机初始化之前调用，可以插入一些业务的state等到states数据库，完成状态机的设置
 	 */
 	@PostConstruct
 	abstract protected void init();
+	
+	
+	public User getCurrentUser() {
+		String username = ContextUtils.getCurrentUserName();
+		return userRepository.findByUserinfoMobile(username);
+	}
 	
 	public String getServiceEntity() {
 		ResolvableType resolvableType = ResolvableType.forClass(jpaRepository.getClass());

@@ -46,8 +46,8 @@ public class TestController extends DefaultHandler{
 //		System.out.println(userService.currentUserStateExecutableEvent(state));
 //		return null;
 	}
-	@GetMapping(path = "/test/user")
+	@GetMapping(path = "/test/status")
 	public Object test(Authentication authentication) {
-		return userService.fetchOne("fields=uuid,state&uuid=5");
+		return userService.currentUserStateExecutableEvent("enabled");
 	}
 }

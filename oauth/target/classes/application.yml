@@ -1,5 +1,6 @@
 server:
   port: 40000
+  name: oauth
   compression:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/xml,text/plain

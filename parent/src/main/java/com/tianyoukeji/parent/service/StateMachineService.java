@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,7 @@ import org.quartz.SimpleTrigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ResolvableType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.expression.EvaluationContext;
@@ -59,13 +62,16 @@ import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.entity.Event;
 import com.tianyoukeji.parent.entity.EventRepository;
+import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.State;
 import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.Timer;
 import com.tianyoukeji.parent.entity.TimerRepository;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.base.IStateMachineEntity;
+import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 
 /**
  * 状态机服务基础服务类
@@ -86,9 +92,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	private StateRepository stateRepository;
 
 	@Autowired
-	private UserRepository userRepository;
-
-	@Autowired
 	private EventRepository eventRepository;
 
 	@Autowired
@@ -101,11 +104,13 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	@Autowired
 	private Scheduler scheduler;
 
-	protected static Builder<String, String> builder;
 
-	// key为entity名字
-	private HashMap<String, StateMachine<String, String>> stateMachineManager;
+	@Value("${server.name}")
+	private String serverName;
 
+	//状态机池子
+	private static HashMap<String,HashMap<Long,Builder<String, String>>> pools = new HashMap<String,HashMap<Long,Builder<String,String>>>();
+	
 	/**
 	 * 返回事件是否成功执行
 	 * 
@@ -122,35 +127,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	}
 
-	/**
-	 * 当前状态下的所有的可执行事件，如果是null，则默认为start的状态
-	 * 
-	 * @param
-	 * @return
-	 */
-	public List<String> stateExecutableEvent(State state) {
-		if (state != null) {
-			List<String> events = state.getEvents().stream().sorted(new Comparator<Event>() {
-				@Override
-				public int compare(Event o1, Event o2) {
-					return o1.getSort() - o2.getSort();
-				}
-			}).map(e -> e.getCode()).collect(Collectors.toList());
-			return events;
-		} else {
-			State findByEntityAndIsStart = stateRepository.findByEntityAndIsStart(getServiceEntity(), true);
-			if (findByEntityAndIsStart != null) {
-				List<String> events = findByEntityAndIsStart.getEvents().stream().sorted(new Comparator<Event>() {
-					@Override
-					public int compare(Event o1, Event o2) {
-						return o1.getSort() - o2.getSort();
-					}
-				}).map(e -> e.getCode()).collect(Collectors.toList());
-				return events;
-			}
-		}
-		return new ArrayList<String>();
-	}
 
 	/**
 	 * 当前状态下的当前登录用户可执行事件，如果是null，则默认为start的状态
@@ -158,20 +134,33 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 * @param
 	 * @return
 	 */
-	public List<String> currentUserStateExecutableEvent(State state) {
-
-		if (state == null) {
-			State findByEntityAndIsStart = stateRepository.findByEntityAndIsStart(getServiceEntity(), true);
-			if (findByEntityAndIsStart != null) {
-				state = findByEntityAndIsStart;
+	public List<String> currentUserStateExecutableEvent(String state) {
+		State findByEntity=null;
+		User currentUser = getCurrentUser();
+		
+		//当前用户米有组织
+		if(currentUser.getOrg() == null) {
+			//状态是null，可能由于是一个新建的状态机，默认为start的状态
+			if(state == null) {
+				findByEntity = stateRepository.findByOrgIsNullAndEntityAndIsStart(getServiceEntity(), true);			
+			}else {
+				findByEntity = stateRepository.findByOrgIsNullAndEntityAndCode(getServiceEntity(), state);
+			}
+		}else {
+			if(state == null) {
+				findByEntity = stateRepository.findByOrgUuidAndEntityAndIsStart(currentUser.getOrg().getUuid(), getServiceEntity(), true);
+			}else {
+				findByEntity = stateRepository.findByOrgUuidAndEntityAndCode(currentUser.getOrg().getUuid(), getServiceEntity(), state);
 			}
 		}
-		if (state == null) {
+		if(findByEntity == null) {
 			return new ArrayList<String>();
 		}
-		List<Event> findBySourcesCodeAndRolesCode = eventRepository.findBySourcesCodeAndRolesCode(state.getCode(),
+		
+		
+		List<Event> findBySourcesUuidAndRolesCode = eventRepository.findBySourcesUuidAndRolesCode(findByEntity.getUuid(),
 				ContextUtils.getRole());
-		List<String> collect = findBySourcesCodeAndRolesCode.stream().sorted(new Comparator<Event>() {
+		List<String> collect = findBySourcesUuidAndRolesCode.stream().sorted(new Comparator<Event>() {
 			@Override
 			public int compare(Event o1, Event o2) {
 				return o1.getSort() - o2.getSort();
@@ -182,20 +171,41 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	}
 
 	/**
-	 * 事件可执行角色
-	 * 
-	 * @param
+	 * 	返回企业的当前实体的状态机builder 
+	 * @param orgId 可以为null
 	 * @return
 	 */
-	public Set<String> eventExecutableRole(Event event) {
-		if (event != null) {
-			Set<String> roles = event.getRoles().stream().map(e -> e.getCode()).collect(Collectors.toSet());
-			return roles;
-		} else {
-			throw new BusinessException(1561, "event不能为空");
+	
+	public Builder<String,String> acquireBuilder(Long orgId){
+		if(orgId == null) {
+			orgId = 0l;
 		}
+		return pools.get(orgId);
 	}
-
+	
+	/**
+	 * 	刷新企业的当前实体的状态机builder 
+	 * @param orgId 可以为null
+	 * @return
+	 */
+	
+	public Builder<String,String> refreshBuilder(Long orgId){
+		Set<State> states = new HashSet<State>();
+		if(orgId == null) {
+			orgId = 0l;
+			states = stateRepository.findByEntityAndOrgIsNull(getServiceEntity());
+		}else {
+			states = stateRepository.findByEntityAndOrgUuid(getServiceEntity(), orgId);
+		}
+		try {
+			_init_org_statemachine_builder(orgId, states);
+		}catch(Exception e) {
+			e.printStackTrace();
+			throw new BusinessException(2612, getServiceEntity() + "状态机 ，企业id："+orgId+",更新失败");
+		}
+		return pools.get(orgId);
+	}
+	
 	/**
 	 * 根据当前实体的id，得到他的状态机
 	 * 
@@ -204,9 +214,21 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 * @throws Exception
 	 */
 	public StateMachine<String, String> acquireStateMachine(Long id) {
-		StateMachine<String, String> stateMachine = builder.build();
 		T findById = findById(id);
 		if (findById != null) {
+
+			// 如果是企业类型的数据，则设置企业的id，否则一律为0
+			Long OrgId = 0l;
+			if (findById instanceof IOrgEntity) {
+				Org org = ((IOrgEntity) findById).getOrg();
+				if (org != null) {
+					OrgId = org.getUuid();
+				}
+			}
+			
+			Builder<String, String> builder = pools.get(OrgId);
+			StateMachine<String, String> stateMachine = builder.build();
+			// findById.getState()为null，可能是刚创建的数据，没有为其设置state，这时状态机的state为start状态
 			if (findById.getState() != null) {
 				DefaultExtendedState defaultExtendedState = new DefaultExtendedState();
 				defaultExtendedState.getVariables().put("id", id);
@@ -217,7 +239,9 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 						.doWithRegion(new StateMachineFunction<StateMachineAccess<String, String>>() {
 							@Override
 							public void apply(StateMachineAccess<String, String> function) {
+								// 这里把状态初始化进去
 								function.resetStateMachine(stateMachineContext);
+								// 这里处理状态机状态变化的持久化和定时器方法
 								function.addStateMachineInterceptor(
 										new StateMachineInterceptorAdapter<String, String>() {
 											@Override
@@ -225,8 +249,17 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 													org.springframework.statemachine.state.State<String, String> state,
 													Message<String> message, Transition<String, String> transition,
 													StateMachine<String, String> stateMachine) {
-												State findByEntityAndCode = stateRepository
-														.findByEntityAndCode(getServiceEntity(), state.getId());
+												User user = getCurrentUser();
+												State findByEntityAndCode = null;
+												if (user.getOrg() == null) {
+													findByEntityAndCode = stateRepository
+															.findByOrgIsNullAndEntityAndCode(getServiceEntity(),
+																	state.getId());
+												} else {
+													findByEntityAndCode = stateRepository.findByOrgUuidAndEntityAndCode(
+															user.getOrg().getUuid(), getServiceEntity(), state.getId());
+												}
+
 												if (findByEntityAndCode == null) {
 													throw new BusinessException(1274,
 															"不存在的状态" + stateMachine.getState().getId());
@@ -236,7 +269,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 												stopJobs(getServiceEntity(), id);
 												Set<Timer> timers = timerRepository
-														.findByEntityAndSourceCode(getServiceEntity(), state.getId());
+														.findByEntityAndSource(getServiceEntity(), findByEntityAndCode);
 												if (timers != null && !timers.isEmpty()) {
 													startJobs(getServiceEntity(), id, timers);
 												}
@@ -253,35 +286,70 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			throw new BusinessException(1273, "id不存在");
 		}
 	}
+
 	// 内部方法 ----------------------------------------------------------------------
 
 	@PostConstruct
 	private void base_init() {
-
-		// 解决quartz和spring重复初始化问题
-//		if(builder!=null) {
-//			return;
-//		}
 		this.init();
 		try {
 			this._init_statemachine();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new BusinessException(1284, getServiceEntity()+"状态机初始化失败");
+			throw new BusinessException(1284, getServiceEntity() + "状态机初始化失败");
 		}
 
 	}
 
-	private void _init_statemachine() throws Exception{
-		builder = StateMachineBuilder.<String, String>builder();
+	/**
+	 * 把当前实体的各个企业独立的状态机的builder，存储到redis里面，方便以后调用
+	 * 
+	 * @throws Exception
+	 */
+	private void _init_statemachine() {
+
 		List<State> allStates = stateRepository.findByEntity(getServiceEntity());
 		if (allStates.isEmpty()) {
 			throw new BusinessException(1321, getServiceEntity() + "的states，没有配置");
 		}
+		// 先把state按照org分组
+		Map<Long, Set<State>> result = new HashMap<>();
+		for (State s : allStates) {
+			Long orgId;
+			Org org = s.getOrg();
+			if (org == null) {
+				orgId = 0l;
+			} else {
+				orgId = org.getUuid();
+			}
+			Set<State> orgStates = result.get(orgId);
+			if (orgStates == null) {
+				orgStates = new HashSet<State>();
+				result.put(orgId, orgStates);
+			}
+			orgStates.add(s);
+		}
+		//因为创建builder非常耗时间，有很多数据库查询，所以把创建好的builder保存
+		Set<Entry<Long, Set<State>>> entrySet = result.entrySet();
+		for (Entry<Long, Set<State>> entry : entrySet) {
+			try {
+				_init_org_statemachine_builder(entry.getKey(), entry.getValue());
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new BusinessException(1357, getServiceEntity() + " - 企业id: " + entry.getKey() + "的状态机初始化错误");
+			}
+		}
+		System.out.println(getServiceEntity() + "状态机初始化完成");
+
+	}
+
+	private void _init_org_statemachine_builder(Long OrgId, Set<State> states) throws Exception {
+		Builder<String, String> builder = StateMachineBuilder.<String, String>builder();
+		// builder可以为空状态，空事件
 		builder.configureConfiguration().withVerifier().enabled(false);
 		builder.configureStates().withStates()
-				.states(new HashSet<String>(allStates.stream().map(e -> e.getCode()).collect(Collectors.toSet())));
-		for (State state : allStates) {
+				.states(new HashSet<String>(states.stream().map(e -> e.getCode()).collect(Collectors.toSet())));
+		for (State state : states) {
 			if (state.getIsStart() != null && state.getIsStart()) {
 				builder.configureStates().withStates().initial(state.getCode());
 			}
@@ -336,9 +404,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 					e.printStackTrace();
 					throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + timer.getAction() + "方法");
 				}
-
 			}
-
 			Set<Event> events = state.getEvents();
 			for (Event event : events) {
 				if (event.getTarget() == null) {
@@ -364,7 +430,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				}
 			}
 		}
-		System.out.println(getServiceEntity() + "状态机初始化完成");
+		pools.put(OrgId, builder);
 	}
 
 	private Action<String, String> AuthorizeActionFactory(String actionStr) {
@@ -381,9 +447,14 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			return new Action<String, String>() {
 				@Override
 				public void execute(StateContext<String, String> context) {
-
-					Event findByEntityAndCode = eventRepository.findByEntityAndCode(getServiceEntity(), actionStr);
-					if (!eventExecutableRole(findByEntityAndCode).contains(ContextUtils.getRole())) {
+					Event findByEntityAndCode = null;
+					User currentUser = getCurrentUser();
+					if(currentUser.getOrg() == null) {
+						findByEntityAndCode = eventRepository.findByOrgIsNullAndEntityAndCodeAndRolesCode(getServiceEntity(), actionStr,ContextUtils.getRole());
+					}else {
+						findByEntityAndCode = eventRepository.findByOrgUuidAndEntityAndCodeAndRolesCode(currentUser.getOrg().getUuid(), getServiceEntity(), actionStr , ContextUtils.getRole());
+					}
+					if (findByEntityAndCode == null) {
 						throw new BusinessException(1231, "角色" + ContextUtils.getRole() + "无操作权限");
 					}
 					try {
@@ -448,6 +519,21 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		} catch (SecurityException e) {
 			e.printStackTrace();
 			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
+		}
+	}
+	
+	/**
+	 * 事件可执行角色
+	 * 
+	 * @param
+	 * @return
+	 */
+	private Set<String> eventExecutableRole(Event event) {
+		if (event != null) {
+			Set<String> roles = event.getRoles().stream().map(e -> e.getCode()).collect(Collectors.toSet());
+			return roles;
+		} else {
+			throw new BusinessException(1561, "event不能为空");
 		}
 	}
 
@@ -515,8 +601,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			@Override
 			public boolean evaluate(StateContext<String, String> context) {
 				Long id = context.getExtendedState().get("id", Long.class);
-				String username = ContextUtils.getCurrentUserName();
-				User user = userRepository.findByUserinfoMobile(username);
+				User user = getCurrentUser();
 				T findById = findById(id);
 				ExpressionParser parser = new SpelExpressionParser();
 				EvaluationContext spelContext = new StandardEvaluationContext();

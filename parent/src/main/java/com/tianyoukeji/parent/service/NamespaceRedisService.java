@@ -30,11 +30,15 @@ public class NamespaceRedisService {
 	private RedisUtils redisUtils;
 	
 	@Autowired
-	private StringRedisTemplate redisTemplate;
+	private StringRedisTemplate stringRedisTemplate;
+	
+	@Autowired
+	private RedisTemplate redisTemplate;
 	
 	@PostConstruct
 	private void init() {
 		this.redisUtils = new RedisUtils();
+		this.redisUtils.setStringRedisTemplate(stringRedisTemplate);
 		this.redisUtils.setRedisTemplate(redisTemplate);
 	}
 
@@ -117,6 +121,9 @@ public class NamespaceRedisService {
 		return redisUtils.get(namespace + ":" + key);
 	}
 
+	public Object getObject(RedisNamespace namespace, String key) {
+		return redisUtils.getObject(namespace + ":" + key);
+	}
 	
 	/**
 	 * 写入缓存
@@ -127,6 +134,10 @@ public class NamespaceRedisService {
 	 */
 	public void set(RedisNamespace namespace, String key, String value, long expire) {
 		redisUtils.setEx(namespace + ":" + key, value, expire, TimeUnit.SECONDS);
+	}
+	
+	public void setObject(RedisNamespace namespace, String key, Object value) {
+		redisUtils.setObject(namespace + ":" + key, value);
 	}
 	
 	/**
@@ -289,7 +300,7 @@ public class NamespaceRedisService {
 	}
 	
 	public enum RedisNamespace {
-		LOGIN_SMS,USER_TOKEN,TIMER,TIMER_ACTION
+		LOGIN_SMS,USER_TOKEN
 	}
 
 }

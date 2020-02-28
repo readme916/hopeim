@@ -26,7 +26,7 @@ import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
-@Table(name = "timer", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
+@Table(name = "timer", uniqueConstraints= {@UniqueConstraint(columnNames= {"org_id","entity","code"})})
 public class Timer implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

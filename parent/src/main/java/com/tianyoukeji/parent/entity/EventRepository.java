@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-	List<Event> findBySourcesCodeAndRolesCode(String state , String role);
-	Event findByEntityAndCode(String entity,String code);
+	Event findByOrgUuidAndEntityAndCodeAndRolesCode(Long uuid ,String entity, String event , String role);
+	Event findByOrgIsNullAndEntityAndCodeAndRolesCode(String entity, String event , String role);
+//	Event findByOrgUuidAndEntityAndCode(Long uuid, String entity,String code);
+//	Event findByOrgIsNullAndEntityAndCode(String entity,String code);
+	
+	List<Event> findBySourcesUuidAndRolesCode(Long uuid , String role);
 }

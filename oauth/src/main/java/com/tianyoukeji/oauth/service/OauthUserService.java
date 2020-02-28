@@ -36,8 +36,8 @@ public class OauthUserService extends BaseService<User> {
 	@Autowired
 	private UserinfoRepository userInfoRepository;
 
-	@PostConstruct
-	private void init() {
+	@Override
+	public void init() {
 		if (this.count() == 0) {
 			registerRole("developer", "开发者");
 			registerRole("user", "普通用户");
