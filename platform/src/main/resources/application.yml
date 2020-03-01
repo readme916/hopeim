@@ -45,7 +45,7 @@ spring:
       org:
         quartz:
           scheduler:
-            instanceName: tianyoukeji
+            instanceName: platform
             instanceId: AUTO
           jobStore:
             class: org.quartz.impl.jdbcjobstore.JobStoreTX
@@ -54,6 +54,7 @@ spring:
             isClustered: true
             clusterCheckinInterval: 10000
             useProperties: false
+            acquireTriggersWithinLock: true
           threadPool:
             class: org.quartz.simpl.SimpleThreadPool
             threadCount: 10

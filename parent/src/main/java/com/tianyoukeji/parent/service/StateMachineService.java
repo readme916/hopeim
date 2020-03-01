@@ -3,8 +3,10 @@ package com.tianyoukeji.parent.service;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,6 +53,7 @@ import org.springframework.statemachine.support.DefaultExtendedState;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
 import org.springframework.statemachine.transition.Transition;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -83,7 +86,7 @@ import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
  * @param <T>
  */
 
-public abstract class StateMachineService<T extends IStateMachineEntity> extends BaseService<T> implements Job {
+public abstract class StateMachineService<T extends IStateMachineEntity> extends BaseService<T>  {
 
 	@Autowired
 	private JpaRepository<T, Long> jpaRepository;
@@ -111,18 +114,25 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	//状态机池子
 	private static HashMap<String,HashMap<Long,Builder<String, String>>> pools = new HashMap<String,HashMap<Long,Builder<String,String>>>();
 	
+	//所有服务的静态引用
+	public static HashMap<String,StateMachineService> services = new HashMap<String,StateMachineService>();
+	
 	/**
 	 * 返回事件是否成功执行
 	 * 
 	 * @param id
 	 * @param eventCode
-	 * @return 仅仅当state和event和设置不一致的时候返回false guard的失败和action抛出异常都不影响返回值
+	 * @return 失败返回false
 	 */
 
 	@Transactional
 	public boolean dispatchEvent(Long id, String eventCode) {
 		StateMachine<String, String> acquireStateMachine = this.acquireStateMachine(id);
 		boolean success = acquireStateMachine.sendEvent(eventCode);
+		Object error = acquireStateMachine.getExtendedState().getVariables().get("error");
+		if(error!=null) {
+			return false;
+		}
 		return success;
 
 	}
@@ -170,18 +180,18 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		return collect;
 	}
 
-	/**
-	 * 	返回企业的当前实体的状态机builder 
-	 * @param orgId 可以为null
-	 * @return
-	 */
-	
-	public Builder<String,String> acquireBuilder(Long orgId){
-		if(orgId == null) {
-			orgId = 0l;
-		}
-		return pools.get(orgId);
-	}
+//	/**
+//	 * 	返回企业的当前实体的状态机builder 
+//	 * @param orgId 可以为null
+//	 * @return
+//	 */
+//	
+//	public Builder<String,String> acquireBuilder(Long orgId){
+//		if(orgId == null) {
+//			orgId = 0l;
+//		}
+//		return pools.get(getServiceEntity()).get(orgId);
+//	}
 	
 	/**
 	 * 	刷新企业的当前实体的状态机builder 
@@ -203,7 +213,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			e.printStackTrace();
 			throw new BusinessException(2612, getServiceEntity() + "状态机 ，企业id："+orgId+",更新失败");
 		}
-		return pools.get(orgId);
+		return pools.get(getServiceEntity()).get(orgId);
 	}
 	
 	/**
@@ -218,15 +228,23 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		if (findById != null) {
 
 			// 如果是企业类型的数据，则设置企业的id，否则一律为0
-			Long OrgId = 0l;
+			Long orgId = 0l;
 			if (findById instanceof IOrgEntity) {
 				Org org = ((IOrgEntity) findById).getOrg();
 				if (org != null) {
-					OrgId = org.getUuid();
+					orgId = org.getUuid();
 				}
 			}
 			
-			Builder<String, String> builder = pools.get(OrgId);
+			HashMap<Long, Builder<String, String>> hashMap = pools.get(getServiceEntity());
+			if(hashMap == null) {
+				throw new BusinessException(1856, "状态机获取失败");
+			}
+			Builder<String, String> builder = hashMap.get(orgId);
+			if(builder == null) {
+				throw new BusinessException(1857, "状态机获取失败");
+			}
+			
 			StateMachine<String, String> stateMachine = builder.build();
 			// findById.getState()为null，可能是刚创建的数据，没有为其设置state，这时状态机的state为start状态
 			if (findById.getState() != null) {
@@ -268,12 +286,27 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 												save(findById);
 
 												stopJobs(getServiceEntity(), id);
-												Set<Timer> timers = timerRepository
-														.findByEntityAndSource(getServiceEntity(), findByEntityAndCode);
+												Set<Timer> timers=null;
+												if(user.getOrg() == null) {
+													timers = timerRepository.findByOrgIsNullAndEntityAndSource(getServiceEntity(), findByEntityAndCode);
+												}else {
+													timers = timerRepository.findByOrgUuidAndEntityAndSource(user.getOrg().getUuid(), getServiceEntity(),findByEntityAndCode);
+												}
 												if (timers != null && !timers.isEmpty()) {
 													startJobs(getServiceEntity(), id, timers);
 												}
 											}
+											@Override
+											public StateContext<String, String> preTransition(StateContext<String, String> stateContext) {
+												if(stateContext.getTransition().getGuard()!=null) {
+													boolean evaluate = stateContext.getTransition().getGuard().evaluate(stateContext);
+													if(!evaluate) {
+														stateContext.getExtendedState().getVariables().put("error", 1);
+													}
+												}
+												return stateContext;
+											}
+
 										});
 							}
 						});
@@ -299,6 +332,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			throw new BusinessException(1284, getServiceEntity() + "状态机初始化失败");
 		}
 
+		services.put(getServiceEntity(), this);
 	}
 
 	/**
@@ -330,6 +364,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			orgStates.add(s);
 		}
 		//因为创建builder非常耗时间，有很多数据库查询，所以把创建好的builder保存
+		pools.put(getServiceEntity(), new HashMap<Long,Builder<String,String>>());
 		Set<Entry<Long, Set<State>>> entrySet = result.entrySet();
 		for (Entry<Long, Set<State>> entry : entrySet) {
 			try {
@@ -343,7 +378,15 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	}
 
-	private void _init_org_statemachine_builder(Long OrgId, Set<State> states) throws Exception {
+	
+	
+	/**
+	 * 	如果没有org，则orgid输入0
+	 * @param orgId
+	 * @param states
+	 * @throws Exception
+	 */
+	private void _init_org_statemachine_builder(Long orgId, Set<State> states) throws Exception {
 		Builder<String, String> builder = StateMachineBuilder.<String, String>builder();
 		// builder可以为空状态，空事件
 		builder.configureConfiguration().withVerifier().enabled(false);
@@ -430,7 +473,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				}
 			}
 		}
-		pools.put(OrgId, builder);
+		pools.get(getServiceEntity()).put(orgId, builder);
 	}
 
 	private Action<String, String> AuthorizeActionFactory(String actionStr) {
@@ -575,17 +618,23 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			map.put("entity", serviceEntity);
 			map.put("id", id);
 			map.put("action", timer.getAction());
-			JobDetail jobDetail = JobBuilder.newJob(this.getClass()).withIdentity(timer.getCode(), serviceEntity + id)
+			map.put("server", serverName);
+			
+			JobDetail jobDetail = JobBuilder.newJob(QuartzTimerJob.class).withIdentity(timer.getCode(), serviceEntity + id)
 					.usingJobData(map).build();
 			SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule();
+			Calendar calendar= Calendar.getInstance();
 			if (timer.getTimerOnce() != null && timer.getTimerOnce() > 0) {
 				simpleScheduleBuilder.withIntervalInSeconds(timer.getTimerOnce());
-				simpleScheduleBuilder.withRepeatCount(1);
+				simpleScheduleBuilder.withRepeatCount(0);
+				calendar.add(Calendar.SECOND, timer.getTimerOnce()); 
 			} else {
 				simpleScheduleBuilder.withIntervalInSeconds(timer.getTimerInterval()).repeatForever();
+				calendar.add(Calendar.SECOND, timer.getTimerInterval()); 
 			}
+			Date d=calendar.getTime();
 			SimpleTrigger simpleTrigger = TriggerBuilder.newTrigger().withIdentity(timer.getCode(), serviceEntity + id)
-					.withSchedule(simpleScheduleBuilder).build();
+					.withSchedule(simpleScheduleBuilder).startAt(d).build();
 			try {
 				scheduler.scheduleJob(jobDetail, simpleTrigger);
 			} catch (SchedulerException e) {
@@ -611,39 +660,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			}
 		};
 	}
-
-	// quartz job 的执行函数
-	@Override
-	public void execute(JobExecutionContext context) {
-		String id = context.getJobDetail().getJobDataMap().get("id").toString();
-		String action = context.getJobDetail().getJobDataMap().getString("action");
-		try {
-			Method method = this.getClass().getDeclaredMethod(action, Long.class, StateMachine.class);
-			StateMachineAction annotation = method.getDeclaredAnnotation(StateMachineAction.class);
-			if (annotation == null) {
-				throw new BusinessException(1861,
-						getServiceEntity() + "服务 ," + action + "的方法，必须使用StateMachineAction注解，才能生效");
-			}
-			try {
-				method.invoke(this, Long.valueOf(id), acquireStateMachine(Long.valueOf(id)));
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-				throw new BusinessException(1862, getServiceEntity() + "服务 ," + action + "的方法，非法访问");
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-				throw new BusinessException(1862, getServiceEntity() + "服务 ," + action + "的方法，非法参数");
-			} catch (InvocationTargetException e) {
-				e.printStackTrace();
-				throw new BusinessException(2000, e.getCause().getMessage());
-			}
-
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + action + "的方法");
-		} catch (SecurityException e) {
-			e.printStackTrace();
-			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + action + "方法");
-		}
-	}
-
+	
+	
 }

@@ -69,9 +69,9 @@ public class UserService extends StateMachineService<User> {
 	}
 	
 	@StateMachineAction
-	public void delete(Long uuid , StateMachine<String,String> stateMachine) {
+	public void speak(Long uuid , StateMachine<String,String> stateMachine) {
 		System.out.println(new Date());
-		System.out.println("delete  动作");
+		System.out.println("speak  动作");
 	}
 	
 	@Transactional
