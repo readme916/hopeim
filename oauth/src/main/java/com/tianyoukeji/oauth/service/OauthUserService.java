@@ -72,7 +72,7 @@ public class OauthUserService extends BaseService<User> {
 				throw new BusinessException(1973, "角色 " + role + " 不存在");
 			}
 		} else {
-			r = roleRepository.findByCodeAndOrg(org);
+			r = roleRepository.findByCodeAndOrg(role,org);
 			if (r == null) {
 				throw new BusinessException(1974, "角色 " + role + " 不存在");
 			}
@@ -96,7 +96,9 @@ public class OauthUserService extends BaseService<User> {
 
 	@Transactional
 	public RoleTemplate registerRoleTemplate(String code, String name) {
-		if (roleTemplateRepository.findByCode(code) != null) {
+		RoleTemplate findByCode = roleTemplateRepository.findByCode(code);
+		if (findByCode != null) {
+			return findByCode;
 		} else {
 			RoleTemplate roleTemplate = new RoleTemplate();
 			roleTemplate.setCode(code);
@@ -104,7 +106,7 @@ public class OauthUserService extends BaseService<User> {
 			roleTemplate = roleTemplateRepository.save(roleTemplate);
 			return roleTemplate;
 		}
-		return null;
+		
 	}
 
 	@Transactional
@@ -150,10 +152,13 @@ public class OauthUserService extends BaseService<User> {
 		return hashSet;
 	}
 
-	private Set<Menu> menuTemplateConvertMenu(Set<MenuTemplate> MenuTemplates, Org org) {
+	private Set<Menu> menuTemplateConvertMenu(Set<MenuTemplate> menuTemplates, Org org) {
 
+		if(menuTemplates == null) {
+			return  new HashSet<Menu>();
+		}
 		HashSet<Menu> hashSet = new HashSet<Menu>();
-		for (MenuTemplate menuTemplate : MenuTemplates) {
+		for (MenuTemplate menuTemplate : menuTemplates) {
 			Menu menu = new Menu();
 			menu.setMenuTemplate(menuTemplate);
 			menu.setOrg(org);
@@ -164,7 +169,7 @@ public class OauthUserService extends BaseService<User> {
 			menu = menuRepository.save(menu);
 			hashSet.add(menu);
 		}
-		for (MenuTemplate menuTemplate : MenuTemplates) {
+		for (MenuTemplate menuTemplate : menuTemplates) {
 			if (menuTemplate.getParent() != null) {
 				MenuTemplate menuTemplateParent = menuTemplate.getParent();
 				if(org == null) {

@@ -327,7 +327,8 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 		List<State> allStates = stateRepository.findByEntity(getServiceEntity());
 		if (allStates.isEmpty()) {
-			throw new BusinessException(1321, getServiceEntity() + "的states，没有配置");
+			return;
+//			throw new BusinessException(1321, getServiceEntity() + "的states，没有配置");
 		}
 		// 先把state按照org分组
 		Map<Long, Set<State>> result = new HashMap<>();
@@ -475,12 +476,15 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				public void execute(StateContext<String, String> context) {
 					Event findByEntityAndCode = null;
 					User currentUser = getCurrentUser();
-					if(currentUser.getOrg() == null) {
+					if(currentUser == null) {
+						findByEntityAndCode = eventRepository.findByOrgIsNullAndEntityAndCodeAndRolesCode(getServiceEntity(), actionStr,"user");
+					}else if(currentUser.getOrg() == null) {
 						findByEntityAndCode = eventRepository.findByOrgIsNullAndEntityAndCodeAndRolesCode(getServiceEntity(), actionStr,ContextUtils.getRole());
 					}else {
 						findByEntityAndCode = eventRepository.findByOrgUuidAndEntityAndCodeAndRolesCode(currentUser.getOrg().getUuid(), getServiceEntity(), actionStr , ContextUtils.getRole());
 					}
 					if (findByEntityAndCode == null) {
+						context.getExtendedState().getVariables().put("error", 1);
 						throw new BusinessException(1231, "角色" + ContextUtils.getRole() + "无操作权限");
 					}
 					try {
@@ -488,12 +492,15 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 								context.getStateMachine());
 					} catch (IllegalAccessException e) {
 						e.printStackTrace();
+						context.getExtendedState().getVariables().put("error", 1);
 						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法访问");
 					} catch (IllegalArgumentException e) {
 						e.printStackTrace();
+						context.getExtendedState().getVariables().put("error", 1);
 						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法参数");
 					} catch (InvocationTargetException e) {
 						e.printStackTrace();
+						context.getExtendedState().getVariables().put("error", 1);
 						throw new BusinessException(2000, e.getCause().getMessage());
 					}
 				}
@@ -528,12 +535,15 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 								context.getStateMachine());
 					} catch (IllegalAccessException e) {
 						e.printStackTrace();
+						context.getExtendedState().getVariables().put("error", 1);
 						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法访问");
 					} catch (IllegalArgumentException e) {
 						e.printStackTrace();
+						context.getExtendedState().getVariables().put("error", 1);
 						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法参数");
 					} catch (InvocationTargetException e) {
 						e.printStackTrace();
+						context.getExtendedState().getVariables().put("error", 1);
 						throw new BusinessException(2000, e.getCause().getMessage());
 					}
 				}

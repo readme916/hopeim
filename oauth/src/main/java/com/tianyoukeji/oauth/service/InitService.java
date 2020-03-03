@@ -57,7 +57,6 @@ public class InitService extends BaseService<User> {
 			hashSet.add(orgManager);
 			hashSet.add(orgUser);
 			OauthUserService.registerOrg("天邮科技有限公司", admin, hashSet);
-			
 
 		}
 	}

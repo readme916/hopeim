@@ -14,8 +14,10 @@ import com.tianyoukeji.parent.annotation.StateMachineAction;
 import com.tianyoukeji.parent.entity.State;
 import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.User;
+import com.tianyoukeji.parent.entity.template.StateTemplateRepository;
 import com.tianyoukeji.parent.service.NamespaceRedisService;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
+import com.tianyoukeji.platform.service.StateTemplateService.Builder;
 import com.tianyoukeji.parent.service.StateMachineService;
 
 @Service
@@ -30,36 +32,33 @@ public class UserService extends StateMachineService<User> {
 	@Autowired
 	private StateRepository stateRepository;
 	
+	@Autowired
+	private StateTemplateService stateTemplateService;
+	
+	@Autowired
+	private StateTemplateRepository stateTemplateRepository;
 	
 	@Override
 	public void init() {
-		if(stateRepository.findByEntity("user").isEmpty()) {
-			State state = new State();
-			state.setCode("created");
-			state.setDescription("刚创建的时候");
-			state.setIsStart(true);
-			state.setEntity(getServiceEntity());
-			state.setName("创建");
-			stateRepository.save(state);
-			
-			State state2 = new State();
-			state2.setCode("forbidden");
-			state2.setDescription("禁止态");
-			state2.setIsStart(false);
-			state2.setEntity(getServiceEntity());
-			state2.setName("禁止");
-			stateRepository.save(state2);
-			
-			State state3 = new State();
-			state3.setCode("enabled");
-			state3.setDescription("正常态");
-			state3.setIsStart(false);
-			state3.setEntity(getServiceEntity());
-			state3.setName("正常");
-			stateRepository.save(state3);
+		if(stateTemplateRepository.count()>0) {
+			return;
 		}
+		Builder builder = stateTemplateService.getBuilder();
+		builder.entity("user")
+		.state("created", "创建", true, false, false, null, null, null, null, null, null, null)
+		.state("enabled", "有效用户", false, false, false, null, null, null, null, null, null, null)
+		.state("disabled", "禁止用户",  false, false, false, null, null, null, null, null, null, null)
+		.event("enable", "有效", "enabled", null, "enable", 0)
+		.event("disable" , "禁止" , "disabled" ,null , "disable",1)
+		.timer("speak", "说话定时器", "enabled", "speak", null, 20);
+		
+		builder.getState("created").addEvent("enable").addEvent("disable");
+		builder.getState("enabled").addEvent("disable");
+		builder.getState("disabled").addEvent("enable");
+		builder.getEvent("enable").addRole("developer");
+		builder.getEvent("disable").addRole("developer");
+		builder.build();
 	}
-	
 	/**
 	 * 	返回值表示是否可以继续往下执行后续，前置截面
 	 * @param uuid
@@ -72,8 +71,8 @@ public class UserService extends StateMachineService<User> {
 	}
 	
 	@StateMachineAction
-	public void forbid(Long uuid , StateMachine<String,String> stateMachine) {
-		System.out.println("forbid  动作");
+	public void disable(Long uuid , StateMachine<String,String> stateMachine) {
+		System.out.println("disable  动作");
 	}
 	
 	@StateMachineAction

@@ -29,4 +29,5 @@ public class CommonServiceBean {
 	public RegionService regionService() {
 		return new RegionService();
 	}
+
 }
