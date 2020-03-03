@@ -43,12 +43,20 @@ public class UserService extends StateMachineService<User> {
 			stateRepository.save(state);
 			
 			State state2 = new State();
-			state.setCode("forbidden");
-			state.setDescription("禁止");
-			state.setIsStart(false);
-			state.setEntity(getServiceEntity());
-			state.setName("禁止");
-			stateRepository.save(state);
+			state2.setCode("forbidden");
+			state2.setDescription("禁止态");
+			state2.setIsStart(false);
+			state2.setEntity(getServiceEntity());
+			state2.setName("禁止");
+			stateRepository.save(state2);
+			
+			State state3 = new State();
+			state3.setCode("enabled");
+			state3.setDescription("正常态");
+			state3.setIsStart(false);
+			state3.setEntity(getServiceEntity());
+			state3.setName("正常");
+			stateRepository.save(state3);
 		}
 	}
 	

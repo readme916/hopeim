@@ -13,10 +13,13 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.liyang.jpa.smart.query.db.structure.EntityStructure;
+import com.liyang.jpa.smart.query.response.HTTPListResponse;
+import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IOrgEntity;
 
 /**
  * 	抽象基础服务类
@@ -41,12 +44,19 @@ public abstract class BaseService<T extends IBaseEntity> {
 	@PostConstruct
 	abstract protected void init();
 	
-	
+	/**
+	 * 	返回当前用户
+	 * @return
+	 */
 	public User getCurrentUser() {
 		String username = ContextUtils.getCurrentUserName();
 		return userRepository.findByUserinfoMobile(username);
 	}
 	
+	/**
+	 * 	返回当前服务的实体
+	 * @return
+	 */
 	public String getServiceEntity() {
 		ResolvableType resolvableType = ResolvableType.forClass(jpaRepository.getClass());
 		Class<?> entityClass = resolvableType.as(JpaRepository.class).getGeneric(0).resolve();
@@ -54,14 +64,86 @@ public abstract class BaseService<T extends IBaseEntity> {
 		return structure.getName();
 	}
 	
+	/**
+	 * 	当前服务的实体的jpa
+	 * @return
+	 */
 	public JpaRepository<T, Long> getJpaRepository() {
 		return jpaRepository;
 	}
 	
+	
+	
+	
+	//smartyquery查询方法部分
+
+	/**
+	 * 	根据query，返回一个具体的map格式的对象
+	 * @param queryString
+	 * @return
+	 */
 	public Map fetchOne(String queryString) {		
 		return SmartQuery.fetchOne(getServiceEntity(), queryString);
 	}
 	
+	/**
+	 * 	传入null，返回所有企业数据，否则返回orgId企业的数据
+	 * @param queryString
+	 * @param orgId
+	 * @return
+	 */
+	public Map fetchOneByOrg(String queryString , Long orgId) {
+		if(!(this instanceof IOrgEntity)) {
+			throw new BusinessException(1864, "当前实体，非org类型");
+		}
+		if(orgId != null) {
+			return fetchOne(queryString + "&org.uuid="+orgId);
+		}else {
+			return fetchOne(queryString);
+		}
+	}
+	
+	/**
+	 * 	返回一个带翻页的结果的Response对象
+	 * @param queryString
+	 * @return
+	 */
+	public HTTPListResponse fetchList(String queryString) {		
+		return SmartQuery.fetchList(getServiceEntity(), queryString);
+	}
+	
+	/**
+	 * 	返回一个按照树形组织的Response对象
+	 * @param queryString
+	 * @return
+	 */
+	public HTTPListResponse fetchTree(String queryString) {		
+		return SmartQuery.fetchTree(getServiceEntity(), queryString);
+	}
+	
+	
+	/**
+	 *	返回一个按照分组组织的Response对象
+	 * @param queryString
+	 * @return
+	 */
+	public HTTPListResponse fetchGroup(String queryString) {		
+		return SmartQuery.fetchGroup(getServiceEntity(), queryString);
+	}
+	
+	/**
+	 * 	返回一个查询count
+	 * @param queryString
+	 * @return
+	 */
+	public long fetchCount(String queryString) {		
+		return SmartQuery.fetchCount(getServiceEntity(), queryString);
+	}
+	
+	
+	
+	
+	//jpa 基础方法
 	/**
 	 *
 	 * null 如果id不存在.

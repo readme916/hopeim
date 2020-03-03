@@ -99,7 +99,7 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
 			user = userRepository.findByUserinfoMobile(username);
 			if (null == user) {
 				// 这里自动注册
-				user = oauthUserService.registerUser(username, password, "user");
+				user = oauthUserService.registerUser(username, password, "user", null);
 			} else if (user.getEnabled() == false) {
 				throw new BadCredentialsException("用户被禁用");
 			}

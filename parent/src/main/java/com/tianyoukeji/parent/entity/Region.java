@@ -68,21 +68,11 @@ public class Region implements IBaseEntity{
 	@OneToMany(mappedBy = "parent")
 	private Set<Region> children;
 	
-	@OneToMany(mappedBy = "region")
-	private Set<Org> orgs;
 	
 	//区域内包含的保险渠道
 	@ManyToMany(mappedBy = "regions")
 	private Set<InsureChannel> insureChannels;
 	
-	
-	public Set<Org> getOrgs() {
-		return orgs;
-	}
-
-	public void setOrgs(Set<Org> orgs) {
-		this.orgs = orgs;
-	}
 
 	public Region getParent() {
 		return parent;

@@ -8,11 +8,16 @@ import org.springframework.util.StringUtils;
 
 import com.tianyoukeji.parent.common.AvatarUtils;
 import com.tianyoukeji.parent.common.BusinessException;
+import com.tianyoukeji.parent.entity.Menu;
+import com.tianyoukeji.parent.entity.MenuRepository;
+import com.tianyoukeji.parent.entity.Org;
+import com.tianyoukeji.parent.entity.OrgRepository;
 import com.tianyoukeji.parent.entity.Role;
 import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.Userinfo;
 import com.tianyoukeji.parent.entity.UserinfoRepository;
+import com.tianyoukeji.parent.entity.template.MenuTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
 import com.tianyoukeji.parent.entity.UserRepository;
@@ -31,19 +36,19 @@ public class OauthUserService extends BaseService<User> {
 	private RoleRepository roleRepository;
 
 	@Autowired
+	private OrgRepository orgRepository;
+
+	@Autowired
 	private RoleTemplateRepository roleTemplateRepository;
 
 	@Autowired
 	private UserinfoRepository userInfoRepository;
 
+	@Autowired
+	private MenuRepository menuRepository;
+
 	@Override
 	public void init() {
-		if (this.count() == 0) {
-			registerRole("developer", "开发者");
-			registerRole("user", "普通用户");
-			registerUser("admin", "admin", "developer");
-
-		}
 	}
 
 	/**
@@ -54,14 +59,26 @@ public class OauthUserService extends BaseService<User> {
 	 * @return
 	 */
 	@Transactional
-	public User registerUser(String username, String password, String role) {
+	public User registerUser(String username, String password, String role, Org org) {
 		if (userRepository.findByUserinfoMobile(username) != null) {
 			throw new BusinessException(1000, "用户名已存在");
 		}
-		Role findByCode = roleRepository.findByCode(role);
 		User user = new User();
 		user.setEnabled(true);
-		user.setRole(findByCode);
+		Role r = null;
+		if (org == null) {
+			r = roleRepository.findByCodeAndOrgIsNull(role);
+			if (r == null) {
+				throw new BusinessException(1973, "角色 " + role + " 不存在");
+			}
+		} else {
+			r = roleRepository.findByCodeAndOrg(org);
+			if (r == null) {
+				throw new BusinessException(1974, "角色 " + role + " 不存在");
+			}
+		}
+		user.setRole(r);
+		user.setOrg(org);
 		save(user);
 
 		// 根据id生成用户名
@@ -78,23 +95,95 @@ public class OauthUserService extends BaseService<User> {
 	}
 
 	@Transactional
-	private Role registerRole(String code, String name) {
-		if (roleRepository.findByCode(code) != null) {
+	public RoleTemplate registerRoleTemplate(String code, String name) {
+		if (roleTemplateRepository.findByCode(code) != null) {
 		} else {
 			RoleTemplate roleTemplate = new RoleTemplate();
 			roleTemplate.setCode(code);
 			roleTemplate.setName(name);
 			roleTemplate = roleTemplateRepository.save(roleTemplate);
-
-			Role role = new Role();
-			role.setCode(code);
-			role.setName(name);
-			role.setRoleTemplate(roleTemplate);
-			role = roleRepository.save(role);
-			return role;
+			return roleTemplate;
 		}
 		return null;
 	}
+
+	@Transactional
+	public Role registerRole(RoleTemplate template,Org org) {
+			Role role = new Role();
+			role.setCode(template.getCode());
+			role.setName(template.getName());
+			role.setRoleTemplate(template);
+			role.setMenus(menuTemplateConvertMenu(template.getMenuTemplates(), org));
+			role.setOrg(org);
+			role = roleRepository.save(role);
+			return role;
+		
+	}
+	
+	@Transactional
+	public Org registerOrg(String name, User owner, Set<RoleTemplate> roles) {
+		if (orgRepository.findByName(name) != null) {
+		} else {
+			Org org = new Org();
+			org = orgRepository.save(org);
+			org.setName(name);
+			org.setDescription(name);
+			org.setOwner(owner);
+			Set<Role> roleTemplateConvertRole = roleTemplateConvertRole(roles, org);
+			return org;
+		}
+		return null;
+	}
+
+	private Set<Role> roleTemplateConvertRole(Set<RoleTemplate> roleTemplates, Org org) {
+		HashSet<Role> hashSet = new HashSet<Role>();
+		for (RoleTemplate roleTemplate : roleTemplates) {
+			Role role = new Role();
+			role.setCode(roleTemplate.getCode());
+			role.setName(roleTemplate.getName());
+			role.setRoleTemplate(roleTemplate);
+			role.setMenus(menuTemplateConvertMenu(roleTemplate.getMenuTemplates(), org));
+			role.setOrg(org);
+			roleRepository.save(role);
+			hashSet.add(role);
+		}
+		return hashSet;
+	}
+
+	private Set<Menu> menuTemplateConvertMenu(Set<MenuTemplate> MenuTemplates, Org org) {
+
+		HashSet<Menu> hashSet = new HashSet<Menu>();
+		for (MenuTemplate menuTemplate : MenuTemplates) {
+			Menu menu = new Menu();
+			menu.setMenuTemplate(menuTemplate);
+			menu.setOrg(org);
+			menu.setName(menuTemplate.getName());
+			menu.setIconUrl(menuTemplate.getIconUrl());
+			menu.setSort(menuTemplate.getSort());
+			menu.setUrl(menuTemplate.getUrl());
+			menu = menuRepository.save(menu);
+			hashSet.add(menu);
+		}
+		for (MenuTemplate menuTemplate : MenuTemplates) {
+			if (menuTemplate.getParent() != null) {
+				MenuTemplate menuTemplateParent = menuTemplate.getParent();
+				if(org == null) {
+					Menu menuParent = menuRepository.findByMenuTemplateAndOrgIsNull(menuTemplateParent);
+					Menu menu = menuRepository.findByMenuTemplateAndOrgIsNull(menuTemplate);
+					menu.setParent(menuParent);
+					menuRepository.save(menu);
+				}else {
+					Menu menuParent = menuRepository.findByMenuTemplateAndOrg(menuTemplateParent, org);
+					Menu menu = menuRepository.findByMenuTemplateAndOrg(menuTemplate, org);
+					menu.setParent(menuParent);
+					menuRepository.save(menu);
+				}
+				
+			}
+		}
+		return hashSet;
+	}
+
 	/**
 	 * 随机字符串
 	 */

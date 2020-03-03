@@ -64,8 +64,7 @@ public class Role implements IOrgEntity{
 	@JoinTable(name="role_menu",joinColumns = { @JoinColumn(name = "role_id") }, inverseJoinColumns = { @JoinColumn(name = "menu_id") })
 	private Set<Menu> menus;
 
-	@ManyToMany
-	@JoinTable(name="role_event",joinColumns = { @JoinColumn(name = "role_id") }, inverseJoinColumns = { @JoinColumn(name = "event_id") })
+	@ManyToMany(mappedBy = "roles")
 	private Set<Event> events;
 	
 	

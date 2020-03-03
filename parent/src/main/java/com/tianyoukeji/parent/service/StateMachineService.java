@@ -111,7 +111,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	@Value("${server.name}")
 	private String serverName;
 
-	//状态机池子
+	//状态机池子,orgId为null时候，以0作为key
 	private static HashMap<String,HashMap<Long,Builder<String, String>>> pools = new HashMap<String,HashMap<Long,Builder<String,String>>>();
 	
 	//所有服务的静态引用
@@ -144,7 +144,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 * @param
 	 * @return
 	 */
-	public List<String> currentUserStateExecutableEvent(String state) {
+	public List<String> currentUserExecutableEvent(String state) {
 		State findByEntity=null;
 		User currentUser = getCurrentUser();
 		
@@ -180,18 +180,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		return collect;
 	}
 
-//	/**
-//	 * 	返回企业的当前实体的状态机builder 
-//	 * @param orgId 可以为null
-//	 * @return
-//	 */
-//	
-//	public Builder<String,String> acquireBuilder(Long orgId){
-//		if(orgId == null) {
-//			orgId = 0l;
-//		}
-//		return pools.get(getServiceEntity()).get(orgId);
-//	}
 	
 	/**
 	 * 	刷新企业的当前实体的状态机builder 
@@ -335,11 +323,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		services.put(getServiceEntity(), this);
 	}
 
-	/**
-	 * 把当前实体的各个企业独立的状态机的builder，存储到redis里面，方便以后调用
-	 * 
-	 * @throws Exception
-	 */
 	private void _init_statemachine() {
 
 		List<State> allStates = stateRepository.findByEntity(getServiceEntity());
@@ -517,11 +500,11 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			};
 
 		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
+//			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
+			return null;
 		} catch (SecurityException e) {
-			e.printStackTrace();
-			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
+//			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
+			return null;
 		}
 
 	}
@@ -557,28 +540,28 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			};
 
 		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
+//			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
+			return null;
 		} catch (SecurityException e) {
-			e.printStackTrace();
-			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
+//			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
+			return null;
 		}
 	}
 	
-	/**
-	 * 事件可执行角色
-	 * 
-	 * @param
-	 * @return
-	 */
-	private Set<String> eventExecutableRole(Event event) {
-		if (event != null) {
-			Set<String> roles = event.getRoles().stream().map(e -> e.getCode()).collect(Collectors.toSet());
-			return roles;
-		} else {
-			throw new BusinessException(1561, "event不能为空");
-		}
-	}
+//	/**
+//	 * 事件可执行角色
+//	 * 
+//	 * @param
+//	 * @return
+//	 */
+//	private Set<String> eventExecutableRole(Event event) {
+//		if (event != null) {
+//			Set<String> roles = event.getRoles().stream().map(e -> e.getCode()).collect(Collectors.toSet());
+//			return roles;
+//		} else {
+//			throw new BusinessException(1561, "event不能为空");
+//		}
+//	}
 
 	private Action<String, String> errorAction() {
 		return new Action<String, String>() {

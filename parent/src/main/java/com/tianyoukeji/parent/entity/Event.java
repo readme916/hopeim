@@ -75,7 +75,8 @@ public class Event implements IOrgEntity{
 	@Column(name = "sort")
 	private Integer sort = 0;
 
-	@ManyToMany(mappedBy = "events")
+	@ManyToMany
+	@JoinTable(name="event_role",joinColumns = { @JoinColumn(name = "event_id") }, inverseJoinColumns = { @JoinColumn(name = "role_id") })
 	private Set<Role> roles;
 	
 	@ManyToOne

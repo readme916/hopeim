@@ -4,4 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StateTemplateRepository extends JpaRepository<StateTemplate, Long> {
 
+	StateTemplate findByEntityAndCode(String entity,String code);
+	
 }

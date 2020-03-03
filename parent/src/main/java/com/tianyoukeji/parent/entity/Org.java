@@ -20,11 +20,12 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IRegionEntity;
 import com.tianyoukeji.parent.entity.template.OrgTemplate;
 
 @Entity
-@Table(name = "org")
-public class Org implements IBaseEntity{
+@Table(name = "org" , uniqueConstraints= {@UniqueConstraint(columnNames= {"name"})})
+public class Org implements IRegionEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -70,24 +71,48 @@ public class Org implements IBaseEntity{
 	private OrgTemplate orgTemplate;
 	
 	@ManyToOne
-	@JoinColumn(name="region_id")
-	private Region region;
+	@JoinColumn(name="country_id")
+	private Region country;
+	
+	@ManyToOne
+	@JoinColumn(name="province_id")
+	private Region province;
+	
+	@ManyToOne
+	@JoinColumn(name="city_id")
+	private Region city;
 	
 	
+	public Region getCountry() {
+		return country;
+	}
+
+	public void setCountry(Region country) {
+		this.country = country;
+	}
+
+	public Region getProvince() {
+		return province;
+	}
+
+	public void setProvince(Region province) {
+		this.province = province;
+	}
+
+	public Region getCity() {
+		return city;
+	}
+
+	public void setCity(Region city) {
+		this.city = city;
+	}
+
 	public Set<Role> getRoles() {
 		return roles;
 	}
 
 	public void setRoles(Set<Role> roles) {
 		this.roles = roles;
-	}
-
-	public Region getRegion() {
-		return region;
-	}
-
-	public void setRegion(Region region) {
-		this.region = region;
 	}
 
 	public Set<Department> getDepartments() {

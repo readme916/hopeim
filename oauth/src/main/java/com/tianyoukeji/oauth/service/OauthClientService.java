@@ -22,7 +22,7 @@ import javax.annotation.PostConstruct;
 public class OauthClientService extends BaseService<Oauth2Client>{
 
     @PostConstruct
-    private void init() {
+    public void init() {
     	if(this.count()==0) {
     		Oauth2Client oauth2ClientPlatform = new Oauth2Client();
     		oauth2ClientPlatform.setAccessTokenValidity(86400*30);
