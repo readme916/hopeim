@@ -30,9 +30,6 @@ public class UserService extends StateMachineService<User> {
 	private NamespaceRedisService namespaceRedisService;
 	
 	@Autowired
-	private StateRepository stateRepository;
-	
-	@Autowired
 	private StateTemplateService stateTemplateService;
 	
 	@Autowired

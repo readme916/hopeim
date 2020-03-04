@@ -1,31 +1,28 @@
 package com.tianyoukeji.parent.entity.template;
 
 import java.util.Date;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
-import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
-@Table(name = "timer_template", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
+@Table(name = "timer_template", uniqueConstraints= {@UniqueConstraint(columnNames= {"source_state_template_id","code"})})
+@EntityListeners(AuditingEntityListener.class)
 public class TimerTemplate implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

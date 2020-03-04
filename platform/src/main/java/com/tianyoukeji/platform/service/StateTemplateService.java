@@ -25,6 +25,7 @@ import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.TimerRepository;
 import com.tianyoukeji.parent.entity.template.EventTemplate;
 import com.tianyoukeji.parent.entity.template.EventTemplateRepository;
+import com.tianyoukeji.parent.entity.template.OrgTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
 import com.tianyoukeji.parent.entity.template.StateTemplate;
@@ -105,6 +106,7 @@ public class StateTemplateService {
 		state.setOrg(org);
 		state.setThenGuardSpel(stateTemplate.getThenGuardSpel());
 		state.setThenTarget(stateTemplateTransfer(stateTemplate.getThenTarget(),org));
+		state.setStateTemplate(stateTemplate);
 		state = stateRepository.saveAndFlush(state);
 		timerTemplateTransfer(stateTemplate.getTimerTemplates(),org,state);
 		Set<com.tianyoukeji.parent.entity.Event> collect = new HashSet<>();
@@ -134,6 +136,7 @@ public class StateTemplateService {
 			timer.setSource(state);
 			timer.setTimerInterval(timerTemplate.getTimerInterval());
 			timer.setTimerOnce(timerTemplate.getTimerOnce());
+			timer.setTimerTemplate(timerTemplate);
 			timer= timerRepository.saveAndFlush(timer);
 			timers.add(timer);
 		}
@@ -166,6 +169,7 @@ public class StateTemplateService {
 		event.setOrg(org);
 		event.setRoles(getOrgRoles(eventTemplate.getRoleTemplates(), org));
 		event.setSort(eventTemplate.getSort());
+		event.setEventTemplate(eventTemplate);
 		event = eventRepository.saveAndFlush(event);
 		event.setTarget(stateTemplateTransfer(eventTemplate.getTarget(),org));
 		return eventRepository.saveAndFlush(event);
@@ -298,20 +302,20 @@ public class StateTemplateService {
 			 */
 			Set<Entry<String, State>> stateSet = allStates.entrySet();
 			for (Entry<String, State> entry : stateSet) {
-				stateToStateTemplate(entry.getValue());
+				convertToStateTemplate(entry.getValue());
 			}
 			Set<Entry<String, Event>> eventSet = allEvents.entrySet();
 			for (Entry<String, Event> entry : eventSet) {
-				eventToEventTemplate(entry.getValue());
+				convertToEventTemplate(entry.getValue());
 			}
 			Set<Entry<String, Timer>> timerSet = allTimers.entrySet();
 			for (Entry<String, Timer> entry : timerSet) {
-				timerToTimerTemplate(entry.getValue());
+				convertToTimerTemplate(entry.getValue());
 			}
 			return this;
 		}
 
-		private StateTemplate stateToStateTemplate(State state) {
+		private StateTemplate convertToStateTemplate(State state) {
 			if (state == null) {
 				return null;
 			}
@@ -325,19 +329,19 @@ public class StateTemplateService {
 			stateTemplate.setEntity(entity);
 			stateTemplate.setExitAction(state.exitAction);
 			stateTemplate.setFirstGuardSpel(state.firstGuardSpel);
-			stateTemplate.setFirstTarget(stateToStateTemplate(getState(state.firstTarget)));
+			stateTemplate.setFirstTarget(convertToStateTemplate(getState(state.firstTarget)));
 			stateTemplate.setIsChoice(state.isChoice);
 			stateTemplate.setIsEnd(state.isEnd);
 			stateTemplate.setIsStart(state.isStart);
-			stateTemplate.setLastTarget(stateToStateTemplate(getState(state.lastTarget)));
+			stateTemplate.setLastTarget(convertToStateTemplate(getState(state.lastTarget)));
 			stateTemplate.setName(state.name);
 			stateTemplate.setThenGuardSpel(state.thenGuardSpel);
-			stateTemplate.setThenTarget(stateToStateTemplate(getState(state.thenTarget)));
+			stateTemplate.setThenTarget(convertToStateTemplate(getState(state.thenTarget)));
 			stateTemplate = stateTemplateRepository.saveAndFlush(stateTemplate);
 			return stateTemplate;
 		}
 
-		private EventTemplate eventToEventTemplate(Event event) {
+		private EventTemplate convertToEventTemplate(Event event) {
 			if (event == null) {
 				return null;
 			}
@@ -351,28 +355,28 @@ public class StateTemplateService {
 			eventTemplate.setGuardSpel(event.guardSpel);
 			eventTemplate.setName(event.name);
 			eventTemplate.setSort(event.sort);
-			eventTemplate.setTarget(stateToStateTemplate(getState(event.target)));
+			eventTemplate.setTarget(convertToStateTemplate(getState(event.target)));
+			HashSet<String> roles = event.roles;
+			HashSet<RoleTemplate> roleTemplates = new HashSet<>();
+			for (String role : roles) {
+				RoleTemplate roleToRoleTemplate = convertToRoleTemplate(role);
+				roleTemplates.add(roleToRoleTemplate);
+			}
+			eventTemplate.setRoleTemplates(roleTemplates);
 			eventTemplate = eventTemplateRepository.saveAndFlush(eventTemplate);
 
 			Set<State> collect = allStates.values().stream().filter(s -> s.events.contains(event))
 					.collect(Collectors.toSet());
 			for (State state : collect) {
-				StateTemplate stateToStateTemplate = stateToStateTemplate(getState(state.code));
+				StateTemplate stateToStateTemplate = convertToStateTemplate(getState(state.code));
 				stateToStateTemplate.getEventTemplates().add(eventTemplate);
 				stateTemplateRepository.saveAndFlush(stateToStateTemplate);
-			}
-
-			HashSet<String> roles = event.roles;
-			for (String role : roles) {
-				RoleTemplate roleToRoleTemplate = roleToRoleTemplate(role);
-				roleToRoleTemplate.getEventTemplates().add(eventTemplate);
-				roleTemplateRepository.saveAndFlush(roleToRoleTemplate);
 			}
 			return eventTemplate;
 
 		}
 
-		private TimerTemplate timerToTimerTemplate(Timer timer) {
+		private TimerTemplate convertToTimerTemplate(Timer timer) {
 			if (timer == null) {
 				return null;
 			}
@@ -385,17 +389,17 @@ public class StateTemplateService {
 			timerTemplate.setCode(timer.code);
 			timerTemplate.setEntity(entity);
 			timerTemplate.setName(timer.name);
-			timerTemplate.setSource(stateToStateTemplate(getState(timer.source)));
+			timerTemplate.setSource(convertToStateTemplate(getState(timer.source)));
 			timerTemplate.setTimerInterval(timer.timerInterval);
 			timerTemplate.setTimerOnce(timer.timerOnce);
 			return timerTemplateRepository.saveAndFlush(timerTemplate);
 		}
 
-		private RoleTemplate roleToRoleTemplate(String role) {
+		private RoleTemplate convertToRoleTemplate(String role) {
 			if (role == null) {
 				return null;
 			}
-			RoleTemplate findByCode = roleTemplateRepository.findByCode(role);
+			RoleTemplate findByCode = roleTemplateRepository.findByCode(role);			
 			if (findByCode == null) {
 				throw new BusinessException(1311, "角色" + role + "不存在");
 			}

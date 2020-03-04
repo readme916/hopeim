@@ -5,11 +5,11 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -18,13 +18,19 @@ import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.tianyoukeji.parent.entity.Event;
-import com.tianyoukeji.parent.entity.Menu;
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
 
+
+/**
+ * 全局角色对象，不同的企业同名的角色，应该使用不同的code以区分
+ * @author Administrator
+ *
+ */
 @Entity
 @Table(name = "role_template" , uniqueConstraints= {@UniqueConstraint(columnNames= {"code"})})
+@EntityListeners(AuditingEntityListener.class)
 public class RoleTemplate implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,19 +55,23 @@ public class RoleTemplate implements IBaseEntity{
 	@Column(name = "code")
 	private String code;
 	
+	@ManyToMany(mappedBy = "roleTemplates")
+	private Set<MenuTemplate> menuTemplates;
+	
+	@ManyToMany(mappedBy = "roleTemplates")
+	private Set<EventTemplate> eventTemplates;
+	
 	@ManyToOne
 	@JoinColumn(name= "org_template_id")
 	private OrgTemplate orgTemplate;
-	
-	@ManyToMany
-	@JoinTable(name="role_template_menu_template",joinColumns = { @JoinColumn(name = "role_template_id") }, inverseJoinColumns = { @JoinColumn(name = "menu_template_id") })
-	private Set<MenuTemplate> menuTemplates;
-	
-	@ManyToMany
-	@JoinTable(name="role_template_event_template",joinColumns = { @JoinColumn(name = "role_template_id") }, inverseJoinColumns = { @JoinColumn(name = "event_template_id") })
-	private Set<EventTemplate> eventTemplates;
-	
 
+	public OrgTemplate getOrgTemplate() {
+		return orgTemplate;
+	}
+
+	public void setOrgTemplate(OrgTemplate orgTemplate) {
+		this.orgTemplate = orgTemplate;
+	}
 
 	public Set<EventTemplate> getEventTemplates() {
 		return eventTemplates;
@@ -126,17 +136,6 @@ public class RoleTemplate implements IBaseEntity{
 	public void setCode(String code) {
 		this.code = code;
 	}
-
-	public OrgTemplate getOrgTemplate() {
-		return orgTemplate;
-	}
-
-	public void setOrgTemplate(OrgTemplate orgTemplate) {
-		this.orgTemplate = orgTemplate;
-	}
-	
-	
-	
 
 	
 }

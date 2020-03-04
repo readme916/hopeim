@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -20,13 +21,16 @@ import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
+import com.tianyoukeji.parent.entity.template.StateTemplate;
 
 @Entity
 @Table(name = "state", uniqueConstraints= {@UniqueConstraint(columnNames= {"org_id","entity","code"})})
+@EntityListeners(AuditingEntityListener.class)
 public class State implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -105,6 +109,19 @@ public class State implements IOrgEntity{
 	@ManyToOne
 	@JoinColumn(name= "org_id")
 	private Org org;
+	
+	@ManyToOne
+	@JoinColumn(name = "state_template_id")
+	private StateTemplate stateTemplate;
+	
+
+	public StateTemplate getStateTemplate() {
+		return stateTemplate;
+	}
+
+	public void setStateTemplate(StateTemplate stateTemplate) {
+		this.stateTemplate = stateTemplate;
+	}
 
 	public Org getOrg() {
 		return org;

@@ -41,8 +41,12 @@ public abstract class BaseService<T extends IBaseEntity> {
 	/**
 	 * 继承的方法,状态机初始化之前调用，可以插入一些业务的state等到states数据库，完成状态机的设置
 	 */
-	@PostConstruct
 	abstract protected void init();
+	
+	@PostConstruct
+	public void base_init() {
+		this.init();
+	}
 	
 	/**
 	 * 	返回当前用户

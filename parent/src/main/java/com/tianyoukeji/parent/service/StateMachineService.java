@@ -311,7 +311,8 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	// 内部方法 ----------------------------------------------------------------------
 
 	@PostConstruct
-	private void base_init() {
+	@Override
+	public void base_init() {
 		this.init();
 		try {
 			this._init_statemachine();

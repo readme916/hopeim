@@ -4,4 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DepartmentTemplateRepository extends JpaRepository<DepartmentTemplate, Long> {
 
+	DepartmentTemplate findByCodeAndOrgTemplate(String code , OrgTemplate orgTemplate);
+	
 }

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -12,21 +13,20 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
-import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
+import com.tianyoukeji.parent.entity.template.EventTemplate;
 
 @Entity
 @Table(name = "event", uniqueConstraints= {@UniqueConstraint(columnNames= {"org_id","entity","code"})})
+@EntityListeners(AuditingEntityListener.class)
 public class Event implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -80,10 +80,22 @@ public class Event implements IOrgEntity{
 	private Set<Role> roles;
 	
 	@ManyToOne
+	@JoinColumn(name="event_template_id")
+	private EventTemplate eventTemplate;
+	
+	@ManyToOne
 	@JoinColumn(name= "org_id")
 	private Org org;
 	
 	
+	public EventTemplate getEventTemplate() {
+		return eventTemplate;
+	}
+
+	public void setEventTemplate(EventTemplate eventTemplate) {
+		this.eventTemplate = eventTemplate;
+	}
+
 	public Org getOrg() {
 		return org;
 	}

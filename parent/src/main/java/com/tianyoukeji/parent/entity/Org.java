@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -18,6 +19,7 @@ import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.base.IRegionEntity;
@@ -25,6 +27,7 @@ import com.tianyoukeji.parent.entity.template.OrgTemplate;
 
 @Entity
 @Table(name = "org" , uniqueConstraints= {@UniqueConstraint(columnNames= {"name"})})
+@EntityListeners(AuditingEntityListener.class)
 public class Org implements IRegionEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

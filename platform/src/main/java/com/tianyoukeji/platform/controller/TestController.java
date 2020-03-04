@@ -28,7 +28,7 @@ public class TestController extends DefaultHandler{
 	
 	@GetMapping(path="/test/test")
 	public void test1() {
-		stateTemplateService.deploy("user", null);
+//		stateTemplateService.deploy("user", null);
 	}
 	@GetMapping(path = "/test/enable")
 	public Object enable(Authentication authentication) {

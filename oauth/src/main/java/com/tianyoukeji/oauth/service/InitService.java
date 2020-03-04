@@ -30,34 +30,34 @@ public class InitService extends BaseService<User> {
 	@Override
 	@PostConstruct
 	public void init() {
-		if (OauthUserService.count() == 0) {
-			
-			/** 
-			 * 	注册无组织角色
-			 */
-			RoleTemplate developer = OauthUserService.registerRoleTemplate("developer", "开发者");
-			OauthUserService.registerRole(developer, null);
-			RoleTemplate user = OauthUserService.registerRoleTemplate("user", "普通用户");
-			OauthUserService.registerRole(user, null);
-			
-			/**
-			 * 	注册用户
-			 */
-			User admin = OauthUserService.registerUser("admin", "admin", "developer",null);
-			
-			
-			/**
-			 * 	注册有组织角色
-			 */
-			RoleTemplate orgOwner = OauthUserService.registerRoleTemplate("orgOwner", "企业主");
-			RoleTemplate orgManager = OauthUserService.registerRoleTemplate("orgManager", "企业管理员");
-			RoleTemplate orgUser = OauthUserService.registerRoleTemplate("orgUser", "企业员工");
-			HashSet<RoleTemplate> hashSet = new HashSet<RoleTemplate>();
-			hashSet.add(orgOwner);
-			hashSet.add(orgManager);
-			hashSet.add(orgUser);
-			OauthUserService.registerOrg("天邮科技有限公司", admin, hashSet);
+//		if (OauthUserService.count() == 0) {
+//			
+//			/** 
+//			 * 	注册无组织角色
+//			 */
+//			RoleTemplate developer = OauthUserService.registerRoleTemplate("developer", "开发者");
+//			OauthUserService.registerRole(developer, null);
+//			RoleTemplate user = OauthUserService.registerRoleTemplate("user", "普通用户");
+//			OauthUserService.registerRole(user, null);
+//			
+//			/**
+//			 * 	注册用户
+//			 */
+//			User admin = OauthUserService.registerUser("admin", "admin", "developer",null);
+//			
+//			
+//			/**
+//			 * 	注册有组织角色
+//			 */
+//			RoleTemplate orgOwner = OauthUserService.registerRoleTemplate("orgOwner", "企业主");
+//			RoleTemplate orgManager = OauthUserService.registerRoleTemplate("orgManager", "企业管理员");
+//			RoleTemplate orgUser = OauthUserService.registerRoleTemplate("orgUser", "企业员工");
+//			HashSet<RoleTemplate> hashSet = new HashSet<RoleTemplate>();
+//			hashSet.add(orgOwner);
+//			hashSet.add(orgManager);
+//			hashSet.add(orgUser);
+//			OauthUserService.registerOrg("天邮科技有限公司", admin, hashSet);
 
-		}
+//		}
 	}
 }

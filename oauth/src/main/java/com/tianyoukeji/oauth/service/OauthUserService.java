@@ -94,63 +94,7 @@ public class OauthUserService extends BaseService<User> {
 		return user;
 	}
 
-	@Transactional
-	public RoleTemplate registerRoleTemplate(String code, String name) {
-		RoleTemplate findByCode = roleTemplateRepository.findByCode(code);
-		if (findByCode != null) {
-			return findByCode;
-		} else {
-			RoleTemplate roleTemplate = new RoleTemplate();
-			roleTemplate.setCode(code);
-			roleTemplate.setName(name);
-			roleTemplate = roleTemplateRepository.save(roleTemplate);
-			return roleTemplate;
-		}
-		
-	}
 
-	@Transactional
-	public Role registerRole(RoleTemplate template,Org org) {
-			Role role = new Role();
-			role.setCode(template.getCode());
-			role.setName(template.getName());
-			role.setRoleTemplate(template);
-			role.setMenus(menuTemplateConvertMenu(template.getMenuTemplates(), org));
-			role.setOrg(org);
-			role = roleRepository.save(role);
-			return role;
-		
-	}
-	
-	@Transactional
-	public Org registerOrg(String name, User owner, Set<RoleTemplate> roles) {
-		if (orgRepository.findByName(name) != null) {
-		} else {
-			Org org = new Org();
-			org = orgRepository.save(org);
-			org.setName(name);
-			org.setDescription(name);
-			org.setOwner(owner);
-			Set<Role> roleTemplateConvertRole = roleTemplateConvertRole(roles, org);
-			return org;
-		}
-		return null;
-	}
-
-	private Set<Role> roleTemplateConvertRole(Set<RoleTemplate> roleTemplates, Org org) {
-		HashSet<Role> hashSet = new HashSet<Role>();
-		for (RoleTemplate roleTemplate : roleTemplates) {
-			Role role = new Role();
-			role.setCode(roleTemplate.getCode());
-			role.setName(roleTemplate.getName());
-			role.setRoleTemplate(roleTemplate);
-			role.setMenus(menuTemplateConvertMenu(roleTemplate.getMenuTemplates(), org));
-			role.setOrg(org);
-			roleRepository.save(role);
-			hashSet.add(role);
-		}
-		return hashSet;
-	}
 
 	private Set<Menu> menuTemplateConvertMenu(Set<MenuTemplate> menuTemplates, Org org) {
 

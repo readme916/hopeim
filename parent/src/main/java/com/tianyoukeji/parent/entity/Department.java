@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -18,6 +19,7 @@ import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
@@ -25,6 +27,7 @@ import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
 @Table(name = "department")
+@EntityListeners(AuditingEntityListener.class)
 public class Department implements IOrgEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +48,9 @@ public class Department implements IOrgEntity{
 	
 	@Column(name = "name")
 	private String name;
+	
+	@Column(name = "code")
+	private String code;
 	
 	@ManyToOne
 	@JoinColumn(name = "org_id")
@@ -68,6 +74,14 @@ public class Department implements IOrgEntity{
 	@JoinColumn(name = "department_template_id")
 	private DepartmentTemplate departmentTemplate;
 	
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
 	public User getManager() {
 		return manager;
 	}
