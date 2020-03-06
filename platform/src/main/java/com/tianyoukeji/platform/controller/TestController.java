@@ -31,8 +31,8 @@ public class TestController extends DefaultHandler{
 //		stateTemplateService.deploy("user", null);
 	}
 	@GetMapping(path = "/test/enable")
-	public Object enable(Authentication authentication) {
-		return userService.dispatchEvent(1l, "enable");
+	public void enable(Authentication authentication) {
+		userService.dispatchEvent(1l, "enable");
 //		User findById = userService.findById(5l);
 //		State state = findById.getState();
 //		System.out.println(userService.stateExecutableEvent(state));
@@ -41,8 +41,8 @@ public class TestController extends DefaultHandler{
 	}
 	
 	@GetMapping(path = "/test/forbid")
-	public Object forbid(Authentication authentication) {
-		return userService.dispatchEvent(1l, "forbid");
+	public void forbid(Authentication authentication) {
+		userService.dispatchEvent(1l, "forbid");
 //		User findById = userService.findById(5l);
 //		State state = findById.getState();
 //		System.out.println(userService.stateExecutableEvent(state));

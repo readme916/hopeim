@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +22,14 @@ import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.entity.Event;
 import com.tianyoukeji.parent.entity.EventRepository;
 import com.tianyoukeji.parent.entity.Org;
+import com.tianyoukeji.parent.entity.Role;
 import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.TimerRepository;
 import com.tianyoukeji.parent.entity.template.EventTemplate;
 import com.tianyoukeji.parent.entity.template.EventTemplateRepository;
 import com.tianyoukeji.parent.entity.template.OrgTemplate;
+import com.tianyoukeji.parent.entity.template.OrgTemplateRepository;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
 import com.tianyoukeji.parent.entity.template.StateTemplate;
@@ -34,6 +38,7 @@ import com.tianyoukeji.parent.entity.template.TimerTemplate;
 import com.tianyoukeji.parent.entity.template.TimerTemplateRepository;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 import com.tianyoukeji.parent.service.RateLimiterService.RateLimiterNamespace;
+import com.tianyoukeji.platform.service.StateTemplateService.Builder;
 import com.tianyoukeji.platform.service.StateTemplateService.State;
 
 @Service
@@ -49,7 +54,7 @@ public class StateTemplateService {
 
 	@Autowired
 	private TimerRepository timerRepository;
-	
+
 	@Autowired
 	private RoleRepository roleRepository;
 
@@ -64,65 +69,120 @@ public class StateTemplateService {
 
 	@Autowired
 	private TimerTemplateRepository timerTemplateRepository;
-
 	
+	@Autowired
+	private OrgTemplateRepository orgTemplateRepository;
+	
+	@Autowired
+	private OrgTemplateService orgTemplateService;
+
+	/**
+	 * 创建用户的状态机
+	 */
+	@PostConstruct
+	public void init() {
+		if (orgTemplateRepository.count() == 0) {
+			com.tianyoukeji.platform.service.OrgTemplateService.Builder menu = orgTemplateService.getBuilder().code("platform").name("天邮科技总平台模板")
+					.department("部门1", "department1", null)
+					.department("部门2", "department2", "department1")
+					.department("部门2-2", "department2_2", "department2")
+					.department("部门3", "department3", "department1")
+					.role("超管", "platform_super")
+					.role("管理员", "platform_manager")
+					.role("员工", "platform_employee")
+					.menu("主页", "home", "/", 0, null)
+					.menu("第一页", "one", "/one", 1, "home")
+					.menu("第二页", "two", "/two", 2, "home").menu("第一页二级页", "one_one", "/oneone", 3, "one");
+			menu.getMenu("home").addRole("platform_manager").addRole("platform_super");
+			menu.getMenu("one").addRole("platform_super");
+			menu.getMenu("two").addRole("platform_manager");
+			menu.getMenu("one_one").addRole("platform_super");
+			menu.build();
+		}
+		
+		
+		if (stateTemplateRepository.count() == 0) {
+			Builder builder = getBuilder();
+			builder.entity("user").state("created", "创建", true, false, false, null, null, null, null, null, null, null)
+					.state("enabled", "有效用户", false, false, false, null, null, null, null, null, null, null)
+					.state("disabled", "禁止用户", false, false, false, null, null, null, null, null, null, null)
+					.event("enable", "有效", "enabled", null, "doEnable", 0)
+					.event("disable", "禁止", "disabled", null, "doDisable", 1)
+					.event("kick", "强制下线", null, null, "doKick", 2)
+					.timer("speak", "说话定时器", "enabled", "doSpeak", null, 20);
+
+			builder.getState("created").addEvent("enable").addEvent("disable");
+			builder.getState("enabled").addEvent("disable").addEvent("kick");
+			builder.getState("disabled").addEvent("enable");
+
+			builder.getEvent("enable").addRole("developer").addRole("platform_super");
+			builder.getEvent("disable").addRole("developer").addRole("platform_super");
+			builder.build();
+		}
+	}
+
+	/**
+	 * 企业专属的state系列 ，每个企业一套专属的state记录
+	 * 
+	 * @param entity
+	 * @param org
+	 */
+
 	@Transactional
-	public void entityStateDeploy(String entity, Org org) {
+	public void entityStateDeploy(String entity) {
 		List<StateTemplate> findByEntity = stateTemplateRepository.findByEntity(entity);
+		
+		
 		for (StateTemplate stateTemplate : findByEntity) {
-			stateTemplateTransfer(stateTemplate, org);
+			stateTemplateTransfer(stateTemplate);
 		}
 	}
 
 	// -------------------------------------private----------------------------
 
-	private com.tianyoukeji.parent.entity.State stateTemplateTransfer(StateTemplate stateTemplate, Org org) {
-		if(stateTemplate==null) {
+	private com.tianyoukeji.parent.entity.State stateTemplateTransfer(StateTemplate stateTemplate) {
+		if (stateTemplate == null) {
 			return null;
 		}
-		if(org == null) {
-			com.tianyoukeji.parent.entity.State findByOrgIsNullAndEntityAndCode = stateRepository.findByOrgIsNullAndEntityAndCode(stateTemplate.getEntity(), stateTemplate.getCode());
-			if(findByOrgIsNullAndEntityAndCode!=null) {
-				return findByOrgIsNullAndEntityAndCode;
-			}
-		}else {
-			com.tianyoukeji.parent.entity.State findByOrgIsNullAndEntityAndCode = stateRepository.findByOrgUuidAndEntityAndCode(org.getUuid(),stateTemplate.getEntity(), stateTemplate.getCode());
-			if(findByOrgIsNullAndEntityAndCode!=null) {
-				return findByOrgIsNullAndEntityAndCode;
-			}
+
+		com.tianyoukeji.parent.entity.State findByOrgIsNullAndEntityAndCode = stateRepository
+				.findByEntityAndCode(stateTemplate.getEntity(), stateTemplate.getCode());
+		if (findByOrgIsNullAndEntityAndCode != null) {
+			return findByOrgIsNullAndEntityAndCode;
 		}
+
 		com.tianyoukeji.parent.entity.State state = new com.tianyoukeji.parent.entity.State();
 		state.setCode(stateTemplate.getCode());
 		state.setEnterAction(stateTemplate.getEnterAction());
 		state.setEntity(stateTemplate.getEntity());
 		state.setExitAction(stateTemplate.getExitAction());
 		state.setFirstGuardSpel(stateTemplate.getFirstGuardSpel());
-		state.setFirstTarget(stateTemplateTransfer(stateTemplate.getFirstTarget(),org));
+		state.setFirstTarget(stateTemplateTransfer(stateTemplate.getFirstTarget()));
 		state.setIsChoice(stateTemplate.getIsChoice());
 		state.setIsEnd(stateTemplate.getIsEnd());
 		state.setIsStart(stateTemplate.getIsStart());
-		state.setLastTarget(stateTemplateTransfer(stateTemplate.getLastTarget(), org));
+		state.setLastTarget(stateTemplateTransfer(stateTemplate.getLastTarget()));
 		state.setName(stateTemplate.getName());
-		state.setOrg(org);
 		state.setThenGuardSpel(stateTemplate.getThenGuardSpel());
-		state.setThenTarget(stateTemplateTransfer(stateTemplate.getThenTarget(),org));
+		state.setThenTarget(stateTemplateTransfer(stateTemplate.getThenTarget()));
 		state.setStateTemplate(stateTemplate);
 		state = stateRepository.saveAndFlush(state);
-		timerTemplateTransfer(stateTemplate.getTimerTemplates(),org,state);
+		timerTemplateTransfer(stateTemplate.getTimerTemplates(), state);
 		Set<com.tianyoukeji.parent.entity.Event> collect = new HashSet<>();
-		
+
 		Set<EventTemplate> eventTemplates = stateTemplate.getEventTemplates();
 		for (EventTemplate eventTemplate : eventTemplates) {
-			collect.add(eventTemplateTransfer(eventTemplate,org));
+			collect.add(eventTemplateTransfer(eventTemplate));
 		}
 		state.setEvents(collect);
-		state  = stateRepository.saveAndFlush(state);
+		state = stateRepository.saveAndFlush(state);
 		return state;
-		
+
 	}
-	
-	private Set<com.tianyoukeji.parent.entity.Timer> timerTemplateTransfer(Set<TimerTemplate> timerTemplates ,Org org , com.tianyoukeji.parent.entity.State state){
-		if(timerTemplates==null || timerTemplates.isEmpty()) {
+
+	private Set<com.tianyoukeji.parent.entity.Timer> timerTemplateTransfer(Set<TimerTemplate> timerTemplates,
+			com.tianyoukeji.parent.entity.State state) {
+		if (timerTemplates == null || timerTemplates.isEmpty()) {
 			return null;
 		}
 		HashSet<com.tianyoukeji.parent.entity.Timer> timers = new HashSet<com.tianyoukeji.parent.entity.Timer>();
@@ -132,76 +192,64 @@ public class StateTemplateService {
 			timer.setCode(timerTemplate.getCode());
 			timer.setEntity(timerTemplate.getEntity());
 			timer.setName(timerTemplate.getName());
-			timer.setOrg(org);
 			timer.setSource(state);
 			timer.setTimerInterval(timerTemplate.getTimerInterval());
 			timer.setTimerOnce(timerTemplate.getTimerOnce());
 			timer.setTimerTemplate(timerTemplate);
-			timer= timerRepository.saveAndFlush(timer);
+			timer = timerRepository.saveAndFlush(timer);
 			timers.add(timer);
 		}
 		return timers;
 	}
-	
-	private com.tianyoukeji.parent.entity.Event eventTemplateTransfer(EventTemplate eventTemplate, Org org) {
-		if(eventTemplate==null) {
+
+	private com.tianyoukeji.parent.entity.Event eventTemplateTransfer(EventTemplate eventTemplate) {
+		if (eventTemplate == null) {
 			return null;
 		}
-		if(org == null) {
-			com.tianyoukeji.parent.entity.Event findByOrgIsNullAndEntityAndCode = eventRepository.findByOrgIsNullAndEntityAndCode(eventTemplate.getEntity(), eventTemplate.getCode());
-			if(findByOrgIsNullAndEntityAndCode!=null) {
-				return findByOrgIsNullAndEntityAndCode;
-			}
-			
-		}else {
-			com.tianyoukeji.parent.entity.Event findByOrgIsNullAndEntityAndCode = eventRepository.findByOrgUuidAndEntityAndCode(org.getUuid(),eventTemplate.getEntity(), eventTemplate.getCode());
-			if(findByOrgIsNullAndEntityAndCode!=null) {
-				return findByOrgIsNullAndEntityAndCode;
-			}
+
+		com.tianyoukeji.parent.entity.Event findByOrgIsNullAndEntityAndCode = eventRepository
+				.findByEntityAndCode(eventTemplate.getEntity(), eventTemplate.getCode());
+		if (findByOrgIsNullAndEntityAndCode != null) {
+			return findByOrgIsNullAndEntityAndCode;
 		}
-		
+
 		com.tianyoukeji.parent.entity.Event event = new com.tianyoukeji.parent.entity.Event();
 		event.setAction(eventTemplate.getAction());
 		event.setCode(eventTemplate.getCode());
 		event.setEntity(eventTemplate.getEntity());
 		event.setGuardSpel(eventTemplate.getGuardSpel());
 		event.setName(eventTemplate.getName());
-		event.setOrg(org);
-		event.setRoles(getOrgRoles(eventTemplate.getRoleTemplates(), org));
+		event.setRoles(getRoles(eventTemplate.getRoleTemplates()));
 		event.setSort(eventTemplate.getSort());
 		event.setEventTemplate(eventTemplate);
 		event = eventRepository.saveAndFlush(event);
-		event.setTarget(stateTemplateTransfer(eventTemplate.getTarget(),org));
+		event.setTarget(stateTemplateTransfer(eventTemplate.getTarget()));
 		return eventRepository.saveAndFlush(event);
-		
+
 	}
-	
-	private Set<com.tianyoukeji.parent.entity.Role> getOrgRoles(Set<RoleTemplate> roleTemplates, Org org) {
-		if(roleTemplates==null || roleTemplates.isEmpty()) {
+
+	private Set<com.tianyoukeji.parent.entity.Role> getRoles(Set<RoleTemplate> roleTemplates) {
+		if (roleTemplates == null || roleTemplates.isEmpty()) {
 			return null;
 		}
-		
 		HashSet<com.tianyoukeji.parent.entity.Role> roles = new HashSet<com.tianyoukeji.parent.entity.Role>();
-		if(org == null) {
-			for (RoleTemplate roleTemplate : roleTemplates) {
-				com.tianyoukeji.parent.entity.Role role = roleRepository.findByCodeAndOrgIsNull(roleTemplate.getCode());
-				if(role == null) {
-					throw new BusinessException(1741, "企业角色"+role+"没有正确设置");
-				}
+		for (RoleTemplate roleTemplate : roleTemplates) {
+			com.tianyoukeji.parent.entity.Role role = roleRepository.findByCode(roleTemplate.getCode());
+			if (role != null) {
 				roles.add(role);
-			}
-		}else {
-			for (RoleTemplate roleTemplate : roleTemplates) {
-				com.tianyoukeji.parent.entity.Role role = roleRepository.findByCodeAndOrg(roleTemplate.getCode(), org);
-				if(role == null) {
-					throw new BusinessException(1741, "企业角色"+role+"没有正确设置");
-				}
+			}else {
+				role = new Role();
+				role.setCode(roleTemplate.getCode());
+				role.setName(roleTemplate.getName());
+				role.setRoleTemplate(roleTemplate);
+				role = roleRepository.save(role);
 				roles.add(role);
 			}
 		}
+
 		return roles;
 	}
-	
+
 	// ----------------------------------------------builder
 	// ------------------------
 
@@ -349,7 +397,7 @@ public class StateTemplateService {
 			if (eventTemplate == null) {
 				eventTemplate = new EventTemplate();
 			}
-			eventTemplate.setAction(event.code);
+			eventTemplate.setAction(event.action);
 			eventTemplate.setCode(event.code);
 			eventTemplate.setEntity(entity);
 			eventTemplate.setGuardSpel(event.guardSpel);
@@ -399,7 +447,7 @@ public class StateTemplateService {
 			if (role == null) {
 				return null;
 			}
-			RoleTemplate findByCode = roleTemplateRepository.findByCode(role);			
+			RoleTemplate findByCode = roleTemplateRepository.findByCode(role);
 			if (findByCode == null) {
 				throw new BusinessException(1311, "角色" + role + "不存在");
 			}

@@ -29,9 +29,9 @@ import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 import com.tianyoukeji.parent.entity.template.TimerTemplate;
 
 @Entity
-@Table(name = "timer", uniqueConstraints= {@UniqueConstraint(columnNames= {"org_id","entity","code"})})
+@Table(name = "timer", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
 @EntityListeners(AuditingEntityListener.class)
-public class Timer implements IOrgEntity{
+public class Timer implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -75,9 +75,6 @@ public class Timer implements IOrgEntity{
 	@Column(name = "time_once")
 	private Integer timerOnce;
 	
-	@ManyToOne
-	@JoinColumn(name= "org_id")
-	private Org org;
 	
 	@ManyToOne
 	@JoinColumn(name="timer_template_id")
@@ -92,13 +89,6 @@ public class Timer implements IOrgEntity{
 		this.timerTemplate = timerTemplate;
 	}
 
-	public Org getOrg() {
-		return org;
-	}
-
-	public void setOrg(Org org) {
-		this.org = org;
-	}
 
 	public Integer getTimerOnce() {
 		return timerOnce;

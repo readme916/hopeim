@@ -61,7 +61,7 @@ public class MenuTemplate implements IBaseEntity{
 	private String url;
 	
 	@ManyToMany
-	@JoinTable(name="role_template_menu_template",joinColumns = { @JoinColumn(name = "role_template_id") }, inverseJoinColumns = { @JoinColumn(name = "menu_template_id") })
+	@JoinTable(name="menu_template_role_template",joinColumns = { @JoinColumn(name = "menu_template_id") }, inverseJoinColumns = { @JoinColumn(name = "role_template_id") })
 	private Set<RoleTemplate> roleTemplates;
 	
 	@ManyToOne

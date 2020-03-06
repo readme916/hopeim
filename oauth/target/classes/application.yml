@@ -1,3 +1,5 @@
+SDKAppID: 1400327058
+SDKAPPSecret: d45e1e4f7aeed80017105f1c639cd7f95e58c025a218bf57bba5d4e25c6b10e8
 server:
   port: 40000
   name: oauth

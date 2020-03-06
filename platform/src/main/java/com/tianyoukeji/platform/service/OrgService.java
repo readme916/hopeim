@@ -20,71 +20,53 @@ import com.tianyoukeji.parent.service.BaseService;
 import com.tianyoukeji.platform.service.OrgTemplateService.Builder;
 
 @Service
-public class OrgService extends BaseService<Org>{
+public class OrgService extends BaseService<Org> {
 
 	final static Logger logger = LoggerFactory.getLogger(OrgService.class);
 
 	@Autowired
-	private OrgRepository orgRepository;
-	
-	@Autowired
-	private DepartmentRepository departmentRepository;
-	
-	@Autowired
-	private MenuRepository menuRepository;
-	
-	@Autowired
-	private RoleRepository roleRepository;
-	
-	@Autowired
-	private DepartmentTemplateRepository departmentTemplateRepository;
-	
-	@Autowired
-	private MenuTemplateRepository menuTemplateRepository;
-	
-	@Autowired
-	private RoleTemplateRepository roleTemplateRepository;
-	
-	@Autowired
 	private OrgTemplateService orgTemplateService;
-	
+
 	@Autowired
-	private OrgTemplateRepository orgTemplateRepository;
-	
+	private StateTemplateService stateTemplateService;
+
+	@Autowired
+	private OrgRepository orgRepository;
+
+	@Autowired
+	private UserService userService;
+
+	/**
+	 * 创建默认企业
+	 */
 	@Override
 	public void init() {
-		if(orgTemplateRepository.count()>0) {
-			return;
+		if (orgRepository.count() == 0) {
+			platformDeploy();
 		}
-		Builder builder = orgTemplateService.getBuilder().code("platform").name("天邮科技")
-				.department("部门1", "department1", null)
-				.department("部门2", "department2", null)
-				.role("管理员", "platform_manager")
-				.role("超管", "platform_super")
-				.menu("主页", "home",  "/", 0, null)
-				.menu("第一页", "one", "/one", 1, "home");
-		builder.getMenu("home").addRole("platform_manager").addRole("platform_super");
-		builder.build();
 	}
 
-	
 	/**
-	 * 平台部署的细节
+	 * 平台部署的细节，相当于第一个企业
 	 */
 	public void platformDeploy() {
-		
+		//找到创建人
+		User findById = userService.findById(1L);
+		//根据platform模板给组织创建部门，角色，菜单
+		Org org = orgTemplateService.orgTemplateDeploy("天邮平台", findById, "platform", "中华人民共和国", "浙江省", "杭州市");
 	}
-	
+
 	/**
 	 * a类企业类型部署的细节
 	 */
 	public void aDeploy() {
-		
+
 	}
+
 	/**
 	 * b类企业类型部署的细节
 	 */
 	public void bDeploy() {
-		
+
 	}
 }

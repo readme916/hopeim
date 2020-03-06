@@ -29,9 +29,9 @@ import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 import com.tianyoukeji.parent.entity.template.StateTemplate;
 
 @Entity
-@Table(name = "state", uniqueConstraints= {@UniqueConstraint(columnNames= {"org_id","entity","code"})})
+@Table(name = "state", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
 @EntityListeners(AuditingEntityListener.class)
-public class State implements IOrgEntity{
+public class State implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -106,9 +106,6 @@ public class State implements IOrgEntity{
 	@Column(name = "exit_action")
 	private String exitAction;
 	
-	@ManyToOne
-	@JoinColumn(name= "org_id")
-	private Org org;
 	
 	@ManyToOne
 	@JoinColumn(name = "state_template_id")
@@ -121,14 +118,6 @@ public class State implements IOrgEntity{
 
 	public void setStateTemplate(StateTemplate stateTemplate) {
 		this.stateTemplate = stateTemplate;
-	}
-
-	public Org getOrg() {
-		return org;
-	}
-
-	public void setOrg(Org org) {
-		this.org = org;
 	}
 
 	public Set<Timer> getTimers() {

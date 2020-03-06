@@ -29,9 +29,9 @@ import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 
 @Entity
-@Table(name = "role", uniqueConstraints= {@UniqueConstraint(columnNames= {"org_id","code"})})
+@Table(name = "role", uniqueConstraints= {@UniqueConstraint(columnNames= {"code"})})
 @EntityListeners(AuditingEntityListener.class)
-public class Role implements IOrgEntity{
+public class Role implements IBaseEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -49,9 +49,8 @@ public class Role implements IOrgEntity{
 	@Column(name = "version")
 	private Long version;
 	
-	@ManyToOne
-	@JoinColumn(name= "org_id")
-	private Org org;
+	@ManyToMany(mappedBy = "roles")
+	private Set<Org> orgs;
 	
 	@Column(name = "name")
 	private String name;
@@ -150,13 +149,13 @@ public class Role implements IOrgEntity{
 	}
 
 
-	public Org getOrg() {
-		return org;
+	public Set<Org> getOrgs() {
+		return orgs;
 	}
 
 
-	public void setOrg(Org org) {
-		this.org = org;
+	public void setOrgs(Set<Org> orgs) {
+		this.orgs = orgs;
 	}
 
 

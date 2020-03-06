@@ -1,10 +1,17 @@
 package com.tianyoukeji.oauth.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -14,17 +21,14 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
-import org.springframework.security.oauth2.provider.code.InMemoryAuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.tencentyun.TLSSigAPIv2;
 import com.tianyoukeji.oauth.filter.UsernamePasswordAuthenticationProvider;
 import com.tianyoukeji.parent.service.NamespaceRedisService;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
-import com.tianyoukeji.parent.service.RateLimiterService;
 
 
 @Configuration
@@ -45,6 +49,13 @@ public class Oauth2Config extends AuthorizationServerConfigurerAdapter {
 	
 	@Autowired
 	private UsernamePasswordAuthenticationProvider usernamePasswordAuthenticationProvider;
+	
+	@Value("${SDKAppID}")
+	private String SDKAppID;
+	
+	@Value("${SDKAPPSecret}")
+	private String SDKAPPSecret;
+	
 
 	@Override
 	public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
@@ -77,6 +88,13 @@ public class Oauth2Config extends AuthorizationServerConfigurerAdapter {
 				String username = authentication.getName();
 				redisService.sAdd(RedisNamespace.USER_TOKEN, username, value);
 				redisService.expire(RedisNamespace.USER_TOKEN, username, 2*30*86400);
+				
+				String user = authentication.getName();
+		        final Map<String, Object> additionalInfo = new HashMap<>();
+		        additionalInfo.put("userID", user);
+		        TLSSigAPIv2 api = new TLSSigAPIv2(Long.valueOf(SDKAppID), SDKAPPSecret);
+		        additionalInfo.put("userSig", api.genSig(user, 365*86400));
+		        ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(additionalInfo);
 				return accessToken;
 			}
 		});

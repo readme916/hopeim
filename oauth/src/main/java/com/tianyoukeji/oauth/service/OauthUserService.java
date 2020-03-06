@@ -1,6 +1,7 @@
 package com.tianyoukeji.oauth.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,9 @@ import com.tianyoukeji.parent.entity.template.RoleTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
 import com.tianyoukeji.parent.entity.UserRepository;
 import com.tianyoukeji.parent.service.BaseService;
+import com.tianyoukeji.parent.service.TIMService;
+import com.tianyoukeji.parent.service.TIMService.ActionStatus;
+import com.tianyoukeji.parent.service.TIMService.TIMResponse;
 
 import java.util.*;
 
@@ -46,6 +50,9 @@ public class OauthUserService extends BaseService<User> {
 
 	@Autowired
 	private MenuRepository menuRepository;
+	
+	@Autowired
+	private TIMService timService;
 
 	@Override
 	public void init() {
@@ -65,24 +72,18 @@ public class OauthUserService extends BaseService<User> {
 		}
 		User user = new User();
 		user.setEnabled(true);
-		Role r = null;
-		if (org == null) {
-			r = roleRepository.findByCodeAndOrgIsNull(role);
-			if (r == null) {
-				throw new BusinessException(1973, "角色 " + role + " 不存在");
-			}
-		} else {
-			r = roleRepository.findByCodeAndOrg(role,org);
-			if (r == null) {
-				throw new BusinessException(1974, "角色 " + role + " 不存在");
-			}
+		Role r = roleRepository.findByCode(role);
+		if (r == null) {
+			throw new BusinessException(1973, "角色 " + role + " 不存在");
 		}
+
 		user.setRole(r);
 		user.setOrg(org);
 		save(user);
 
 		// 根据id生成用户名
-		user.setNickname("用户" + gen(user.getUuid()));
+		String nick  = "用户" + gen(user.getUuid());
+		user.setNickname(nick);
 		Userinfo userInfo = new Userinfo();
 		userInfo.setMobile(username);
 		userInfo.setPassword(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(password));
@@ -91,46 +92,12 @@ public class OauthUserService extends BaseService<User> {
 		user.setUserinfo(userInfo);
 		user.setHeadimgurl(AvatarUtils.generatorUserAvatar(username));
 		userRepository.save(user);
+		
+		TIMResponse registerUser = timService.registerUser(username, nick, AvatarUtils.generatorUserAvatar(username));
+		if(registerUser.getActionStatus().equals(ActionStatus.FAIL)) {
+			throw new BusinessException(4000, registerUser.getErrorInfo());
+		}
 		return user;
-	}
-
-
-
-	private Set<Menu> menuTemplateConvertMenu(Set<MenuTemplate> menuTemplates, Org org) {
-
-		if(menuTemplates == null) {
-			return  new HashSet<Menu>();
-		}
-		HashSet<Menu> hashSet = new HashSet<Menu>();
-		for (MenuTemplate menuTemplate : menuTemplates) {
-			Menu menu = new Menu();
-			menu.setMenuTemplate(menuTemplate);
-			menu.setOrg(org);
-			menu.setName(menuTemplate.getName());
-			menu.setIconUrl(menuTemplate.getIconUrl());
-			menu.setSort(menuTemplate.getSort());
-			menu.setUrl(menuTemplate.getUrl());
-			menu = menuRepository.save(menu);
-			hashSet.add(menu);
-		}
-		for (MenuTemplate menuTemplate : menuTemplates) {
-			if (menuTemplate.getParent() != null) {
-				MenuTemplate menuTemplateParent = menuTemplate.getParent();
-				if(org == null) {
-					Menu menuParent = menuRepository.findByMenuTemplateAndOrgIsNull(menuTemplateParent);
-					Menu menu = menuRepository.findByMenuTemplateAndOrgIsNull(menuTemplate);
-					menu.setParent(menuParent);
-					menuRepository.save(menu);
-				}else {
-					Menu menuParent = menuRepository.findByMenuTemplateAndOrg(menuTemplateParent, org);
-					Menu menu = menuRepository.findByMenuTemplateAndOrg(menuTemplate, org);
-					menu.setParent(menuParent);
-					menuRepository.save(menu);
-				}
-				
-			}
-		}
-		return hashSet;
 	}
 
 	/**

@@ -10,6 +10,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -59,8 +61,12 @@ public class Org implements IRegionEntity{
 	@OneToMany(mappedBy = "org")
 	private Set<Department> departments;
 	
-	@OneToMany(mappedBy = "org")
+	@ManyToMany
+	@JoinTable(name="org_role",joinColumns = { @JoinColumn(name = "org_id") }, inverseJoinColumns = { @JoinColumn(name = "role_id") })
 	private Set<Role> roles;
+	
+	@OneToMany(mappedBy = "org")
+	private Set<Menu> menus;
 	
 	@ManyToOne
 	@JoinColumn(name = "parent")
@@ -86,6 +92,14 @@ public class Org implements IRegionEntity{
 	private Region city;
 	
 	
+	public Set<Menu> getMenus() {
+		return menus;
+	}
+
+	public void setMenus(Set<Menu> menus) {
+		this.menus = menus;
+	}
+
 	public Region getCountry() {
 		return country;
 	}

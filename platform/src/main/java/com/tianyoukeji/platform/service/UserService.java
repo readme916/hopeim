@@ -1,6 +1,7 @@
 package com.tianyoukeji.platform.service;
 
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tianyoukeji.parent.annotation.StateMachineAction;
+import com.tianyoukeji.parent.entity.Org;
+import com.tianyoukeji.parent.entity.OrgRepository;
 import com.tianyoukeji.parent.entity.State;
 import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.User;
@@ -33,28 +36,20 @@ public class UserService extends StateMachineService<User> {
 	private StateTemplateService stateTemplateService;
 	
 	@Autowired
-	private StateTemplateRepository stateTemplateRepository;
+	private StateRepository stateRepository;
 	
+	@Autowired
+	private OrgRepository orgRepository;
+	
+	
+	/**
+	 * 	创建用户的状态机
+	 */
 	@Override
 	public void init() {
-		if(stateTemplateRepository.count()>0) {
-			return;
+		if(stateRepository.count() == 0) {
+			stateTemplateService.entityStateDeploy(getServiceEntity());
 		}
-		Builder builder = stateTemplateService.getBuilder();
-		builder.entity("user")
-		.state("created", "创建", true, false, false, null, null, null, null, null, null, null)
-		.state("enabled", "有效用户", false, false, false, null, null, null, null, null, null, null)
-		.state("disabled", "禁止用户",  false, false, false, null, null, null, null, null, null, null)
-		.event("enable", "有效", "enabled", null, "enable", 0)
-		.event("disable" , "禁止" , "disabled" ,null , "disable",1)
-		.timer("speak", "说话定时器", "enabled", "speak", null, 20);
-		
-		builder.getState("created").addEvent("enable").addEvent("disable");
-		builder.getState("enabled").addEvent("disable");
-		builder.getState("disabled").addEvent("enable");
-		builder.getEvent("enable").addRole("developer");
-		builder.getEvent("disable").addRole("developer");
-		builder.build();
 	}
 	/**
 	 * 	返回值表示是否可以继续往下执行后续，前置截面
@@ -62,24 +57,24 @@ public class UserService extends StateMachineService<User> {
 	 * @return
 	 */
 	@StateMachineAction
-	public void enable(Long uuid , StateMachine<String,String> stateMachine) {
+	public void doEnable(Long uuid , StateMachine<String,String> stateMachine) {
 		System.out.println(stateMachine.getState().getId());
 		System.out.println("enable  动作");
 	}
 	
 	@StateMachineAction
-	public void disable(Long uuid , StateMachine<String,String> stateMachine) {
+	public void doDisable(Long uuid , StateMachine<String,String> stateMachine) {
 		System.out.println("disable  动作");
 	}
 	
 	@StateMachineAction
-	public void speak(Long uuid , StateMachine<String,String> stateMachine) {
+	public void doSpeak(Long uuid , StateMachine<String,String> stateMachine) {
 		System.out.println(new Date());
 		System.out.println("speak  动作");
 	}
 	
-	@Transactional
-	public void banUser(Long uuid) {
+	@StateMachineAction
+	public void doKick(Long uuid, StateMachine<String,String> stateMachine) {
 		User user = findById(uuid);
 		user.setEnabled(false);
 		save(user);
@@ -89,5 +84,6 @@ public class UserService extends StateMachineService<User> {
 			redisTokenStore.removeAccessToken(str);
 		}
 		namespaceRedisService.delete(RedisNamespace.USER_TOKEN, user.getUserinfo().getMobile());
+		System.out.println("kick  动作");
 	}
 }

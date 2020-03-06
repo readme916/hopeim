@@ -61,16 +61,16 @@ public class RoleTemplate implements IBaseEntity{
 	@ManyToMany(mappedBy = "roleTemplates")
 	private Set<EventTemplate> eventTemplates;
 	
-	@ManyToOne
-	@JoinColumn(name= "org_template_id")
-	private OrgTemplate orgTemplate;
+	@ManyToMany(mappedBy = "roleTemplates")
+	private Set<OrgTemplate> orgTemplates;
 
-	public OrgTemplate getOrgTemplate() {
-		return orgTemplate;
+	
+	public Set<OrgTemplate> getOrgTemplates() {
+		return orgTemplates;
 	}
 
-	public void setOrgTemplate(OrgTemplate orgTemplate) {
-		this.orgTemplate = orgTemplate;
+	public void setOrgTemplates(Set<OrgTemplate> orgTemplates) {
+		this.orgTemplates = orgTemplates;
 	}
 
 	public Set<EventTemplate> getEventTemplates() {

@@ -63,7 +63,7 @@ public class Menu implements IOrgEntity{
 	private String url;
 	
 	@ManyToMany
-	@JoinTable(name="role_menu",joinColumns = { @JoinColumn(name = "role_id") }, inverseJoinColumns = { @JoinColumn(name = "menu_id") })
+	@JoinTable(name="menu_role",joinColumns = { @JoinColumn(name = "menu_id") }, inverseJoinColumns = { @JoinColumn(name = "role_id") })
 	private Set<Role> roles;
 
 	@ManyToOne

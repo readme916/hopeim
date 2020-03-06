@@ -8,6 +8,7 @@ import org.springframework.util.StringUtils;
 
 import com.tianyoukeji.parent.common.AvatarUtils;
 import com.tianyoukeji.parent.common.BusinessException;
+import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.Role;
 import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.entity.User;
@@ -24,40 +25,57 @@ import javax.annotation.PostConstruct;
 
 @Service
 public class InitService extends BaseService<User> {
+
 	@Autowired
-	private OauthUserService OauthUserService;
-
+	private RoleTemplateRepository roleTemplateRepository;
+	
+	@Autowired
+	private RoleRepository roleRepository;
+	
+	@Autowired
+	private OauthUserService oauthUserService;
+	
 	@Override
-	@PostConstruct
 	public void init() {
-//		if (OauthUserService.count() == 0) {
-//			
-//			/** 
-//			 * 	注册无组织角色
-//			 */
-//			RoleTemplate developer = OauthUserService.registerRoleTemplate("developer", "开发者");
-//			OauthUserService.registerRole(developer, null);
-//			RoleTemplate user = OauthUserService.registerRoleTemplate("user", "普通用户");
-//			OauthUserService.registerRole(user, null);
-//			
-//			/**
-//			 * 	注册用户
-//			 */
-//			User admin = OauthUserService.registerUser("admin", "admin", "developer",null);
-//			
-//			
-//			/**
-//			 * 	注册有组织角色
-//			 */
-//			RoleTemplate orgOwner = OauthUserService.registerRoleTemplate("orgOwner", "企业主");
-//			RoleTemplate orgManager = OauthUserService.registerRoleTemplate("orgManager", "企业管理员");
-//			RoleTemplate orgUser = OauthUserService.registerRoleTemplate("orgUser", "企业员工");
-//			HashSet<RoleTemplate> hashSet = new HashSet<RoleTemplate>();
-//			hashSet.add(orgOwner);
-//			hashSet.add(orgManager);
-//			hashSet.add(orgUser);
-//			OauthUserService.registerOrg("天邮科技有限公司", admin, hashSet);
-
-//		}
+		if (roleTemplateRepository.count() == 0) {
+			/** 
+			 * 	注册无组织角色
+			 */
+			RoleTemplate developer = registerRoleTemplate("developer", "开发者");
+			registerRole(developer);
+			RoleTemplate user = registerRoleTemplate("user", "普通用户");
+			registerRole(user);
+			
+			/**
+			 * 	注册用户
+			 */
+			User admin = oauthUserService.registerUser("admin", "admin", "developer",null);
+		}
 	}
+	@Transactional
+	private RoleTemplate registerRoleTemplate(String code, String name) {
+		RoleTemplate findByCode = roleTemplateRepository.findByCode(code);
+		if (findByCode != null) {
+			return findByCode;
+		} else {
+			RoleTemplate roleTemplate = new RoleTemplate();
+			roleTemplate.setCode(code);
+			roleTemplate.setName(name);
+			roleTemplate = roleTemplateRepository.save(roleTemplate);
+			return roleTemplate;
+		}
+		
+	}
+
+	@Transactional
+	private Role registerRole(RoleTemplate template) {
+			Role role = new Role();
+			role.setCode(template.getCode());
+			role.setName(template.getName());
+			role.setRoleTemplate(template);
+			role = roleRepository.save(role);
+			return role;
+		
+	}
+	
 }

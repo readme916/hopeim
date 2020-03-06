@@ -9,6 +9,9 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -50,10 +53,22 @@ public class OrgTemplate implements IBaseEntity{
 	@OneToMany(mappedBy = "orgTemplate")
 	private Set<DepartmentTemplate> departmentTemplates;
 	
-	@OneToMany(mappedBy = "orgTemplate")
+	@ManyToMany
+	@JoinTable(name="org_template_role_template",joinColumns = { @JoinColumn(name = "org_template_id") }, inverseJoinColumns = { @JoinColumn(name = "role_template_id") })
 	private Set<RoleTemplate> roleTemplates;
 	
+	@OneToMany(mappedBy = "orgTemplate")
+	private Set<MenuTemplate> menuTemplates;
 	
+	
+	public Set<MenuTemplate> getMenuTemplates() {
+		return menuTemplates;
+	}
+
+	public void setMenuTemplates(Set<MenuTemplate> menuTemplates) {
+		this.menuTemplates = menuTemplates;
+	}
+
 	public String getCode() {
 		return code;
 	}

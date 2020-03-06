@@ -75,7 +75,7 @@ public class EventTemplate implements IBaseEntity{
 	private Integer sort = 0;
 
 	@ManyToMany
-	@JoinTable(name="role_template_event_template",joinColumns = { @JoinColumn(name = "role_template_id") }, inverseJoinColumns = { @JoinColumn(name = "event_template_id") })
+	@JoinTable(name="event_template_role_template",joinColumns = { @JoinColumn(name = "event_template_id") }, inverseJoinColumns = { @JoinColumn(name = "role_template_id") })
 	private Set<RoleTemplate> roleTemplates;
 	
 

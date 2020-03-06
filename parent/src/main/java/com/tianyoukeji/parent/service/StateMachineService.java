@@ -86,7 +86,7 @@ import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
  * @param <T>
  */
 
-public abstract class StateMachineService<T extends IStateMachineEntity> extends BaseService<T>  {
+public abstract class StateMachineService<T extends IStateMachineEntity> extends BaseService<T> {
 
 	@Autowired
 	private JpaRepository<T, Long> jpaRepository;
@@ -107,16 +107,15 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	@Autowired
 	private Scheduler scheduler;
 
-
 	@Value("${server.name}")
 	private String serverName;
 
-	//状态机池子,orgId为null时候，以0作为key
-	private static HashMap<String,HashMap<Long,Builder<String, String>>> pools = new HashMap<String,HashMap<Long,Builder<String,String>>>();
-	
-	//所有服务的静态引用
-	public static HashMap<String,StateMachineService> services = new HashMap<String,StateMachineService>();
-	
+	// 状态机池子
+	private static HashMap<String, Builder<String, String>> pools = new HashMap<String, Builder<String, String>>();
+
+	// 所有服务的静态引用
+	public static HashMap<String, StateMachineService> services = new HashMap<String, StateMachineService>();
+
 	/**
 	 * 返回事件是否成功执行
 	 * 
@@ -126,17 +125,14 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 */
 
 	@Transactional
-	public boolean dispatchEvent(Long id, String eventCode) {
+	public void dispatchEvent(Long id, String eventCode) {
 		StateMachine<String, String> acquireStateMachine = this.acquireStateMachine(id);
 		boolean success = acquireStateMachine.sendEvent(eventCode);
 		Object error = acquireStateMachine.getExtendedState().getVariables().get("error");
-		if(error!=null) {
-			return false;
+		if (success == false || error != null) {
+			throw new BusinessException(3000, "不能执行");
 		}
-		return success;
-
 	}
-
 
 	/**
 	 * 当前状态下的当前登录用户可执行事件，如果是null，则默认为start的状态
@@ -145,31 +141,21 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 * @return
 	 */
 	public List<String> currentUserExecutableEvent(String state) {
-		State findByEntity=null;
-		User currentUser = getCurrentUser();
-		
-		//当前用户米有组织
-		if(currentUser.getOrg() == null) {
-			//状态是null，可能由于是一个新建的状态机，默认为start的状态
-			if(state == null) {
-				findByEntity = stateRepository.findByOrgIsNullAndEntityAndIsStart(getServiceEntity(), true);			
-			}else {
-				findByEntity = stateRepository.findByOrgIsNullAndEntityAndCode(getServiceEntity(), state);
-			}
-		}else {
-			if(state == null) {
-				findByEntity = stateRepository.findByOrgUuidAndEntityAndIsStart(currentUser.getOrg().getUuid(), getServiceEntity(), true);
-			}else {
-				findByEntity = stateRepository.findByOrgUuidAndEntityAndCode(currentUser.getOrg().getUuid(), getServiceEntity(), state);
-			}
+		State findByEntity = null;
+
+		// 状态是null，可能由于是一个新建的状态机，默认为start的状态
+		if (state == null) {
+			findByEntity = stateRepository.findByEntityAndIsStart(getServiceEntity(), true);
+		} else {
+			findByEntity = stateRepository.findByEntityAndCode(getServiceEntity(), state);
 		}
-		if(findByEntity == null) {
+
+		if (findByEntity == null) {
 			return new ArrayList<String>();
 		}
-		
-		
-		List<Event> findBySourcesUuidAndRolesCode = eventRepository.findBySourcesUuidAndRolesCode(findByEntity.getUuid(),
-				ContextUtils.getRole());
+
+		List<Event> findBySourcesUuidAndRolesCode = eventRepository
+				.findBySourcesUuidAndRolesCode(findByEntity.getUuid(), ContextUtils.getRole());
 		List<String> collect = findBySourcesUuidAndRolesCode.stream().sorted(new Comparator<Event>() {
 			@Override
 			public int compare(Event o1, Event o2) {
@@ -180,30 +166,25 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		return collect;
 	}
 
-	
 	/**
-	 * 	刷新企业的当前实体的状态机builder 
+	 * 刷新企业的当前实体的状态机builder
+	 * 
 	 * @param orgId 可以为null
 	 * @return
 	 */
-	
-	public Builder<String,String> refreshBuilder(Long orgId){
+
+	public Builder<String, String> refreshBuilder() {
 		Set<State> states = new HashSet<State>();
-		if(orgId == null) {
-			orgId = 0l;
-			states = stateRepository.findByEntityAndOrgIsNull(getServiceEntity());
-		}else {
-			states = stateRepository.findByEntityAndOrgUuid(getServiceEntity(), orgId);
-		}
+		states = stateRepository.findByEntity(getServiceEntity());
 		try {
-			_init_org_statemachine_builder(orgId, states);
-		}catch(Exception e) {
+			_init_org_statemachine_builder(states);
+		} catch (Exception e) {
 			e.printStackTrace();
-			throw new BusinessException(2612, getServiceEntity() + "状态机 ，企业id："+orgId+",更新失败");
+			throw new BusinessException(2612, getServiceEntity() + "状态机 ,更新失败");
 		}
-		return pools.get(getServiceEntity()).get(orgId);
+		return pools.get(getServiceEntity());
 	}
-	
+
 	/**
 	 * 根据当前实体的id，得到他的状态机
 	 * 
@@ -214,25 +195,11 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	public StateMachine<String, String> acquireStateMachine(Long id) {
 		T findById = findById(id);
 		if (findById != null) {
-
-			// 如果是企业类型的数据，则设置企业的id，否则一律为0
-			Long orgId = 0l;
-			if (findById instanceof IOrgEntity) {
-				Org org = ((IOrgEntity) findById).getOrg();
-				if (org != null) {
-					orgId = org.getUuid();
-				}
-			}
-			
-			HashMap<Long, Builder<String, String>> hashMap = pools.get(getServiceEntity());
-			if(hashMap == null) {
-				throw new BusinessException(1856, "状态机获取失败");
-			}
-			Builder<String, String> builder = hashMap.get(orgId);
-			if(builder == null) {
+			Builder<String, String> builder = pools.get(getServiceEntity());
+			if (builder == null) {
 				throw new BusinessException(1857, "状态机获取失败");
 			}
-			
+
 			StateMachine<String, String> stateMachine = builder.build();
 			// findById.getState()为null，可能是刚创建的数据，没有为其设置state，这时状态机的state为start状态
 			if (findById.getState() != null) {
@@ -256,15 +223,8 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 													Message<String> message, Transition<String, String> transition,
 													StateMachine<String, String> stateMachine) {
 												User user = getCurrentUser();
-												State findByEntityAndCode = null;
-												if (user.getOrg() == null) {
-													findByEntityAndCode = stateRepository
-															.findByOrgIsNullAndEntityAndCode(getServiceEntity(),
-																	state.getId());
-												} else {
-													findByEntityAndCode = stateRepository.findByOrgUuidAndEntityAndCode(
-															user.getOrg().getUuid(), getServiceEntity(), state.getId());
-												}
+												State findByEntityAndCode = stateRepository
+														.findByEntityAndCode(getServiceEntity(), state.getId());
 
 												if (findByEntityAndCode == null) {
 													throw new BusinessException(1274,
@@ -274,21 +234,23 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 												save(findById);
 
 												stopJobs(getServiceEntity(), id);
-												Set<Timer> timers=null;
-												if(user.getOrg() == null) {
-													timers = timerRepository.findByOrgIsNullAndEntityAndSource(getServiceEntity(), findByEntityAndCode);
-												}else {
-													timers = timerRepository.findByOrgUuidAndEntityAndSource(user.getOrg().getUuid(), getServiceEntity(),findByEntityAndCode);
-												}
+												Set<Timer> timers = null;
+
+												timers = timerRepository.findByEntityAndSource(getServiceEntity(),
+														findByEntityAndCode);
+
 												if (timers != null && !timers.isEmpty()) {
 													startJobs(getServiceEntity(), id, timers);
 												}
 											}
+
 											@Override
-											public StateContext<String, String> preTransition(StateContext<String, String> stateContext) {
-												if(stateContext.getTransition().getGuard()!=null) {
-													boolean evaluate = stateContext.getTransition().getGuard().evaluate(stateContext);
-													if(!evaluate) {
+											public StateContext<String, String> preTransition(
+													StateContext<String, String> stateContext) {
+												if (stateContext.getTransition().getGuard() != null) {
+													boolean evaluate = stateContext.getTransition().getGuard()
+															.evaluate(stateContext);
+													if (!evaluate) {
 														stateContext.getExtendedState().getVariables().put("error", 1);
 													}
 												}
@@ -326,52 +288,28 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	private void _init_statemachine() {
 
-		List<State> allStates = stateRepository.findByEntity(getServiceEntity());
+		Set<State> allStates = stateRepository.findByEntity(getServiceEntity());
 		if (allStates.isEmpty()) {
 			return;
-//			throw new BusinessException(1321, getServiceEntity() + "的states，没有配置");
 		}
-		// 先把state按照org分组
-		Map<Long, Set<State>> result = new HashMap<>();
-		for (State s : allStates) {
-			Long orgId;
-			Org org = s.getOrg();
-			if (org == null) {
-				orgId = 0l;
-			} else {
-				orgId = org.getUuid();
-			}
-			Set<State> orgStates = result.get(orgId);
-			if (orgStates == null) {
-				orgStates = new HashSet<State>();
-				result.put(orgId, orgStates);
-			}
-			orgStates.add(s);
-		}
-		//因为创建builder非常耗时间，有很多数据库查询，所以把创建好的builder保存
-		pools.put(getServiceEntity(), new HashMap<Long,Builder<String,String>>());
-		Set<Entry<Long, Set<State>>> entrySet = result.entrySet();
-		for (Entry<Long, Set<State>> entry : entrySet) {
-			try {
-				_init_org_statemachine_builder(entry.getKey(), entry.getValue());
-			} catch (Exception e) {
-				e.printStackTrace();
-				throw new BusinessException(1357, getServiceEntity() + " - 企业id: " + entry.getKey() + "的状态机初始化错误");
-			}
+
+		// 因为创建builder非常耗时间，有很多数据库查询，所以把创建好的builder保存
+		try {
+			_init_org_statemachine_builder(allStates);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new BusinessException(1357, getServiceEntity() + "的状态机初始化错误");
 		}
 		System.out.println(getServiceEntity() + "状态机初始化完成");
 
 	}
 
-	
-	
 	/**
-	 * 	如果没有org，则orgid输入0
-	 * @param orgId
+	 * @param
 	 * @param states
 	 * @throws Exception
 	 */
-	private void _init_org_statemachine_builder(Long orgId, Set<State> states) throws Exception {
+	private void _init_org_statemachine_builder(Set<State> states) throws Exception {
 		Builder<String, String> builder = StateMachineBuilder.<String, String>builder();
 		// builder可以为空状态，空事件
 		builder.configureConfiguration().withVerifier().enabled(false);
@@ -458,7 +396,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				}
 			}
 		}
-		pools.get(getServiceEntity()).put(orgId, builder);
+		pools.put(getServiceEntity(), builder);
 	}
 
 	private Action<String, String> AuthorizeActionFactory(String actionStr) {
@@ -477,42 +415,40 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				public void execute(StateContext<String, String> context) {
 					Event findByEntityAndCode = null;
 					User currentUser = getCurrentUser();
-					if(currentUser == null) {
-						findByEntityAndCode = eventRepository.findByOrgIsNullAndEntityAndCodeAndRolesCode(getServiceEntity(), actionStr,"user");
-					}else if(currentUser.getOrg() == null) {
-						findByEntityAndCode = eventRepository.findByOrgIsNullAndEntityAndCodeAndRolesCode(getServiceEntity(), actionStr,ContextUtils.getRole());
-					}else {
-						findByEntityAndCode = eventRepository.findByOrgUuidAndEntityAndCodeAndRolesCode(currentUser.getOrg().getUuid(), getServiceEntity(), actionStr , ContextUtils.getRole());
-					}
-					if (findByEntityAndCode == null) {
-						context.getExtendedState().getVariables().put("error", 1);
-						throw new BusinessException(1231, "角色" + ContextUtils.getRole() + "无操作权限");
-					}
-					try {
-						method.invoke(_this, context.getExtendedState().get("id", Long.class),
-								context.getStateMachine());
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-						context.getExtendedState().getVariables().put("error", 1);
-						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法访问");
-					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-						context.getExtendedState().getVariables().put("error", 1);
-						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法参数");
-					} catch (InvocationTargetException e) {
-						e.printStackTrace();
-						context.getExtendedState().getVariables().put("error", 1);
-						throw new BusinessException(2000, e.getCause().getMessage());
+					if (currentUser == null) {
+						findByEntityAndCode = eventRepository.findByEntityAndActionAndRolesCode(getServiceEntity(),
+								actionStr, "user");
+					} else {
+						findByEntityAndCode = eventRepository.findByEntityAndActionAndRolesCode(getServiceEntity(),
+								actionStr, ContextUtils.getRole());
+
+						if (findByEntityAndCode == null) {
+							context.getExtendedState().getVariables().put("error", 1);
+							throw new BusinessException(1231, "角色" + ContextUtils.getRole() + "无操作" + actionStr + "权限");
+						}
+						try {
+							method.invoke(_this, context.getExtendedState().get("id", Long.class),
+									context.getStateMachine());
+						} catch (IllegalAccessException e) {
+							e.printStackTrace();
+							context.getExtendedState().getVariables().put("error", 1);
+							throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法访问");
+						} catch (IllegalArgumentException e) {
+							e.printStackTrace();
+							context.getExtendedState().getVariables().put("error", 1);
+							throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法参数");
+						} catch (InvocationTargetException e) {
+							e.printStackTrace();
+							context.getExtendedState().getVariables().put("error", 1);
+							throw new BusinessException(2000, e.getCause().getMessage());
+						}
 					}
 				}
 			};
-
 		} catch (NoSuchMethodException e) {
-//			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
-			return null;
+			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
 		} catch (SecurityException e) {
-//			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
-			return null;
+			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
 		}
 
 	}
@@ -551,28 +487,11 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			};
 
 		} catch (NoSuchMethodException e) {
-//			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
-			return null;
+			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
 		} catch (SecurityException e) {
-//			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
-			return null;
+			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
 		}
 	}
-	
-//	/**
-//	 * 事件可执行角色
-//	 * 
-//	 * @param
-//	 * @return
-//	 */
-//	private Set<String> eventExecutableRole(Event event) {
-//		if (event != null) {
-//			Set<String> roles = event.getRoles().stream().map(e -> e.getCode()).collect(Collectors.toSet());
-//			return roles;
-//		} else {
-//			throw new BusinessException(1561, "event不能为空");
-//		}
-//	}
 
 	private Action<String, String> errorAction() {
 		return new Action<String, String>() {
@@ -613,20 +532,20 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			map.put("id", id);
 			map.put("action", timer.getAction());
 			map.put("server", serverName);
-			
-			JobDetail jobDetail = JobBuilder.newJob(QuartzTimerJob.class).withIdentity(timer.getCode(), serviceEntity + id)
-					.usingJobData(map).build();
+
+			JobDetail jobDetail = JobBuilder.newJob(QuartzTimerJob.class)
+					.withIdentity(timer.getCode(), serviceEntity + id).usingJobData(map).build();
 			SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule();
-			Calendar calendar= Calendar.getInstance();
+			Calendar calendar = Calendar.getInstance();
 			if (timer.getTimerOnce() != null && timer.getTimerOnce() > 0) {
 				simpleScheduleBuilder.withIntervalInSeconds(timer.getTimerOnce());
 				simpleScheduleBuilder.withRepeatCount(0);
-				calendar.add(Calendar.SECOND, timer.getTimerOnce()); 
+				calendar.add(Calendar.SECOND, timer.getTimerOnce());
 			} else {
 				simpleScheduleBuilder.withIntervalInSeconds(timer.getTimerInterval()).repeatForever();
-				calendar.add(Calendar.SECOND, timer.getTimerInterval()); 
+				calendar.add(Calendar.SECOND, timer.getTimerInterval());
 			}
-			Date d=calendar.getTime();
+			Date d = calendar.getTime();
 			SimpleTrigger simpleTrigger = TriggerBuilder.newTrigger().withIdentity(timer.getCode(), serviceEntity + id)
 					.withSchedule(simpleScheduleBuilder).startAt(d).build();
 			try {
@@ -654,6 +573,5 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			}
 		};
 	}
-	
-	
+
 }

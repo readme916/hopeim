@@ -1,8 +1,12 @@
 package com.tianyoukeji.platform.service;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.annotation.PostConstruct;
+
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
@@ -16,6 +20,7 @@ import com.tianyoukeji.parent.entity.DepartmentRepository;
 import com.tianyoukeji.parent.entity.MenuRepository;
 import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.OrgRepository;
+import com.tianyoukeji.parent.entity.RegionRepository;
 import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
@@ -28,8 +33,10 @@ import com.tianyoukeji.parent.entity.template.OrgTemplate;
 import com.tianyoukeji.parent.entity.template.OrgTemplateRepository;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
+import com.tianyoukeji.parent.entity.template.StateTemplate;
 import com.tianyoukeji.parent.entity.template.StateTemplateRepository;
 import com.tianyoukeji.parent.entity.template.TimerTemplateRepository;
+import com.tianyoukeji.platform.service.OrgTemplateService.Role;
 import com.tianyoukeji.platform.service.StateTemplateService.Builder;
 import com.tianyoukeji.platform.service.StateTemplateService.Event;
 import com.tianyoukeji.platform.service.StateTemplateService.State;
@@ -45,18 +52,127 @@ public class OrgTemplateService {
 
 	@Autowired
 	private DepartmentTemplateRepository departmentTemplateRepository;
+	
+	@Autowired
+	private DepartmentRepository departmentRepository;
 
 	@Autowired
 	private MenuTemplateRepository menuTemplateRepository;
+	
+	@Autowired
+	private MenuRepository menuRepository;
 
 	@Autowired
 	private RoleTemplateRepository roleTemplateRepository;
+	
+	@Autowired
+	private RoleRepository roleRepository;
+	
+	@Autowired
+	private RegionRepository regionRepository;
+	
+	@Autowired
+	private OrgRepository orgRepository;
+
 
 	
-	public Org orgTemplateDeploy(String name, User user , OrgTemplate orgTemplate) {
-		return null;
+	public Org orgTemplateDeploy(String name, User owner , String orgTemplateCode , String country, String province , String city) {
+		OrgTemplate orgTemplate = orgTemplateRepository.findByCode(orgTemplateCode);
+		if(orgTemplate == null) {
+			throw new BusinessException(1742, "企业模板不存在");
+		}
+		Org org = new Org();
+		org.setName(name);
+		org.setOrgTemplate(orgTemplate);
+		org.setOwner(owner);
+		org.setCity(regionRepository.findByFullname(city));
+		org.setProvince(regionRepository.findByFullname(province));
+		org.setCountry(regionRepository.findByFullname(country));
+		org = orgRepository.save(org);
+		
+		Set<DepartmentTemplate> departmentTemplates = orgTemplate.getDepartmentTemplates();
+		for (DepartmentTemplate departmentTemplate : departmentTemplates) {
+			departmentTemplateTransfer(departmentTemplate , org);
+		}
+		
+		Set<RoleTemplate> roleTemplates = orgTemplate.getRoleTemplates();
+		roleTemplateTransfer(roleTemplates , org);
+		
+		Set<MenuTemplate> menuTemplates = orgTemplate.getMenuTemplates();
+		for (MenuTemplate menuTemplate : menuTemplates) {
+			menuTemplateTransfer(menuTemplate,org);
+		}
+		return org;
 	}
 	
+	private com.tianyoukeji.parent.entity.Department departmentTemplateTransfer(DepartmentTemplate departmentTemplate, Org org) {
+		if(departmentTemplate==null) {
+			return null;
+		}
+		com.tianyoukeji.parent.entity.Department department = departmentRepository.findByCodeAndOrg(departmentTemplate.getCode(), org);
+		if(department!=null) {
+			return department;
+		}
+	
+		department = new com.tianyoukeji.parent.entity.Department();
+		department.setCode(departmentTemplate.getCode());
+		department.setDepartmentTemplate(departmentTemplate);
+		department.setName(departmentTemplate.getName());
+		department.setOrg(org);
+		department.setParent(departmentTemplateTransfer(departmentTemplate.getParent(),org));
+	
+		department = departmentRepository.saveAndFlush(department);
+		return department;
+		
+	}
+	
+	private void roleTemplateTransfer(Set<RoleTemplate> roleTemplates, Org org) {
+		if(roleTemplates==null) {
+			return;
+		}
+		Set<com.tianyoukeji.parent.entity.Role> roles = new HashSet<>();
+		for (RoleTemplate roleTemplate : roleTemplates) {
+			com.tianyoukeji.parent.entity.Role role = roleRepository.findByCode(roleTemplate.getCode());
+			if(role == null) {
+				role = new com.tianyoukeji.parent.entity.Role();
+				role.setCode(roleTemplate.getCode());
+				role.setName(roleTemplate.getName());
+				role.setRoleTemplate(roleTemplate);
+				role = roleRepository.saveAndFlush(role);
+			}
+			roles.add(role);
+		}
+		
+		org.setRoles(roles);
+		orgRepository.save(org);
+	}
+	
+	private com.tianyoukeji.parent.entity.Menu menuTemplateTransfer(MenuTemplate menuTemplate, Org org) {
+		if(menuTemplate==null) {
+			return null;
+		}
+		com.tianyoukeji.parent.entity.Menu menu = menuRepository.findByMenuTemplateAndOrg(menuTemplate, org);
+		if(menu!=null) {
+			return menu;
+		}
+	
+		menu = new com.tianyoukeji.parent.entity.Menu();
+		menu.setCode(menuTemplate.getCode());
+		menu.setName(menuTemplate.getName());
+		menu.setMenuTemplate(menuTemplate);
+		menu.setOrg(org);
+		menu.setSort(menuTemplate.getSort());
+		Set<RoleTemplate> roleTemplates = menuTemplate.getRoleTemplates();
+		HashSet<com.tianyoukeji.parent.entity.Role> roles = new HashSet<>();
+		for (RoleTemplate roleTemplate : roleTemplates) {
+			roles.add(roleRepository.findByCode(roleTemplate.getCode()));
+		}
+		menu.setRoles(roles);
+		menu.setParent(menuTemplateTransfer(menuTemplate.getParent(),org));
+		menu = menuRepository.saveAndFlush(menu);
+		return menu;
+		
+	}
 	public Builder getBuilder() {
 		Builder builder = new Builder();
 		builder.setDepartmentTemplateRepository(departmentTemplateRepository);
@@ -167,15 +283,31 @@ public class OrgTemplateService {
 			for (Entry<String, Department> entry : departmentSet) {
 				convertToDepartmentTemplate(entry.getValue(),orgTemplate);
 			}
-			Set<Entry<String, Role>> roleSet = allRoles.entrySet();
-			for (Entry<String, Role> entry : roleSet) {
-				convertToRoleTemplate(entry.getValue(),orgTemplate);
-			}
+	
+			convertToRoleTemplate(allRoles.values(),orgTemplate);
+			
 			Set<Entry<String, Menu>> menuSet = allMenus.entrySet();
 			for (Entry<String, Menu> entry : menuSet) {
 				convertToMenuTemplate(entry.getValue(),orgTemplate);
 			}
 			return this;
+		}
+
+		private void convertToRoleTemplate(Collection<Role> values, OrgTemplate orgTemplate) {
+			HashSet<RoleTemplate> hashSet = new HashSet<RoleTemplate>();
+			for (Role role : values) {
+				RoleTemplate roleTemplate = roleTemplateRepository.findByCode(role.code);
+				if(roleTemplate == null) {
+					roleTemplate = new RoleTemplate();
+				}
+				roleTemplate.setCode(role.code);
+				roleTemplate.setName(role.name);
+				roleTemplate = roleTemplateRepository.saveAndFlush(roleTemplate);
+				hashSet.add(roleTemplate);
+			}
+			orgTemplate.setRoleTemplates(hashSet);
+			orgTemplateRepository.save(orgTemplate);
+			
 		}
 
 		private MenuTemplate convertToMenuTemplate(Menu menu, OrgTemplate orgTemplate) {
@@ -212,15 +344,7 @@ public class OrgTemplateService {
 			if(role == null) {
 				return null;
 			}
-			RoleTemplate roleTemplate = roleTemplateRepository.findByCode(role.code);
-			if(roleTemplate == null) {
-				roleTemplate = new RoleTemplate();
-			}
-			roleTemplate.setCode(role.code);
-			roleTemplate.setName(role.name);
-			roleTemplate.setOrgTemplate(orgTemplate);
-			return roleTemplateRepository.saveAndFlush(roleTemplate);
-
+			return roleTemplateRepository.findByCode(role.code);
 		}
 
 		private DepartmentTemplate convertToDepartmentTemplate(Department department, OrgTemplate orgTemplate) {
