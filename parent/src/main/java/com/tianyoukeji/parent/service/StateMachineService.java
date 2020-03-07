@@ -107,10 +107,9 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	@Autowired
 	private Scheduler scheduler;
-	
+
 	@Value("${server.terminal}")
 	private String terminal;
-	
 
 	// 状态机池子
 	private static HashMap<String, Builder<String, String>> pools = new HashMap<String, Builder<String, String>>();
@@ -167,23 +166,22 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 		return collect;
 	}
-	
 
 	/**
-	 * 	根据query，返回一个具体的map格式的对象detail,包含了当前用户角色在当前状态机可执行事件events
+	 * 根据query，返回一个具体的map格式的对象detail,包含了当前用户角色在当前状态机可执行事件events
+	 * 
 	 * @param queryString
 	 * @return
 	 */
 	@Override
 	public Map fetchOne(String queryString) {
-		if(!entityInstanceOf(IStateMachineEntity.class)) {
+		if (!entityInstanceOf(IStateMachineEntity.class)) {
 			throw new BusinessException(1864, "当前实体，非状态机类型");
 		}
 		Map fetchOne = SmartQuery.fetchOne(getServiceEntity(), queryString);
 		fetchOne.put("events", fetchOne.get("state").toString());
 		return fetchOne;
 	}
-	
 
 	/**
 	 * 刷新企业的当前实体的状态机builder
@@ -392,9 +390,10 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			}
 			Set<Event> events = state.getEvents();
 			for (Event event : events) {
-				
-				int countByUuidAndRolesTerminal = eventRepository.countByUuidAndRolesTerminal(event.getUuid(), Terminal.valueOf(terminal));
-				if(countByUuidAndRolesTerminal == 0) {
+
+				int countByUuidAndRolesTerminal = eventRepository.countByUuidAndRolesTerminal(event.getUuid(),
+						Terminal.valueOf(terminal));
+				if (countByUuidAndRolesTerminal == 0) {
 					continue;
 				}
 				if (event.getTarget() == null) {
@@ -443,12 +442,15 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 						findByEntityAndCode = eventRepository.findByEntityAndActionAndRolesCode(getServiceEntity(),
 								actionStr, "user");
 					} else {
-						findByEntityAndCode = eventRepository.findByEntityAndActionAndRolesCode(getServiceEntity(),
-								actionStr, ContextUtils.getRole());
+						if (!ContextUtils.getRole().equals("developer")) {
+							findByEntityAndCode = eventRepository.findByEntityAndActionAndRolesCode(getServiceEntity(),
+									actionStr, ContextUtils.getRole());
 
-						if (findByEntityAndCode == null) {
-							context.getExtendedState().getVariables().put("error", 1);
-							throw new BusinessException(1231, "角色" + ContextUtils.getRole() + "无操作" + actionStr + "权限");
+							if (findByEntityAndCode == null) {
+								context.getExtendedState().getVariables().put("error", 1);
+								throw new BusinessException(1231,
+										"角色" + ContextUtils.getRole() + "无操作" + actionStr + "权限");
+							}
 						}
 						try {
 							method.invoke(_this, context.getExtendedState().get("id", Long.class),
@@ -511,10 +513,15 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			};
 
 		} catch (NoSuchMethodException e) {
-			throw new BusinessException(1861, getServiceEntity() + "服务，没有" + actionStr + "的方法");
+			System.out.println(getServiceEntity() + "服务，没有" + actionStr + "的方法");
 		} catch (SecurityException e) {
-			throw new BusinessException(1861, getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
+			System.out.println(getServiceEntity() + "服务，禁止访问" + actionStr + "方法");
 		}
+		return new Action<String, String>() {
+			@Override
+			public void execute(StateContext<String, String> context) {
+			}
+		};
 	}
 
 	private Action<String, String> errorAction() {
