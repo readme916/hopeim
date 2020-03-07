@@ -6,6 +6,8 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -64,7 +66,19 @@ public class RoleTemplate implements IBaseEntity{
 	@ManyToMany(mappedBy = "roleTemplates")
 	private Set<OrgTemplate> orgTemplates;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name="terminal")
+	private Terminal terminal;
 	
+	
+	public Terminal getTerminal() {
+		return terminal;
+	}
+
+	public void setTerminal(Terminal terminal) {
+		this.terminal = terminal;
+	}
+
 	public Set<OrgTemplate> getOrgTemplates() {
 		return orgTemplates;
 	}
@@ -137,5 +151,8 @@ public class RoleTemplate implements IBaseEntity{
 		this.code = code;
 	}
 
+	public enum Terminal{
+		org,user
+	}
 	
 }

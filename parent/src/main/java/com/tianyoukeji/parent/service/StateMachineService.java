@@ -74,6 +74,7 @@ import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.base.IStateMachineEntity;
+import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 
 /**
@@ -106,9 +107,10 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	@Autowired
 	private Scheduler scheduler;
-
-	@Value("${server.name}")
-	private String serverName;
+	
+	@Value("${server.terminal}")
+	private String terminal;
+	
 
 	// 状态机池子
 	private static HashMap<String, Builder<String, String>> pools = new HashMap<String, Builder<String, String>>();
@@ -165,6 +167,23 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 		return collect;
 	}
+	
+
+	/**
+	 * 	根据query，返回一个具体的map格式的对象detail,包含了当前用户角色在当前状态机可执行事件events
+	 * @param queryString
+	 * @return
+	 */
+	@Override
+	public Map fetchOne(String queryString) {
+		if(!entityInstanceOf(IStateMachineEntity.class)) {
+			throw new BusinessException(1864, "当前实体，非状态机类型");
+		}
+		Map fetchOne = SmartQuery.fetchOne(getServiceEntity(), queryString);
+		fetchOne.put("events", fetchOne.get("state").toString());
+		return fetchOne;
+	}
+	
 
 	/**
 	 * 刷新企业的当前实体的状态机builder
@@ -373,6 +392,11 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			}
 			Set<Event> events = state.getEvents();
 			for (Event event : events) {
+				
+				int countByUuidAndRolesTerminal = eventRepository.countByUuidAndRolesTerminal(event.getUuid(), Terminal.valueOf(terminal));
+				if(countByUuidAndRolesTerminal == 0) {
+					continue;
+				}
 				if (event.getTarget() == null) {
 					InternalTransitionConfigurer<String, String> eventTemp1 = builder.configureTransitions()
 							.withInternal().source(state.getCode()).event(event.getCode());
@@ -531,7 +555,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			map.put("entity", serviceEntity);
 			map.put("id", id);
 			map.put("action", timer.getAction());
-			map.put("server", serverName);
 
 			JobDetail jobDetail = JobBuilder.newJob(QuartzTimerJob.class)
 					.withIdentity(timer.getCode(), serviceEntity + id).usingJobData(map).build();

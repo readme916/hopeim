@@ -2,6 +2,7 @@ package com.tianyoukeji.oauth.config;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
@@ -27,6 +29,9 @@ import org.springframework.security.oauth2.provider.token.store.redis.RedisToken
 import com.alibaba.druid.pool.DruidDataSource;
 import com.tencentyun.TLSSigAPIv2;
 import com.tianyoukeji.oauth.filter.UsernamePasswordAuthenticationProvider;
+import com.tianyoukeji.parent.common.BusinessException;
+import com.tianyoukeji.parent.entity.User;
+import com.tianyoukeji.parent.entity.UserRepository;
 import com.tianyoukeji.parent.service.NamespaceRedisService;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 
@@ -49,6 +54,9 @@ public class Oauth2Config extends AuthorizationServerConfigurerAdapter {
 	
 	@Autowired
 	private UsernamePasswordAuthenticationProvider usernamePasswordAuthenticationProvider;
+	
+	@Autowired
+	private UserRepository userRepository;
 	
 	@Value("${SDKAppID}")
 	private String SDKAppID;
@@ -90,10 +98,21 @@ public class Oauth2Config extends AuthorizationServerConfigurerAdapter {
 				redisService.expire(RedisNamespace.USER_TOKEN, username, 2*30*86400);
 				
 				String user = authentication.getName();
+				User u = userRepository.findByUserinfoMobile(user);
+				
+				String terminal = u.getRole().getTerminal().toString();
+				if(authentication.getOAuth2Request().getClientId().equals("org")) {
+					if(!terminal.equals("org")) {
+						throw new BadCredentialsException("角色不允许登录");
+					}
+				}
+				
 		        final Map<String, Object> additionalInfo = new HashMap<>();
+		        additionalInfo.put("unionID", u.getUnionId());
 		        additionalInfo.put("userID", user);
 		        TLSSigAPIv2 api = new TLSSigAPIv2(Long.valueOf(SDKAppID), SDKAPPSecret);
 		        additionalInfo.put("userSig", api.genSig(user, 365*86400));
+		        
 		        ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(additionalInfo);
 				return accessToken;
 			}

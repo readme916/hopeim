@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
 import com.tianyoukeji.parent.common.AvatarUtils;
@@ -87,6 +88,8 @@ public class OauthUserService extends BaseService<User> {
 		Userinfo userInfo = new Userinfo();
 		userInfo.setMobile(username);
 		userInfo.setPassword(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(password));
+		String md5 = DigestUtils.md5DigestAsHex(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(password).getBytes());
+		user.setUnionId(md5);
 		userInfoRepository.save(userInfo);
 
 		user.setUserinfo(userInfo);

@@ -16,10 +16,14 @@ import com.liyang.jpa.smart.query.db.structure.EntityStructure;
 import com.liyang.jpa.smart.query.response.HTTPListResponse;
 import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.common.ContextUtils;
+import com.tianyoukeji.parent.entity.Department;
+import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.IDepartmentEntity;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
+import com.tianyoukeji.parent.entity.base.IRegionEntity;
 
 /**
  * 	抽象基础服务类
@@ -58,6 +62,23 @@ public abstract class BaseService<T extends IBaseEntity> {
 	}
 	
 	/**
+	 * 	返回当前用户企业
+	 * @return
+	 */
+	public Org getCurrentOrg() {
+		return getCurrentUser().getOrg();
+	}
+	
+	/**
+	 * 	返回当前用户部门
+	 * @return
+	 */
+	public Department getCurrentDepartment() {
+		return getCurrentUser().getDepartment();
+	}
+	
+	
+	/**
 	 * 	返回当前服务的实体
 	 * @return
 	 */
@@ -82,7 +103,7 @@ public abstract class BaseService<T extends IBaseEntity> {
 	//smartyquery查询方法部分
 
 	/**
-	 * 	根据query，返回一个具体的map格式的对象
+	 * 	根据query，返回一个具体的map格式的对象detail
 	 * @param queryString
 	 * @return
 	 */
@@ -90,22 +111,6 @@ public abstract class BaseService<T extends IBaseEntity> {
 		return SmartQuery.fetchOne(getServiceEntity(), queryString);
 	}
 	
-	/**
-	 * 	传入null，返回所有企业数据，否则返回orgId企业的数据
-	 * @param queryString
-	 * @param orgId
-	 * @return
-	 */
-	public Map fetchOneByOrg(String queryString , Long orgId) {
-		if(!(this instanceof IOrgEntity)) {
-			throw new BusinessException(1864, "当前实体，非org类型");
-		}
-		if(orgId != null) {
-			return fetchOne(queryString + "&org.uuid="+orgId);
-		}else {
-			return fetchOne(queryString);
-		}
-	}
 	
 	/**
 	 * 	返回一个带翻页的结果的Response对象
@@ -114,6 +119,54 @@ public abstract class BaseService<T extends IBaseEntity> {
 	 */
 	public HTTPListResponse fetchList(String queryString) {		
 		return SmartQuery.fetchList(getServiceEntity(), queryString);
+	}
+	
+	/**
+	 * 	根据企业查找数据
+	 * @param queryString
+	 * @param orgId
+	 * @return
+	 */
+	public HTTPListResponse fetchListByOrg(String queryString, Long orgId) {
+		if(!entityInstanceOf(IOrgEntity.class)) {
+			throw new BusinessException(1864, "当前实体，非org类型");
+		}
+		if(orgId == null) {
+			throw new BusinessException(1864, "企业id不能为null");
+		}
+		return SmartQuery.fetchList(getServiceEntity(), queryString + "&org.uuid="+orgId);
+	}
+	
+	/**
+	 * 	根据部门查找数据
+	 * @param queryString
+	 * @param departmentId
+	 * @return
+	 */
+	public HTTPListResponse fetchListByDepartment(String queryString, Long departmentId) {
+		if(!entityInstanceOf(IDepartmentEntity.class)) {
+			throw new BusinessException(1864, "当前实体，非department类型");
+		}
+		if(departmentId == null) {
+			throw new BusinessException(1864, "部门id不能为null");
+		}
+		return SmartQuery.fetchList(getServiceEntity(), queryString + "&department.uuid="+departmentId);
+	}
+	
+	/**
+	 * 	根据城市查找数据
+	 * @param queryString
+	 * @param cityName
+	 * @return
+	 */
+	public HTTPListResponse fetchListByCity(String queryString, String cityName) {
+		if(!entityInstanceOf(IRegionEntity.class)) {	
+			throw new BusinessException(1864, "当前实体，非region类型");
+		}
+		if(cityName == null) {
+			throw new BusinessException(1864, "cityName不能为null");
+		}
+		return SmartQuery.fetchList(getServiceEntity(), queryString + "&city.fullname="+cityName);
 	}
 	
 	/**
@@ -199,5 +252,15 @@ public abstract class BaseService<T extends IBaseEntity> {
 	 */
 	public void delete(T entity) {
 		getJpaRepository().delete(entity);
+	}
+	
+	/**
+	 * 	instanceof
+	 * @return
+	 */
+	public boolean entityInstanceOf(Class<?> clz) {
+		ResolvableType resolvableType = ResolvableType.forClass(jpaRepository.getClass());
+		Class<?> entityClass = resolvableType.as(JpaRepository.class).getGeneric(0).resolve();
+		return clz.isAssignableFrom(entityClass);
 	}
 }
