@@ -89,6 +89,7 @@ public class StateTemplateService {
 
 		com.tianyoukeji.parent.entity.State state = new com.tianyoukeji.parent.entity.State();
 		state.setCode(stateTemplate.getCode());
+		state.setSort(stateTemplate.getSort());
 		state.setEnterAction(stateTemplate.getEnterAction());
 		state.setEntity(stateTemplate.getEntity());
 		state.setExitAction(stateTemplate.getExitAction());
@@ -230,10 +231,10 @@ public class StateTemplateService {
 			return this;
 		}
 
-		public Builder state(String code, String name, Boolean isStart, Boolean isEnd, Boolean isChoice,
+		public Builder state(Integer sort , String code, String name, Boolean isStart, Boolean isEnd, Boolean isChoice,
 				String firstTarget, String firstGuardSpel, String thenTarget, String thenGuardSpel, String lastTarget,
 				String enterAction, String exitAction) {
-			State s = new State(code, name, isStart, isEnd, isChoice, firstTarget, firstGuardSpel, thenTarget,
+			State s = new State(sort ,code, name, isStart, isEnd, isChoice, firstTarget, firstGuardSpel, thenTarget,
 					thenGuardSpel, lastTarget, enterAction, exitAction);
 			if (allStates.containsKey(code)) {
 				throw new BusinessException(1746, "状态 ： " + code + "已经存在");
@@ -243,8 +244,8 @@ public class StateTemplateService {
 			return this;
 		}
 
-		public Builder event(String code, String name, String target, String guardSpel, String action, int sort) {
-			Event e = new Event(code, name, target, guardSpel, action, sort);
+		public Builder event( int sort, String code, String name, String target, String guardSpel, String action) {
+			Event e = new Event(sort ,code, name, target, guardSpel, action);
 			if (allEvents.containsKey(code)) {
 				throw new BusinessException(1746, "事件： " + code + "已经存在");
 			}
@@ -307,7 +308,7 @@ public class StateTemplateService {
 			if (stateTemplate == null) {
 				stateTemplate = new StateTemplate();
 			}
-
+			stateTemplate.setSort(state.sort);
 			stateTemplate.setCode(state.code);
 			stateTemplate.setEnterAction(state.enterAction);
 			stateTemplate.setEntity(entity);
@@ -395,7 +396,9 @@ public class StateTemplateService {
 	public static class State {
 
 		// 保存builder的引用
+		
 		private Builder builder;
+		private Integer sort;
 		private String code;
 		private String name;
 		private Boolean isStart;
@@ -411,10 +414,11 @@ public class StateTemplateService {
 		private HashSet<Event> events = new HashSet<Event>();
 		private HashSet<Timer> timers = new HashSet<Timer>();
 
-		public State(String code, String name, Boolean isStart, Boolean isEnd, Boolean isChoice, String firstTarget,
+		public State(Integer sort, String code, String name, Boolean isStart, Boolean isEnd, Boolean isChoice, String firstTarget,
 				String firstGuardSpel, String thenTarget, String thenGuardSpel, String lastTarget, String enterAction,
 				String exitAction) {
 			super();
+			this.sort = sort;
 			this.code = code;
 			this.name = name;
 			this.isStart = isStart;
@@ -461,7 +465,7 @@ public class StateTemplateService {
 		private int sort;
 		private HashSet<String> roles = new HashSet<String>();
 
-		public Event(String code, String name, String target, String guardSpel, String action, int sort) {
+		public Event(int sort ,String code, String name, String target, String guardSpel, String action) {
 			super();
 			this.code = code;
 			this.name = name;

@@ -8,9 +8,12 @@ import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-	Event findByEntityAndActionAndRolesCode(String entity, String action , String role);
+	Event findBySourcesUuidAndActionAndRolesCode(Long uuid , String action , String role);
+	Event findBySourcesUuidAndAction(Long uuid , String action);
 	Event findByEntityAndCode(String entity,String code);
+	
 	List<Event> findBySourcesUuidAndRolesCode(Long uuid , String role);
+	List<Event> findBySourcesUuid(Long uuid);
 	
 	int countByUuidAndRolesTerminal(Long uuid , Terminal terminal);
 	

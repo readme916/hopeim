@@ -6,6 +6,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.tianyoukeji.parent.service.NamespaceRedisService;
 import com.tianyoukeji.parent.service.RateLimiterService;
+import com.tianyoukeji.parent.service.RegionService;
 import com.tianyoukeji.parent.service.SmsService;
 import com.tianyoukeji.parent.service.TIMService;
 
@@ -25,6 +26,11 @@ public class CommonServiceBean {
 	@Bean
 	public SmsService smsService() {
 		return new SmsService(new Object());
+	}
+	
+	@Bean
+	public RegionService regionService() {
+		return new RegionService();
 	}
 	
 	@Bean

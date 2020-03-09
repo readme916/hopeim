@@ -23,11 +23,12 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.ISortEntity;
 
 @Entity
 @Table(name = "state_template", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
 @EntityListeners(AuditingEntityListener.class)
-public class StateTemplate implements IBaseEntity{
+public class StateTemplate implements IBaseEntity,ISortEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -63,6 +64,8 @@ public class StateTemplate implements IBaseEntity{
 	@Column(name = "is_end")
 	private Boolean isEnd;
 	
+	@Column(name = "sort")
+	private Integer sort;
 	
 	//这一部分处理分支事件
 	@Column(name = "is_choice")
@@ -102,6 +105,14 @@ public class StateTemplate implements IBaseEntity{
 	@Column(name = "exit_action")
 	private String exitAction;
 	
+
+	public Integer getSort() {
+		return sort;
+	}
+
+	public void setSort(Integer sort) {
+		this.sort = sort;
+	}
 
 	public Set<EventTemplate> getEventTemplates() {
 		return eventTemplates;

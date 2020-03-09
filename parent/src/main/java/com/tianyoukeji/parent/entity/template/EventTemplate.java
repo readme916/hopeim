@@ -22,11 +22,12 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
+import com.tianyoukeji.parent.entity.base.ISortEntity;
 
 @Entity
 @Table(name = "event_template", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
 @EntityListeners(AuditingEntityListener.class)
-public class EventTemplate implements IBaseEntity{
+public class EventTemplate implements IBaseEntity,ISortEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")

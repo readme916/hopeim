@@ -48,9 +48,12 @@ public class InitService {
 		if (orgTemplateRepository.count() == 0) {
 			com.tianyoukeji.org.service.OrgTemplateService.Builder builder = orgTemplateService.getBuilder()
 					.code("platform").name("天邮科技总平台模板").department("部门1", "department1", null)
-					.department("部门2", "department2", "department1").department("部门2-2", "department2_2", "department2")
-					.department("部门3", "department3", "department1").role("超管", "platform_super", Terminal.org)
-					.role("管理员", "platform_manager", Terminal.org).role("员工", "platform_employee", Terminal.org)
+					.department("部门2", "department2", "department1")
+					.department("部门2-2", "department2_2", "department2")
+					.department("部门3", "department3", "department1")
+					.role("平台超管", "platform_super", Terminal.org)
+					.role("平台管理员", "platform_manager", Terminal.org)
+					.role("平台员工", "platform_employee", Terminal.org)
 					.menu("主页", "home", "/", 0, null).menu("第一页", "one", "/one", 1, "home")
 					.menu("第二页", "two", "/two", 2, "home").menu("第一页二级页", "one_one", "/oneone", 3, "one");
 			builder.getMenu("home").addRole("platform_manager").addRole("platform_super");
@@ -62,20 +65,22 @@ public class InitService {
 
 		if (stateTemplateRepository.count() == 0) {
 			com.tianyoukeji.org.service.StateTemplateService.Builder builder = stateTemplateService.getBuilder();
-			builder.entity("user").state("created", "创建", true, false, false, null, null, null, null, null, null, null)
-					.state("enabled", "有效用户", false, false, false, null, null, null, null, null, null, null)
-					.state("disabled", "禁止用户", false, false, false, null, null, null, null, null, null, null)
-					.event("enable", "有效", "enabled", null, "doEnable", 0)
-					.event("disable", "禁止", "disabled", null, "doDisable", 1)
-					.event("kick", "强制下线", null, null, "doKick", 2)
+			builder.entity("user")
+					.state(10,"created", "初始状态", true, false, false, null, null, null, null, null, null, null)
+					.state(20,"enabled", "有效状态", false, false, false, null, null, null, null, null, null, null)
+					.state(30,"disabled", "禁止状态", false, false, false, null, null, null, null, null, null, null)
+					.event(10,"enable", "有效", "enabled", null, "doEnable")
+					.event(20,"disable", "禁止", "disabled", null, "doDisable")
+					.event(30,"kick", "强制下线", null, null, "doKick")
 					.timer("speak", "说话定时器", "enabled", "doSpeak", null, 20);
 
 			builder.getState("created").addEvent("enable").addEvent("disable");
 			builder.getState("enabled").addEvent("disable").addEvent("kick");
 			builder.getState("disabled").addEvent("enable");
 
-			builder.getEvent("enable").addRole("developer").addRole("platform_super");
-			builder.getEvent("disable").addRole("developer").addRole("platform_super");
+			builder.getEvent("enable").addRole("platform_super").addRole("platform_manager");
+			builder.getEvent("disable").addRole("platform_super").addRole("platform_manager");
+			builder.getEvent("kick").addRole("platform_employee");
 			builder.build();
 		}
 

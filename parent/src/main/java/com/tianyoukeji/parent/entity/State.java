@@ -25,13 +25,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
+import com.tianyoukeji.parent.entity.base.ISortEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 import com.tianyoukeji.parent.entity.template.StateTemplate;
 
 @Entity
 @Table(name = "state", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
 @EntityListeners(AuditingEntityListener.class)
-public class State implements IBaseEntity{
+public class State implements IBaseEntity,ISortEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -106,11 +107,21 @@ public class State implements IBaseEntity{
 	@Column(name = "exit_action")
 	private String exitAction;
 	
+	@Column(name = "sort")
+	private Integer sort = 0;
 	
 	@ManyToOne
 	@JoinColumn(name = "state_template_id")
 	private StateTemplate stateTemplate;
 	
+
+	public Integer getSort() {
+		return sort;
+	}
+
+	public void setSort(Integer sort) {
+		this.sort = sort;
+	}
 
 	public StateTemplate getStateTemplate() {
 		return stateTemplate;

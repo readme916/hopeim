@@ -26,11 +26,6 @@ public class CommonServiceBean {
 	public SmsService smsService() {
 		return new SmsService(new Object());
 	}
-//	@Bean
-//	public RegionService regionService() {
-//		return new RegionService();
-//	}
-
 	
 	@Bean
 	public TIMService timService() {

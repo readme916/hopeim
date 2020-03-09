@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -90,6 +91,9 @@ import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 public abstract class StateMachineService<T extends IStateMachineEntity> extends BaseService<T> {
 
 	@Autowired
+	private HttpServletRequest request;
+
+	@Autowired
 	private JpaRepository<T, Long> jpaRepository;
 
 	@Autowired
@@ -154,9 +158,14 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		if (findByEntity == null) {
 			return new ArrayList<String>();
 		}
+		List<Event> findBySourcesUuidAndRolesCode = null;
 
-		List<Event> findBySourcesUuidAndRolesCode = eventRepository
-				.findBySourcesUuidAndRolesCode(findByEntity.getUuid(), ContextUtils.getRole());
+		if (ContextUtils.getRole().equals("developer")) {
+			findBySourcesUuidAndRolesCode = eventRepository.findBySourcesUuid(findByEntity.getUuid());
+		} else {
+			findBySourcesUuidAndRolesCode = eventRepository.findBySourcesUuidAndRolesCode(findByEntity.getUuid(),
+					ContextUtils.getRole());
+		}
 		List<String> collect = findBySourcesUuidAndRolesCode.stream().sorted(new Comparator<Event>() {
 			@Override
 			public int compare(Event o1, Event o2) {
@@ -400,7 +409,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 					InternalTransitionConfigurer<String, String> eventTemp1 = builder.configureTransitions()
 							.withInternal().source(state.getCode()).event(event.getCode());
 					if (StringUtils.hasText(event.getAction())) {
-						eventTemp1.action(AuthorizeActionFactory(event.getAction()), errorAction());
+						eventTemp1.action(AuthorizeActionFactory(state, event.getAction()), errorAction());
 					}
 					if (StringUtils.hasText(event.getGuardSpel())) {
 						eventTemp1.guard(guardFactory(event.getGuardSpel()));
@@ -411,7 +420,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 							.withExternal().source(state.getCode()).target(event.getTarget().getCode())
 							.event(event.getCode());
 					if (StringUtils.hasText(event.getAction())) {
-						eventTemp2.action(AuthorizeActionFactory(event.getAction()), errorAction());
+						eventTemp2.action(AuthorizeActionFactory(state, event.getAction()), errorAction());
 					}
 					if (StringUtils.hasText(event.getGuardSpel())) {
 						eventTemp2.guard(guardFactory(event.getGuardSpel()));
@@ -422,7 +431,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		pools.put(getServiceEntity(), builder);
 	}
 
-	private Action<String, String> AuthorizeActionFactory(String actionStr) {
+	private Action<String, String> AuthorizeActionFactory(State state, String actionStr) {
 
 		StateMachineService<T> _this = this;
 		try {
@@ -439,36 +448,37 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 					Event findByEntityAndCode = null;
 					User currentUser = getCurrentUser();
 					if (currentUser == null) {
-						findByEntityAndCode = eventRepository.findByEntityAndActionAndRolesCode(getServiceEntity(),
+						findByEntityAndCode = eventRepository.findBySourcesUuidAndActionAndRolesCode(state.getUuid(),
 								actionStr, "user");
+					} else if (request.getRequestURI().contains("/integration/")
+							|| ContextUtils.getRole().equals("developer")) {
+						findByEntityAndCode = eventRepository.findBySourcesUuidAndAction(state.getUuid(), actionStr);
 					} else {
-						if (!ContextUtils.getRole().equals("developer")) {
-							findByEntityAndCode = eventRepository.findByEntityAndActionAndRolesCode(getServiceEntity(),
-									actionStr, ContextUtils.getRole());
-
-							if (findByEntityAndCode == null) {
-								context.getExtendedState().getVariables().put("error", 1);
-								throw new BusinessException(1231,
-										"角色" + ContextUtils.getRole() + "无操作" + actionStr + "权限");
-							}
-						}
-						try {
-							method.invoke(_this, context.getExtendedState().get("id", Long.class),
-									context.getStateMachine());
-						} catch (IllegalAccessException e) {
-							e.printStackTrace();
-							context.getExtendedState().getVariables().put("error", 1);
-							throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法访问");
-						} catch (IllegalArgumentException e) {
-							e.printStackTrace();
-							context.getExtendedState().getVariables().put("error", 1);
-							throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法参数");
-						} catch (InvocationTargetException e) {
-							e.printStackTrace();
-							context.getExtendedState().getVariables().put("error", 1);
-							throw new BusinessException(2000, e.getCause().getMessage());
-						}
+						findByEntityAndCode = eventRepository.findBySourcesUuidAndActionAndRolesCode(state.getUuid(),
+								actionStr, ContextUtils.getRole());
 					}
+					if (findByEntityAndCode == null) {
+						context.getExtendedState().getVariables().put("error", 1);
+						throw new BusinessException(1231, "角色" + ContextUtils.getRole() + "无操作" + actionStr + "权限");
+					}
+
+					try {
+						method.invoke(_this, context.getExtendedState().get("id", Long.class),
+								context.getStateMachine());
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+						context.getExtendedState().getVariables().put("error", 1);
+						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法访问");
+					} catch (IllegalArgumentException e) {
+						e.printStackTrace();
+						context.getExtendedState().getVariables().put("error", 1);
+						throw new BusinessException(1862, getServiceEntity() + "服务 ," + actionStr + "的方法，非法参数");
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+						context.getExtendedState().getVariables().put("error", 1);
+						throw new BusinessException(2000, e.getCause().getMessage());
+					}
+
 				}
 			};
 		} catch (NoSuchMethodException e) {

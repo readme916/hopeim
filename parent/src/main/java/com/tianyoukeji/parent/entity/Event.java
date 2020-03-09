@@ -23,12 +23,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
+import com.tianyoukeji.parent.entity.base.ISortEntity;
 import com.tianyoukeji.parent.entity.template.EventTemplate;
 
 @Entity
 @Table(name = "event", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
 @EntityListeners(AuditingEntityListener.class)
-public class Event implements IBaseEntity{
+public class Event implements IBaseEntity,ISortEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")

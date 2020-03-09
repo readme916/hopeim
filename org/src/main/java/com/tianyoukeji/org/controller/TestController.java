@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tianyoukeji.org.service.StateService;
 import com.tianyoukeji.org.service.StateTemplateService;
 import com.tianyoukeji.org.service.UserService;
 import com.tianyoukeji.parent.controller.DefaultHandler;
@@ -17,6 +18,9 @@ public class TestController extends DefaultHandler{
 
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private StateService stateService;
 	
 	@Autowired
 	private StateTemplateService stateTemplateService;
@@ -49,4 +53,9 @@ public class TestController extends DefaultHandler{
 	public Object test(Authentication authentication) {
 		return userService.currentUserExecutableEvent("enabled");
 	}
+	@GetMapping(path = "/test/state")
+	public Object state(Authentication authentication) {
+		return stateService.fetchList("fields=events,events.roles,events.target,firstTarget,thenTarget,lastTarget,timers,*&entity=user&sort=sort,asc");
+	}
+	
 }
