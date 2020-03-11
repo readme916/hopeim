@@ -188,7 +188,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			throw new BusinessException(1864, "当前实体，非状态机类型");
 		}
 		Map fetchOne = SmartQuery.fetchOne(getServiceEntity(), queryString);
-		fetchOne.put("events", fetchOne.get("state").toString());
+		fetchOne.put("events", currentUserExecutableEvent(fetchOne.get("state").toString()));
 		return fetchOne;
 	}
 

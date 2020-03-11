@@ -11,5 +11,10 @@ public  class AvatarUtils {
         String mdtStr = DigestUtils.md5DigestAsHex(username.getBytes());
         return "https://www.gravatar.com/avatar/"+mdtStr+"?d=robohash&s=256";
     }
+    
+    public static String generatorGroupAvatar(String name){
+        String mdtStr = DigestUtils.md5DigestAsHex(name.getBytes());
+        return "https://www.gravatar.com/avatar/"+mdtStr+"?d=wavatar&s=256";
+    }
 
 }

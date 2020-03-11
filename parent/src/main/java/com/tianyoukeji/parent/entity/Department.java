@@ -23,12 +23,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
+import com.tianyoukeji.parent.entity.base.IQunEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
 @Table(name = "department")
 @EntityListeners(AuditingEntityListener.class)
-public class Department implements IOrgEntity{
+public class Department implements IOrgEntity,IQunEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="uuid")
@@ -74,6 +75,18 @@ public class Department implements IOrgEntity{
 	@JoinColumn(name = "department_template_id")
 	private DepartmentTemplate departmentTemplate;
 	
+	@Column(name= "groupId")
+	private String groupId;
+	
+	
+	public String getGroupId() {
+		return groupId;
+	}
+
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
+	}
+
 	public String getCode() {
 		return code;
 	}

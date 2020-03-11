@@ -20,7 +20,7 @@ public class SwaggerConfig {
 				.apiInfo(new ApiInfoBuilder().title("天邮科技平台后台开发接口").description("平台后台").version("1.0")
 						.contact(new Contact("李扬", "https://github.com/readme916", "1290144599@qq.com"))
 						.license("The Apache License").build())
-				.select().apis(RequestHandlerSelectors.basePackage("com.tianyoukeji.platform.controller"))
+				.select().apis(RequestHandlerSelectors.basePackage("com.tianyoukeji.org.controller"))
 				.paths(PathSelectors.any()).build();
 	}
 }

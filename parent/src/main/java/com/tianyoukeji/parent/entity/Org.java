@@ -68,6 +68,9 @@ public class Org implements IRegionEntity{
 	@OneToMany(mappedBy = "org")
 	private Set<Menu> menus;
 	
+	@OneToMany(mappedBy = "org")
+	private Set<User> users;
+	
 	@ManyToOne
 	@JoinColumn(name = "parent")
 	private Org parent;
@@ -92,6 +95,14 @@ public class Org implements IRegionEntity{
 	private Region city;
 	
 	
+	public Set<User> getUsers() {
+		return users;
+	}
+
+	public void setUsers(Set<User> users) {
+		this.users = users;
+	}
+
 	public Set<Menu> getMenus() {
 		return menus;
 	}
