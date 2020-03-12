@@ -28,6 +28,7 @@ import com.tianyoukeji.parent.entity.template.OrgTemplate;
 import com.tianyoukeji.parent.entity.template.OrgTemplateRepository;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
+import com.tianyoukeji.parent.service.TIMService;
 import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
 
 @Service
@@ -61,6 +62,9 @@ public class OrgTemplateService {
 	
 	@Autowired
 	private OrgRepository orgRepository;
+	
+	@Autowired
+	private TIMService timService;
 
 
 	
@@ -108,8 +112,8 @@ public class OrgTemplateService {
 		department.setName(departmentTemplate.getName());
 		department.setOrg(org);
 		department.setParent(departmentTemplateTransfer(departmentTemplate.getParent(),org));
-	
 		department = departmentRepository.saveAndFlush(department);
+		timService.getOrCreateEntityQun("department",department.getUuid(), "部门群", null, null);
 		return department;
 		
 	}

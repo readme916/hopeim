@@ -54,6 +54,9 @@ public class Log implements IDepartmentEntity{
 	@Column(name = "entity")
 	private String entity;
 	
+	@Column(name = "event")
+	private String event;
+	
 	@Column(name = "entity_id")
 	private Long entityId;
 	
@@ -72,6 +75,14 @@ public class Log implements IDepartmentEntity{
 	@Lob
 	@Column(name = "params")
 	private String params;
+
+	public String getEvent() {
+		return event;
+	}
+
+	public void setEvent(String event) {
+		this.event = event;
+	}
 
 	public Long getUuid() {
 		return uuid;

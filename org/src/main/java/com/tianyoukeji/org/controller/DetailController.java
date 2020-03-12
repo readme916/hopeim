@@ -32,9 +32,6 @@ public class DetailController extends DefaultHandler {
 
 	@PostMapping(path = "/{entity}/{uuid}")
 	@ApiOperation(value = "通用详细页", notes = "默认只包括实体普通的属性，如果有对象属性要求，自己实现mapping", httpMethod = "POST")
-	@ApiImplicitParams({
-			@ApiImplicitParam(dataType = "String", name = "entity", value = "实体类型", required = true, paramType = "path"),
-			@ApiImplicitParam(dataType = "Long", name = "uuid", value = "uuid", required = true, paramType = "path") })
 	public Map fetchOne(@PathVariable(required = true) String entity, @PathVariable(required = true) Long uuid) {
 		if (StateMachineService.services.containsKey(entity)) {
 			Map fetchOne = SmartQuery.fetchOne(entity, "fields=*&uuid=" + uuid);
@@ -47,8 +44,6 @@ public class DetailController extends DefaultHandler {
 
 	@PostMapping(path = "/user/{uuid}")
 	@ApiOperation(value = "用户详细页", notes = "增加了role，org，state，department等对象", httpMethod = "POST")
-	@ApiImplicitParams({
-			@ApiImplicitParam(dataType = "Long", name = "uuid", value = "uuid", required = true, paramType = "path") })
 	public Map fetchUser(@PathVariable(required = true) Long uuid) {
 		Map fetchOne = SmartQuery.fetchOne("user", "fields=*,role,org,department,state&uuid=" + uuid);
 		fetchOne.put("events",

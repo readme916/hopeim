@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ResolvableType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.statemachine.state.PseudoStateContext.PseudoAction;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,7 +33,9 @@ import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
 import com.tianyoukeji.parent.entity.base.IQunEntity;
 import com.tianyoukeji.parent.service.TIMService.TIMMsgElement;
+import com.tianyoukeji.parent.service.TIMService.TIMResponse;
 
+@Service
 public class TIMService {
 	final static Logger logger = LoggerFactory.getLogger(TIMService.class);
 
@@ -141,20 +145,19 @@ public class TIMService {
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}
-	
-	
+
 	/**
-	 * 	用户的登录状态
+	 * 用户的登录状态
 	 * 
 	 * @param username
 	 * @return
 	 */
-	public HashMap<String,Boolean> loginQuery(List<String> mobiles) {
-		
-		if(mobiles == null || mobiles.isEmpty()) {
+	public HashMap<String, Boolean> loginQuery(List<String> mobiles) {
+
+		if (mobiles == null || mobiles.isEmpty()) {
 			return null;
 		}
-		
+
 		Random random = new Random();
 		String nextInt = String.valueOf(random.nextInt());
 		String url = "https://console.tim.qq.com/v4/openim/querystate?sdkappid=" + SDKAppID
@@ -162,20 +165,20 @@ public class TIMService {
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("To_Account", mobiles);
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
-		
-		HashMap<String, Boolean> response = new HashMap<String,Boolean>();
-		if(postForObject.getActionStatus().equals(ActionStatus.OK)) {
-			List result = (List)postForObject.getQueryResult();
+
+		HashMap<String, Boolean> response = new HashMap<String, Boolean>();
+		if (postForObject.getActionStatus().equals(ActionStatus.OK)) {
+			List result = (List) postForObject.getQueryResult();
 			for (Object o : result) {
-				Map m = (Map)o;
-				if(m.get("State").toString().equals("Online")) {
+				Map m = (Map) o;
+				if (m.get("State").toString().equals("Online")) {
 					response.put(m.get("To_Account").toString(), true);
-				}else {
+				} else {
 					response.put(m.get("To_Account").toString(), false);
 				}
 			}
 			return response;
-		}else {
+		} else {
 			return null;
 		}
 	}
@@ -244,7 +247,7 @@ public class TIMService {
 	}
 
 	/**
-	 * 	加入企业时候，自动把其他员工导入自己联系人
+	 * 加入企业时候，自动把其他员工导入自己联系人
 	 * 
 	 * @param username
 	 * @return
@@ -276,10 +279,9 @@ public class TIMService {
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}
-	
-	
+
 	/**
-	 * 	退出企业时候，自动把其他员工从自己联系人删除
+	 * 退出企业时候，自动把其他员工从自己联系人删除
 	 * 
 	 * @param username
 	 * @return
@@ -306,11 +308,9 @@ public class TIMService {
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}
-	
-	
 
 	/**
-	 * 	添加好友，普通好友分类
+	 * 添加好友，普通好友分类
 	 * 
 	 * @param username
 	 * @return
@@ -336,9 +336,9 @@ public class TIMService {
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}
-	
+
 	/**
-	 * 	删除普通好友
+	 * 删除普通好友
 	 * 
 	 * @param username
 	 * @return
@@ -361,27 +361,35 @@ public class TIMService {
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}
-	
+
 	/**
-	 * 	创建一个基于entity的群，把相关的人员拉入，不判断是否已经存在这个实体群
+	 * 创建一个基于entity的群，把相关的人员拉入，已经存在这个实体群则直接返回
 	 * 
 	 * @param username
 	 * @return
 	 */
-	public TIMResponse createEntityGroup(String entity, Long id , String name , String faceUrl , List<String> users) {
-		
-		if(!entityInstanceOf(entity, IQunEntity.class)) {
+	public TIMResponse getOrCreateEntityQun(String entity, Long id, String name, String faceUrl, List<String> users) {
+
+		if (!entityInstanceOf(entity, IQunEntity.class)) {
 			throw new BusinessException(1395, "实体类型不符合IQun");
 		}
 		JpaRepository jpaRepository = SmartQuery.getStructure(entity).getJpaRepository();
 		Optional findById = jpaRepository.findById(id);
-		if(!findById.isPresent()) {
-			throw new BusinessException(1481, "实体不存在"+id);
+		if (!findById.isPresent()) {
+			throw new BusinessException(1481, "实体不存在" + id);
 		}
-		if(users == null || users.isEmpty()) {
-			throw new BusinessException(1482, "不能创建无人群组");
+		IQunEntity qunEntity = (IQunEntity) findById.get();
+		String groupId = qunEntity.getGroupId();
+		if (StringUtils.hasText(groupId)) {
+			TIMResponse timResponse = new TIMResponse();
+			timResponse.setActionStatus(ActionStatus.OK);
+			timResponse.setErrorCode(0);
+			timResponse.setGroupId(groupId);
+			return timResponse;
 		}
-		
+//		if(users == null || users.isEmpty()) {
+//			throw new BusinessException(1482, "不能创建无人群组");
+//		}
 		Random random = new Random();
 		String nextInt = String.valueOf(random.nextInt());
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/create_group?sdkappid=" + SDKAppID
@@ -390,41 +398,88 @@ public class TIMService {
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("Type", "Private");
 		hashMap.put("Name", name);
-		hashMap.put("Introduction", entity+"/"+id);
-		if(faceUrl==null) {
-			faceUrl = AvatarUtils.generatorGroupAvatar( entity+"/"+id);
+		hashMap.put("Introduction", entity + "/" + id);
+		if (faceUrl == null) {
+			faceUrl = AvatarUtils.generatorGroupAvatar(entity + "/" + id);
 		}
 		hashMap.put("FaceUrl", faceUrl);
-		ArrayList<HashMap<String,String>> us = new ArrayList<HashMap<String,String>>();
-		for(String uName : users) {
-			HashMap<String, String> hashMapUser = new HashMap<String,String>();
-			hashMapUser.put("Member_Account", uName);
-			us.add(hashMapUser);
+		if (users != null) {
+			ArrayList<HashMap<String, String>> us = new ArrayList<HashMap<String, String>>();
+			for (String uName : users) {
+				HashMap<String, String> hashMapUser = new HashMap<String, String>();
+				hashMapUser.put("Member_Account", uName);
+				us.add(hashMapUser);
+			}
+			hashMap.put("MemberList", us);
 		}
-		hashMap.put("MemberList", us);
+
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
-		if(postForObject.getActionStatus().equals(ActionStatus.OK)) {
+		if (postForObject.getActionStatus().equals(ActionStatus.OK)) {
+			
+			qunEntity.setGroupId(postForObject.getGroupId());
+			jpaRepository.save(qunEntity);
+			
 			TIMMsgElement timMsgElement = new TIMMsgElement();
 			timMsgElement.setMsgType(MessageType.TIMTextElem);
 			TIMTextContent timTextContent = new TIMTextContent();
-			timTextContent.setText("欢迎加入"+name);
+			timTextContent.setText("Hello Everyone!");
 			timMsgElement.setMsgContent(timTextContent);
-			sendQunMessage(postForObject.getGroupId() , timMsgElement);
+			sendQunMessage(postForObject.getGroupId(), timMsgElement);
 		}
-		
-		
+
+		return postForObject;
+	}
+
+	/**
+	 * 加入群
+	 * 
+	 * @param
+	 * @return
+	 */
+	public TIMResponse joinEntityQun(String username, String groupId) {
+		Random random = new Random();
+		String nextInt = String.valueOf(random.nextInt());
+		String url = "https://console.tim.qq.com/v4/group_open_http_svc/add_group_member?sdkappid=" + SDKAppID
+				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
+		HashMap<String, Object> hashMap = new HashMap<String, Object>();
+		hashMap.put("GroupId", groupId);
+
+		ArrayList<HashMap<String, String>> us = new ArrayList<HashMap<String, String>>();
+		HashMap<String, String> hashMapUser = new HashMap<String, String>();
+		hashMapUser.put("Member_Account", username);
+		us.add(hashMapUser);
+		hashMap.put("MemberList", us);
+		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}
 	
-	
-
 	/**
-	 * 	发送群普通消息
+	 * 退出群
 	 * 
-	 * @param 
+	 * @param
 	 * @return
 	 */
-	public TIMResponse sendQunMessage(String groupId , TIMMsgElement element) {
+	public TIMResponse quitEntityQun(String username, String groupId) {
+		Random random = new Random();
+		String nextInt = String.valueOf(random.nextInt());
+		String url = "https://console.tim.qq.com/v4/group_open_http_svc/delete_group_member?sdkappid=" + SDKAppID
+				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
+		HashMap<String, Object> hashMap = new HashMap<String, Object>();
+		hashMap.put("GroupId", groupId);
+
+		ArrayList<String>us = new ArrayList<String>();
+		us.add(username);
+		hashMap.put("MemberToDel_Account", us);
+		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
+		return postForObject;
+	}
+	/**
+	 * 发送群普通消息
+	 * 
+	 * @param
+	 * @return
+	 */
+	public TIMResponse sendQunMessage(String groupId, TIMMsgElement element) {
 		Random random = new Random();
 		String nextInt = String.valueOf(random.nextInt());
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/send_group_msg?sdkappid=" + SDKAppID
@@ -438,16 +493,14 @@ public class TIMService {
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}
-	
-	
 
 	/**
-	 * 	发送群普通消息，带推送
+	 * 发送群普通消息，带推送
 	 * 
-	 * @param 
+	 * @param
 	 * @return
 	 */
-	public TIMResponse sendQunMessageOffline(String groupId , TIMMsgElement element , String offlineTitle,
+	public TIMResponse sendQunMessageOffline(String groupId, TIMMsgElement element, String offlineTitle,
 			String offlineDesc) {
 		Random random = new Random();
 		String nextInt = String.valueOf(random.nextInt());
@@ -467,37 +520,31 @@ public class TIMService {
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}
-	
+
 	/**
-	 * 	发送群系统通知
+	 * 发送群系统通知
 	 * 
-	 * @param 
+	 * @param
 	 * @return
 	 */
-	public TIMResponse sendQunNotice(String groupId , String content) {
+	public TIMResponse sendQunNotice(String groupId, String content) {
 		Random random = new Random();
 		String nextInt = String.valueOf(random.nextInt());
-		String url = "https://console.tim.qq.com/v4/group_open_http_svc/send_group_system_notification?sdkappid=" + SDKAppID
-				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
+		String url = "https://console.tim.qq.com/v4/group_open_http_svc/send_group_system_notification?sdkappid="
+				+ SDKAppID + "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt
+				+ "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("GroupId", groupId);
 		hashMap.put("Content", content);
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}
-	
 
-	
-	
-	
-	private boolean entityInstanceOf(String entity , Class<?> clz) {
+	private boolean entityInstanceOf(String entity, Class<?> clz) {
 		EntityStructure structure = SmartQuery.getStructure(entity);
-		Class<?> entityClass  = structure.getEntityClass();
+		Class<?> entityClass = structure.getEntityClass();
 		return clz.isAssignableFrom(entityClass);
 	}
-
-	
-	
 
 	public static class TIMResponse {
 		@JsonProperty("ActionStatus")
@@ -508,32 +555,31 @@ public class TIMService {
 		private Integer errorCode = 0;
 		@JsonProperty("MsgKey")
 		private String msgKey = null;
-		
+
 		@JsonProperty("MsgTime")
 		private Long msgTime = null;
-		
+
 		@JsonProperty("MsgSeq")
 		private Long msgSeq = null;
-		
+
 		@JsonProperty("ErrorList")
 		private Object errorList = null;
-		
+
 		@JsonProperty("ErrorDisplay")
 		private String errorDisplay = null;
-		
+
 		@JsonProperty("ResultItem")
-		private Object resultItem= null;
-		
+		private Object resultItem = null;
+
 		@JsonProperty("Fail_Account")
 		private Object failAccount = null;
-		
+
 		@JsonProperty("GroupId")
-		private String groupId=null;
-		
+		private String groupId = null;
+
 		@JsonProperty("QueryResult")
 		private Object queryResult;
-		
-		
+
 		public Object getQueryResult() {
 			return queryResult;
 		}
@@ -656,8 +702,8 @@ public class TIMService {
 		}
 
 	}
-	
-	public static class TIMTextContent implements TIMContent{
+
+	public static class TIMTextContent implements TIMContent {
 		@JsonProperty("Text")
 		String text;
 
@@ -668,54 +714,62 @@ public class TIMService {
 		public void setText(String text) {
 			this.text = text;
 		}
-		
+
 	}
-	public static class TIMLocationContent implements TIMContent{
+
+	public static class TIMLocationContent implements TIMContent {
 		@JsonProperty("Desc")
 		String desc;
 		@JsonProperty("Latitude")
 		Double latitude;
 		@JsonProperty("Longitude")
 		Double longitude;
+
 		public String getDesc() {
 			return desc;
 		}
+
 		public void setDesc(String desc) {
 			this.desc = desc;
 		}
+
 		public Double getLatitude() {
 			return latitude;
 		}
+
 		public void setLatitude(Double latitude) {
 			this.latitude = latitude;
 		}
+
 		public Double getLongitude() {
 			return longitude;
 		}
+
 		public void setLongitude(Double longitude) {
 			this.longitude = longitude;
 		}
-		
+
 	}
-	public static class TIMCustomContent implements TIMContent{
+
+	public static class TIMCustomContent implements TIMContent {
 		/**
-		 * 	内部传输数据enityt Json字符串     {"name":"kaka","id":2222}
+		 * 内部传输数据enityt Json字符串 {"name":"kaka","id":2222}
 		 */
 		@JsonProperty("Data")
 		Object data;
-		
+
 		/**
-		 * 	显示的文本，例如： 用户{{name}}的名片
+		 * 显示的文本，例如： 用户{{name}}的名片
 		 */
 		@JsonProperty("Desc")
 		String desc;
-		
+
 		/**
-		 * 	一般使用entity来标识这是个什么实体 ，来作为扩展传过去
+		 * 一般使用entity来标识这是个什么实体 ，来作为扩展传过去
 		 */
 		@JsonProperty("Ext")
 		String ext;
-		
+
 		@JsonProperty("Sound")
 		String sound;
 
@@ -750,7 +804,7 @@ public class TIMService {
 		public void setSound(String sound) {
 			this.sound = sound;
 		}
-		
+
 	}
 
 	public static class ProfileItem {
@@ -781,9 +835,9 @@ public class TIMService {
 			this.value = value;
 		}
 	}
-	
-	public interface TIMContent{
-		
+
+	public interface TIMContent {
+
 	}
 
 	public enum Gender {

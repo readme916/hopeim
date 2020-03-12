@@ -16,6 +16,7 @@ import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.service.NamespaceRedisService;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 import com.tianyoukeji.parent.service.StateMachineService;
+import com.tianyoukeji.parent.service.TIMService;
 
 @Service
 public class UserService extends StateMachineService<User> {
@@ -35,6 +36,9 @@ public class UserService extends StateMachineService<User> {
 	@Autowired
 	private OrgRepository orgRepository;
 	
+	@Autowired
+	private TIMService timService;
+	
 	@Override
 	public void init() {
 	}
@@ -45,38 +49,38 @@ public class UserService extends StateMachineService<User> {
 	 */
 	@StateMachineAction
 	public void doEnable(Long uuid , StateMachine<String,String> stateMachine) {
-		System.out.println(stateMachine.getState().getId());
-		System.out.println("enable  动作");
+		User user = findById(uuid);
+		user.setEnabled(true);
+		save(user);
 	}
 	
 	@StateMachineAction
 	public void doDisable(Long uuid , StateMachine<String,String> stateMachine) {
-		System.out.println("disable  动作");
+		User user = findById(uuid);
+		user.setEnabled(false);
+		save(user);
+		this.doKick(uuid, stateMachine);
+		timService.kickUser(uuid);
 	}
 	
 	@StateMachineAction
 	public void doSpeak(Long uuid , StateMachine<String,String> stateMachine) {
 		System.out.println(new Date());
-		System.out.println("speak  动作");
 	}
 	
 	@StateMachineAction
 	public void doTest(Long uuid , StateMachine<String,String> stateMachine) {
-		System.out.println("test  动作");
 	}
 	
 	
 	@StateMachineAction
 	public void doKick(Long uuid, StateMachine<String,String> stateMachine) {
 		User user = findById(uuid);
-		user.setEnabled(false);
-		save(user);
 		RedisTokenStore redisTokenStore = new RedisTokenStore(redisConnectionFactory);
 		Set<String> sMembers = namespaceRedisService.sMembers(RedisNamespace.USER_TOKEN, user.getUserinfo().getMobile());
 		for (String str : sMembers) {
 			redisTokenStore.removeAccessToken(str);
 		}
 		namespaceRedisService.delete(RedisNamespace.USER_TOKEN, user.getUserinfo().getMobile());
-		System.out.println("kick  动作");
 	}
 }

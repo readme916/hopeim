@@ -58,6 +58,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.RateLimiter;
 import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.liyang.jpa.smart.query.db.structure.EntityStructure;
 import com.liyang.jpa.smart.query.service.EntityRegister;
@@ -66,6 +69,8 @@ import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.entity.Event;
 import com.tianyoukeji.parent.entity.EventRepository;
+import com.tianyoukeji.parent.entity.Log;
+import com.tianyoukeji.parent.entity.LogRepository;
 import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.State;
 import com.tianyoukeji.parent.entity.StateRepository;
@@ -77,6 +82,7 @@ import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.base.IStateMachineEntity;
 import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
+import com.tianyoukeji.parent.service.RateLimiterService.RateLimiterNamespace;
 
 /**
  * 状态机服务基础服务类
@@ -104,6 +110,12 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	@Autowired
 	private TimerRepository timerRepository;
+	
+	@Autowired 
+	private RateLimiterService rateLimiterService;
+	
+	@Autowired
+	private LogRepository logRepository;
 
 	// 没有实际使用，只是用来确定注入的顺序
 	@Autowired
@@ -122,8 +134,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	public static HashMap<String, StateMachineService> services = new HashMap<String, StateMachineService>();
 
 	/**
-	 * 返回事件是否成功执行
-	 * 
+	 * 不带log的事件触发器
 	 * @param id
 	 * @param eventCode
 	 * @return 失败返回false
@@ -131,13 +142,51 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	@Transactional
 	public void dispatchEvent(Long id, String eventCode) {
+		
+		//事件的频率限制一次/秒
+		RateLimiter rateLimiter = rateLimiterService.get(RateLimiterNamespace.STATEMACHINE_EVENT, getServiceEntity()+id+eventCode, 1);
+		rateLimiter.acquire();
+		
 		StateMachine<String, String> acquireStateMachine = this.acquireStateMachine(id);
 		boolean success = acquireStateMachine.sendEvent(eventCode);
 		Object error = acquireStateMachine.getExtendedState().getVariables().get("error");
 		if (success == false || error != null) {
 			throw new BusinessException(3000, "不能执行");
 		}
+		
 	}
+	
+
+	/**
+	 * 带log的事件触发器
+	 * @param id
+	 * @param eventCode
+	 * @param params 这个是用于log的对象，一般可以设置为控制器接收的body
+	 */
+	@Transactional
+	public void dispatchEvent(Long id, String eventCode , Object params) {
+		dispatchEvent(id,eventCode);
+		Log log = new Log();
+		log.setEvent(eventCode);
+		log.setDepartment(getCurrentDepartment());
+		log.setOrg(getCurrentOrg());
+		log.setEntity(getServiceEntity());
+		log.setEntityId(id);
+		log.setOperator(getCurrentUser());
+		if(params!=null) {
+			ObjectMapper objectMapper = new ObjectMapper();
+			String writeValueAsString;
+			try {
+				writeValueAsString = objectMapper.writeValueAsString(params);
+				log.setParams(writeValueAsString);
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		logRepository.save(log);
+	}
+	
 
 	/**
 	 * 当前状态下的当前登录用户可执行事件，如果是null，则默认为start的状态

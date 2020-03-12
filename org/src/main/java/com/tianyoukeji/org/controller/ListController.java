@@ -35,10 +35,7 @@ public class ListController extends DefaultHandler {
 
 	@PostMapping(path = "/{entity}")
 	@ApiOperation(value = "通用列表页", notes = "默认只包括实体普通的属性，如果有对象属性要求，自己实现mapping", httpMethod = "POST")
-	@ApiImplicitParams({
-			@ApiImplicitParam(dataType = "String", name = "entity", value = "实体类型", required = true, paramType = "path"),
-			@ApiImplicitParam(dataType = "String", name = "params", value = "查询字符串", required = false, paramType = "query" ,example = "uuid=1&sort=name,desc&page=0&size=10")
-	})
+	@ApiImplicitParam(dataType = "String", name = "params", value = "查询字符串", required = false, paramType = "query" ,example = "uuid=1&sort=name,desc&page=0&size=10")
 	public HTTPListResponse fetchList(@PathVariable(required = true) String entity,@RequestParam(required = false) HashMap<String, String> params) {
 		params.put("fields", "*");
 		HTTPListResponse fetchList = SmartQuery.fetchList(entity, params);
