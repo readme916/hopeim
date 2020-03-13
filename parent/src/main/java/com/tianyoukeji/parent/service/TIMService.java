@@ -97,7 +97,7 @@ public class TIMService {
 	 * @return
 	 */
 	public TIMResponse updateUser(String username, String nick, Gender gender, String faceUrl, String selfSignature,
-			Integer roleId) {
+			Long roleId , Long departmentId) {
 		Random random = new Random();
 		String nextInt = String.valueOf(random.nextInt());
 		String url = "https://console.tim.qq.com/v4/profile/portrait_set?sdkappid=" + SDKAppID
@@ -119,6 +119,9 @@ public class TIMService {
 		}
 		if (roleId != null) {
 			items.add(new ProfileItem("Tag_Profile_IM_Role", roleId));
+		}
+		if (departmentId != null) {
+			items.add(new ProfileItem("Tag_Profile_IM_Level", departmentId));
 		}
 		hashMap.put("ProfileItem", items);
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
@@ -436,7 +439,10 @@ public class TIMService {
 	 * @param
 	 * @return
 	 */
-	public TIMResponse joinEntityQun(String username, String groupId) {
+	public TIMResponse joinQun(String username, String groupId) {
+		if(groupId==null) {
+			return null;
+		}
 		Random random = new Random();
 		String nextInt = String.valueOf(random.nextInt());
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/add_group_member?sdkappid=" + SDKAppID
@@ -459,7 +465,10 @@ public class TIMService {
 	 * @param
 	 * @return
 	 */
-	public TIMResponse quitEntityQun(String username, String groupId) {
+	public TIMResponse quitQun(String username, String groupId) {
+		if(groupId == null) {
+			return null;
+		}
 		Random random = new Random();
 		String nextInt = String.valueOf(random.nextInt());
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/delete_group_member?sdkappid=" + SDKAppID
