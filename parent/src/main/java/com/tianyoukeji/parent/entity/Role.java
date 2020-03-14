@@ -71,10 +71,21 @@ public class Role implements IBaseEntity{
 	@ManyToMany(mappedBy = "roles")
 	private Set<Event> events;
 	
+	@OneToMany(mappedBy = "role")
+	private Set<User> users;
+	
 	@Enumerated(EnumType.STRING)
 	@Column(name="terminal")
 	private Terminal terminal;
 	
+	public Set<User> getUsers() {
+		return users;
+	}
+
+	public void setUsers(Set<User> users) {
+		this.users = users;
+	}
+
 	public Terminal getTerminal() {
 		return terminal;
 	}

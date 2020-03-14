@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.tianyoukeji.org.service.StateService;
 import com.tianyoukeji.org.service.StateTemplateService;
 import com.tianyoukeji.org.service.UserService;
@@ -27,8 +28,8 @@ public class TestController extends DefaultHandler{
 
 	
 	@GetMapping(path="/test/test")
-	public void test1() {
-//		stateTemplateService.deploy("user", null);
+	public Object test1() {
+		return SmartQuery.fetchGroup("user", "group=nickname");
 	}
 	@GetMapping(path = "/test/enable")
 	public void enable(Authentication authentication) {
