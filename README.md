@@ -55,6 +55,8 @@ hopeim 是最新一代基于事务，人，任务的交互和反馈的工作流�
 
 - 文档：Swagger2
 
+- IM：  [腾讯即时通信 IM](https://cloud.tencent.com/document/product/269)
+
 
 框架特色
 ------------------------------------
