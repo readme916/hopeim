@@ -43,7 +43,7 @@ hopeim 是最新一代基于事务，人，任务的交互和反馈的工作流�
 
 - 任务：Quartz
 
-- 状态机：Spring StateMachine
+- 状态机：[Spring StateMachine](https://spring.io/projects/spring-statemachine#overview)
 
 - 登录：Spring Security Oauth2
 
@@ -74,9 +74,9 @@ hopeim 是最新一代基于事务，人，任务的交互和反馈的工作流�
 * 11.数据变更记录日志，可记录数据每次操作和变动，通过版本对比功能查看历史变化
  
 
-功能使用
+使用教程
 ---------------------
-
+* [登录](login.md)
 
 
 备注
