@@ -2,10 +2,15 @@
 
 ## 基于Spring data jpa 模型
 
+### 模型位置
+------------------------
+Entity目录：parent模块的**com.tianyoukeji.parent.entity**包
 
-* Entity目录：parent模块的**com.tianyoukeji.parent.entity**包
+### 标识接口
+--------------------------------------------
+标识接口,位于**com.tianyoukeji.parent.entity.base**包
 
-* 标识接口,位于**com.tianyoukeji.parent.entity.base**包
+
 1. IBaseEntity 基础接口，全局实体类型必须实现
   
 ```java
