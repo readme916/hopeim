@@ -78,3 +78,5 @@ Oauth2登录
 ![](1584447034.png)
 ![](1584446601.png)
 
+* 一个web的oauth2登录的例子 [http://localhost:40000/unionLogin]
+
