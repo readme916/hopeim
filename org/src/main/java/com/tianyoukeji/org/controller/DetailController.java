@@ -44,7 +44,7 @@ public class DetailController extends DefaultHandler {
 		if (StateMachineService.services.containsKey(entity)) {
 			Map fetchOne = getOrgDetail(entity, "fields=*&uuid=" + uuid);
 			fetchOne.put("events", StateMachineService.services.get(entity)
-					.currentUserExecutableEvent(fetchOne.get("state").toString()));
+					.currentUserExecutableEvent(((Map)fetchOne.get("state")).get("code").toString()));
 			return fetchOne;
 		}
 		return getOrgDetail(entity, "fields=*&uuid=" + uuid);
@@ -55,7 +55,7 @@ public class DetailController extends DefaultHandler {
 	public Map fetchUser(@PathVariable(required = true) Long uuid) {
 		Map fetchOne = getOrgDetail("user", "fields=*,role,org,department,state&uuid=" + uuid);
 		fetchOne.put("events",
-				StateMachineService.services.get("user").currentUserExecutableEvent(fetchOne.get("state").toString()));
+				StateMachineService.services.get("user").currentUserExecutableEvent((((Map)fetchOne.get("state")).get("code").toString())));
 		return fetchOne;
 
 	}

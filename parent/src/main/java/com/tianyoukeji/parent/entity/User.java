@@ -97,9 +97,6 @@ public class User implements IStateMachineEntity,IRegionEntity,IDepartmentEntity
 	@OneToMany(mappedBy = "buyer")
 	private Set<Order> orders;
 	
-	@OneToOne(mappedBy = "owner")
-	private Org OwnedOrg;
-	
 	@OneToMany(mappedBy = "user")
 	private Set<UserEquipmentRelationship> relativeEquipments;
 	
@@ -186,13 +183,6 @@ public class User implements IStateMachineEntity,IRegionEntity,IDepartmentEntity
 		this.role = role;
 	}
 
-	public Org getOwnedOrg() {
-		return OwnedOrg;
-	}
-
-	public void setOwnedOrg(Org ownedOrg) {
-		OwnedOrg = ownedOrg;
-	}
 
 	public String getUnionId() {
 		return unionId;

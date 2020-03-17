@@ -94,7 +94,6 @@ public class Role implements IBaseEntity{
 		this.terminal = terminal;
 	}
 
-
 	public String getName() {
 		return name;
 	}

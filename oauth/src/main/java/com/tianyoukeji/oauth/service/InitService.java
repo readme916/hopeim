@@ -56,7 +56,7 @@ public class InitService extends BaseService<User> {
 			oauth2ClientPlatform.setClientSecret(
 					PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("org@tianyoukeji"));
 			oauth2ClientPlatform.setRefreshTokenValidity(86400 * 365);
-			oauth2ClientPlatform.setResourceIds(RoleTemplate.Terminal.org.toString());
+			oauth2ClientPlatform.setResourceIds(RoleTemplate.Terminal.ORG.toString());
 			oauth2ClientPlatform.setScope("all");
 			oauth2ClientRepository.save(oauth2ClientPlatform);
 			Oauth2Client oauth2ClientApp = new Oauth2Client();
@@ -67,7 +67,7 @@ public class InitService extends BaseService<User> {
 			oauth2ClientApp.setClientSecret(
 					PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("user@tianyoukeji"));
 			oauth2ClientApp.setRefreshTokenValidity(86400 * 365);
-			oauth2ClientApp.setResourceIds(RoleTemplate.Terminal.user.toString());
+			oauth2ClientApp.setResourceIds(RoleTemplate.Terminal.ORG.toString());
 			oauth2ClientApp.setScope("all");
 			oauth2ClientRepository.save(oauth2ClientApp);
 
@@ -77,9 +77,9 @@ public class InitService extends BaseService<User> {
 			/**
 			 * 注册无组织角色
 			 */
-			RoleTemplate developer = registerRoleTemplate("developer", "开发者", Terminal.org);
+			RoleTemplate developer = registerRoleTemplate("developer", "开发者", Terminal.ORG);
 			registerRole(developer);
-			RoleTemplate user = registerRoleTemplate("user", "普通用户", Terminal.user);
+			RoleTemplate user = registerRoleTemplate("user", "普通用户", Terminal.USER);
 			registerRole(user);
 		}
 		

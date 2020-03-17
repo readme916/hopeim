@@ -7,6 +7,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.OrgRepository;
 import com.tianyoukeji.parent.entity.StateRepository;
@@ -51,9 +52,9 @@ public class InitService {
 					.department("部门2", "department2", "department1")
 					.department("部门2-2", "department2_2", "department2")
 					.department("部门3", "department3", "department1")
-					.role("平台超管", "platform_super", Terminal.org)
-					.role("平台管理员", "platform_manager", Terminal.org)
-					.role("平台员工", "platform_employee", Terminal.org)
+					.role("平台超管", "platform_super", Terminal.ORG)
+					.role("平台管理员", "platform_manager", Terminal.ORG)
+					.role("平台员工", "platform_employee", Terminal.ORG)
 					.menu("主页", "home", "/", 0, null).menu("第一页", "one", "/one", 1, "home")
 					.menu("第二页", "two", "/two", 2, "home").menu("第一页二级页", "one_one", "/oneone", 3, "one");
 			builder.getMenu("home").addRole("platform_manager").addRole("platform_super");
@@ -90,12 +91,12 @@ public class InitService {
 		}
 
 		// 创建第一个企业
-		if (orgRepository.count() == 0) {
+//		if (orgRepository.count() == 0) {
 			Optional<User> findById = userRepository.findById(1L);
 			User user = findById.get();
 			// 根据platform模板给组织创建部门，角色，菜单
-			Org org = orgTemplateService.orgTemplateDeploy("天邮平台", user, "platform", "中华人民共和国", "浙江省", "杭州市");
-		}
+			Org org = orgTemplateService.orgTemplateDeploy("天邮平台"+ContextUtils.randomInt(10), user, "platform", "中华人民共和国", "浙江省", "杭州市");
+//		}
 	}
 
 }

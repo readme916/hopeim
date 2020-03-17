@@ -152,7 +152,7 @@ public class RoleTemplate implements IBaseEntity{
 	}
 
 	public enum Terminal{
-		org,user
+		ORG,USER
 	}
 	
 }

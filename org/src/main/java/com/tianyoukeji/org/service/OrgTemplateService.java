@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -80,7 +81,7 @@ public class OrgTemplateService {
 		org.setCity(regionRepository.findByFullname(city));
 		org.setProvince(regionRepository.findByFullname(province));
 		org.setCountry(regionRepository.findByFullname(country));
-		org = orgRepository.save(org);
+		org = orgRepository.saveAndFlush(org);
 		
 		Set<DepartmentTemplate> departmentTemplates = orgTemplate.getDepartmentTemplates();
 		for (DepartmentTemplate departmentTemplate : departmentTemplates) {
@@ -124,20 +125,21 @@ public class OrgTemplateService {
 		}
 		Set<com.tianyoukeji.parent.entity.Role> roles = new HashSet<>();
 		for (RoleTemplate roleTemplate : roleTemplates) {
+			Optional<RoleTemplate> findById = roleTemplateRepository.findById(roleTemplate.getUuid());
+			RoleTemplate roleTemplate2 = findById.get();
 			com.tianyoukeji.parent.entity.Role role = roleRepository.findByCode(roleTemplate.getCode());
 			if(role == null) {
 				role = new com.tianyoukeji.parent.entity.Role();
-				role.setCode(roleTemplate.getCode());
-				role.setName(roleTemplate.getName());
-				role.setRoleTemplate(roleTemplate);
-				role.setTerminal(roleTemplate.getTerminal());
+				role.setCode(roleTemplate2.getCode());
+				role.setName(roleTemplate2.getName());
+				role.setTerminal(roleTemplate2.getTerminal());
+				role.setRoleTemplate(roleTemplate2);
 				role = roleRepository.saveAndFlush(role);
 			}
 			roles.add(role);
 		}
-		
 		org.setRoles(roles);
-		orgRepository.save(org);
+		orgRepository.saveAndFlush(org);
 	}
 	
 	private com.tianyoukeji.parent.entity.Menu menuTemplateTransfer(MenuTemplate menuTemplate, Org org) {
@@ -269,7 +271,7 @@ public class OrgTemplateService {
 			}
 			orgTemplate.setCode(code);
 			orgTemplate.setName(name);
-			orgTemplate = orgTemplateRepository.save(orgTemplate);
+			orgTemplate = orgTemplateRepository.saveAndFlush(orgTemplate);
 			
 			
 			Set<Entry<String, Department>> departmentSet = allDepartments.entrySet();
@@ -300,7 +302,7 @@ public class OrgTemplateService {
 				hashSet.add(roleTemplate);
 			}
 			orgTemplate.setRoleTemplates(hashSet);
-			orgTemplateRepository.save(orgTemplate);
+			orgTemplateRepository.saveAndFlush(orgTemplate);
 			
 		}
 

@@ -179,7 +179,7 @@ public class StateTemplateService {
 				role.setCode(roleTemplate.getCode());
 				role.setName(roleTemplate.getName());
 				role.setRoleTemplate(roleTemplate);
-				role = roleRepository.save(role);
+				role = roleRepository.saveAndFlush(role);
 				roles.add(role);
 			}
 		}

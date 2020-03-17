@@ -51,7 +51,7 @@ public class Org implements IRegionEntity{
 	@Column(name = "name")
 	private String name;
 	
-	@OneToOne
+	@ManyToOne
 	@JoinColumn(name="owner_id")
 	private User owner;
 	
