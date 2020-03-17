@@ -53,6 +53,8 @@ hopeim 是最新一代基于事务，人，任务的交互和反馈的工作流�
 
 - 连接池：Druid
 
+- 文件存储：MongoDB
+
 - 文档：Swagger2
 
 - IM：  [腾讯即时通信 IM](https://cloud.tencent.com/document/product/269)
@@ -76,8 +78,19 @@ hopeim 是最新一代基于事务，人，任务的交互和反馈的工作流�
 
 使用教程
 ---------------------
-* [登录](doc/login.md)
-
+* [maven依赖](doc/maven.md)
+* [数据库设计](doc/db.md)
+* [地理数据](doc/region.md)
+* [Oauth2登录](doc/login.md)
+* [租户系统](doc/rent.md)
+* [角色权限](doc/authority.md)
+* [限流控制](doc/ratelimiter.md)
+* [文件上传](doc/file.md)
+* [REST查询](https://github.com/readme916/spring-jpa-mysql-smart-query)
+* [异常和事务](doc/exception.md)
+* [通用，自定义的详细页和列表页控制器](doc/detail.md)
+* [状态机使用](doc/statemachine.md)
+* [TIM使用](doc/tim.md)
 
 备注
 ----
