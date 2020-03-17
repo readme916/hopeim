@@ -3,6 +3,4 @@
 
 * 企业端的数据列表，来源于菜单的url
 
-* 企业端如果使用通用数据列表url获取数据  /v1/list/{entity} ，并且数据实现了IOrgEntity接口 ，控制器会自动筛选本企业的数据，并且数据列表只有简单属性
 
-* 如果有不同的需求，例如加入对象属性，可以自己实现路由@RequestMapping ，例子见ListController
