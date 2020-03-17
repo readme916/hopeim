@@ -44,6 +44,8 @@ public class RegionService extends BaseService<Region> {
 				Region china = new Region();
 				china.setFullname("中华人民共和国");
 				china.setName("中国");
+				china.setLatitude(39.90469);
+				china.setLongitude(116.40717);
 				china.setTxCid(1000);
 				save(china);
 
