@@ -75,7 +75,7 @@ public class Department implements IOrgEntity,IQunEntity{
 	@JoinColumn(name = "department_template_id")
 	private DepartmentTemplate departmentTemplate;
 	
-	@Column(name= "groupId")
+	@Column(name= "group_id")
 	private String groupId;
 	
 	
