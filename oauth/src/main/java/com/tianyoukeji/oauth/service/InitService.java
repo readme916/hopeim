@@ -34,6 +34,9 @@ public class InitService extends BaseService<User> {
 
 	@Autowired
 	private RoleRepository roleRepository;
+	
+	@Autowired
+	private UserRepository userRepository;
 
 	@Autowired
 	private OauthUserService oauthUserService;
@@ -51,7 +54,7 @@ public class InitService extends BaseService<User> {
 			oauth2ClientPlatform.setAuthorizedGrantTypes("refresh_token,password");
 			oauth2ClientPlatform.setClientId("org");
 			oauth2ClientPlatform.setClientSecret(
-					PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("tianyoukeji@org"));
+					PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("org@tianyoukeji"));
 			oauth2ClientPlatform.setRefreshTokenValidity(86400 * 365);
 			oauth2ClientPlatform.setResourceIds(RoleTemplate.Terminal.org.toString());
 			oauth2ClientPlatform.setScope("all");
@@ -60,9 +63,9 @@ public class InitService extends BaseService<User> {
 			oauth2ClientApp.setAccessTokenValidity(86400 * 30);
 			oauth2ClientApp.setAutoapprove("true");
 			oauth2ClientApp.setAuthorizedGrantTypes("refresh_token,password");
-			oauth2ClientApp.setClientId("app");
+			oauth2ClientApp.setClientId("user");
 			oauth2ClientApp.setClientSecret(
-					PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("tianyoukeji@app"));
+					PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("user@tianyoukeji"));
 			oauth2ClientApp.setRefreshTokenValidity(86400 * 365);
 			oauth2ClientApp.setResourceIds(RoleTemplate.Terminal.user.toString());
 			oauth2ClientApp.setScope("all");
@@ -78,7 +81,9 @@ public class InitService extends BaseService<User> {
 			registerRole(developer);
 			RoleTemplate user = registerRoleTemplate("user", "普通用户", Terminal.user);
 			registerRole(user);
-
+		}
+		
+		if(userRepository.count()==0) {
 			/**
 			 * 注册用户
 			 */

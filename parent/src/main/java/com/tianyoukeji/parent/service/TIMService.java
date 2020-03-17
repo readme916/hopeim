@@ -83,7 +83,7 @@ public class TIMService {
 		String url = "https://console.tim.qq.com/v4/im_open_login_svc/account_import?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, String> hashMap = new HashMap<String, String>();
-		hashMap.put("From_Account", username);
+		hashMap.put("Identifier", username);
 		hashMap.put("Nick", nick);
 		hashMap.put("FaceUrl", faceUrl);
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
