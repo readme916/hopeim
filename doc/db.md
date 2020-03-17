@@ -6,8 +6,9 @@
 * Entity目录：parent模块的**com.tianyoukeji.parent.entity**包
 
 * 标识接口,位于**com.tianyoukeji.parent.entity.base**包
-  1. IBaseEntity 基础接口，全局实体类型必须实现
-  ```java
+1. IBaseEntity 基础接口，全局实体类型必须实现
+  
+```java
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public interface IBaseEntity extends Serializable{
@@ -20,7 +21,4 @@ public interface IBaseEntity extends Serializable{
 	public Long getVersion();
 	public void setVersion(Long version);
 }
-  
-  
-  
-  ```
+```
