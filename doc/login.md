@@ -70,4 +70,10 @@ Oauth2登录
 	password:admin
 ```
 
+* 扩展的登录字段
+使用oauth2标准协议登录时候，默认字段只有username，password，无法满足用手机密码和手机验证码两种方式登录的需求
+所以我们添加一个提交的字段 type: sms/pwd
+
+同时，我们扩展了提交成功的返回值，添加了unionID，userSig（TIM的通讯签名），userID
+![](1584446601.png)
 
