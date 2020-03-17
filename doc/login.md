@@ -75,5 +75,6 @@ Oauth2登录
 所以我们添加一个提交的字段 type: sms/pwd
 
 同时，我们扩展了提交成功的返回值，添加了unionID，userSig（TIM的通讯签名），userID
+![](1584447034.png)
 ![](1584446601.png)
 
