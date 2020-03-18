@@ -28,9 +28,6 @@ public class V1OrgController extends DefaultHandler {
 	@Autowired
 	private OrgService orgService;
 
-	@Autowired
-	private TIMService timService;
-
 	@PostMapping(path = "/addUser")
 	@ApiOperation(value = "邀请员工", notes = "直接把普通用户变成公司员工，如果已经有其他企业的不能邀请", httpMethod = "POST")
 	public HttpPostReturnUuid addUser(@RequestBody(required = true) InviteBody body) {

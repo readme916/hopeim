@@ -26,9 +26,6 @@ public class V1UserController extends DefaultHandler {
 	@Autowired
 	private UserService userService;
 
-	@Autowired
-	private TIMService timService;
-
 	@PostMapping(path = "/{uuid}/kick")
 	@ApiOperation(value = "踢下线", notes = "如果用户在线则直接踢下线", httpMethod = "POST")
 	public HttpPostReturnUuid kick(@PathVariable(required = true) Long uuid) {

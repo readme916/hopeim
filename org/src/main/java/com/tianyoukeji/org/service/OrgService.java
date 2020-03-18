@@ -78,7 +78,8 @@ public class OrgService extends BaseService<Org> {
 		if(department.getGroupId()!=null) {
 			timService.quitQun(findByUnionId.getUserinfo().getMobile(), department.getGroupId());
 		}
-		
+		Role findByCode = roleRepository.findByCode("user");
+		findByUnionId.setRole(findByCode);
 		findByUnionId.setOrg(null);
 		findByUnionId.setDepartment(null);
 		userRepository.save(findByUnionId);

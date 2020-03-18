@@ -20,6 +20,7 @@ import com.tianyoukeji.org.service.OrgService;
 import com.tianyoukeji.org.service.StateService;
 import com.tianyoukeji.org.service.StateTemplateService;
 import com.tianyoukeji.org.service.UserService;
+import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.common.HttpPostReturnUuid;
 import com.tianyoukeji.parent.controller.DefaultHandler;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
@@ -54,6 +55,14 @@ public class ListController extends DefaultHandler {
 	public HTTPListResponse fetchUserList(@RequestParam(required = false) HashMap<String, String> params) {
 		params.put("fields", "*,role,org,department,state");
 		return getOrgList("user",params);
+	}
+	
+	@PostMapping(path = "/menu")
+	@ApiOperation(value = "菜单列表页", notes = "根据不同角色返回不同菜单,并且自动排序", httpMethod = "POST")
+	public HTTPListResponse fetchMenuList() {
+		Long orgId = orgService.getCurrentOrg().getUuid();
+		String role = ContextUtils.getRole();
+		return SmartQuery.fetchTree("menu", "org.uuid="+orgId + "&roles.code="+role);
 	}
 	
 	

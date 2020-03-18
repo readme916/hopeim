@@ -89,9 +89,11 @@ hopeim 是最新一代基于事务，人，任务的交互和反馈的工作流�
 * [限流控制](doc/ratelimiter.md)
 * [文件上传](doc/file.md)
 * [REST查询](https://github.com/readme916/spring-jpa-mysql-smart-query)
+* [数据结构查看器](doc/dbparse.md)
 * [异常和事务](doc/exception.md)
 * [状态机使用](doc/statemachine.md)
 * [TIM使用](doc/tim.md)
+* [信息流转](doc/flow.md)
 
 备注
 ----
