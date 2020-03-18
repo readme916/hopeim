@@ -137,7 +137,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 * 不带log的事件触发器
 	 * @param id
 	 * @param eventCode
-	 * @return 失败返回false
+	 * @return 
 	 */
 
 	@Transactional

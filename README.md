@@ -94,6 +94,7 @@ hopeim 是最新一代基于事务，人，任务的交互和反馈的工作流�
 * [状态机使用](doc/statemachine.md)
 * [TIM使用](doc/tim.md)
 * [信息流转](doc/flow.md)
+* [接口文档](doc/swagger.md)
 
 备注
 ----
