@@ -1,5 +1,9 @@
 package com.tianyoukeji.org.controller;
 
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,7 +13,15 @@ import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.tianyoukeji.org.service.StateService;
 import com.tianyoukeji.org.service.StateTemplateService;
 import com.tianyoukeji.org.service.UserService;
+import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.controller.DefaultHandler;
+import com.tianyoukeji.parent.entity.Org;
+import com.tianyoukeji.parent.entity.OrgRepository;
+import com.tianyoukeji.parent.entity.RoleRepository;
+import com.tianyoukeji.parent.entity.User;
+import com.tianyoukeji.parent.entity.template.OrgTemplate;
+import com.tianyoukeji.parent.entity.template.OrgTemplateRepository;
+import com.tianyoukeji.parent.entity.template.RoleTemplate;
 
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -26,6 +38,14 @@ public class TestController extends DefaultHandler{
 	@Autowired
 	private StateTemplateService stateTemplateService;
 
+	@Autowired
+	private OrgTemplateRepository orgTemplateRepository;
+	
+	@Autowired
+	private RoleRepository roleRepository;
+	
+	@Autowired
+	private OrgRepository orgRepository;
 	
 	@GetMapping(path="/test/test")
 	public Object test1() {
@@ -58,5 +78,4 @@ public class TestController extends DefaultHandler{
 	public Object state(Authentication authentication) {
 		return stateService.fetchList("fields=events,events.roles,events.target,firstTarget,thenTarget,lastTarget,timers,*&entity=user&sort=sort,asc");
 	}
-	
 }

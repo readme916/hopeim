@@ -5,13 +5,13 @@
 
 * 每个类型的企业，具备一套完整的模板，位于com.tianyoukeji.parent.entity.template包，用于开通企业的时候部署使用
 
-
 ![](1584450228.png)
 
+* 数据Entity，如果实现了IOrgEntity接口，则在企业端使用[标准list](list.md)和[标准detail](detail.md)时候，会自动筛选本企业数据
 
 * 模板机制，使升级的新功能模板、菜单，不影响历史的企业
 
-* 状态机模板部署，copy到具体的实体表
+* Entity的状态机模板部署，copy到具体的state,event,timer表
 
 ```java
 @Autowired

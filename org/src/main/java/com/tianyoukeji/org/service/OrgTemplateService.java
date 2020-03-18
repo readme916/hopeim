@@ -125,15 +125,13 @@ public class OrgTemplateService {
 		}
 		Set<com.tianyoukeji.parent.entity.Role> roles = new HashSet<>();
 		for (RoleTemplate roleTemplate : roleTemplates) {
-			Optional<RoleTemplate> findById = roleTemplateRepository.findById(roleTemplate.getUuid());
-			RoleTemplate roleTemplate2 = findById.get();
 			com.tianyoukeji.parent.entity.Role role = roleRepository.findByCode(roleTemplate.getCode());
 			if(role == null) {
 				role = new com.tianyoukeji.parent.entity.Role();
-				role.setCode(roleTemplate2.getCode());
-				role.setName(roleTemplate2.getName());
-				role.setTerminal(roleTemplate2.getTerminal());
-				role.setRoleTemplate(roleTemplate2);
+				role.setCode(roleTemplate.getCode());
+				role.setName(roleTemplate.getName());
+				role.setTerminal(roleTemplate.getTerminal());
+				role.setRoleTemplate(roleTemplate);
 				role = roleRepository.saveAndFlush(role);
 			}
 			roles.add(role);

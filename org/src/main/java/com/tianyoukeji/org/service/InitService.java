@@ -91,12 +91,12 @@ public class InitService {
 		}
 
 		// 创建第一个企业
-//		if (orgRepository.count() == 0) {
+		if (orgRepository.count() == 0) {
 			Optional<User> findById = userRepository.findById(1L);
 			User user = findById.get();
 			// 根据platform模板给组织创建部门，角色，菜单
 			Org org = orgTemplateService.orgTemplateDeploy("天邮平台"+ContextUtils.randomInt(10), user, "platform", "中华人民共和国", "浙江省", "杭州市");
-//		}
+		}
 	}
 
 }

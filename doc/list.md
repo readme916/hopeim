@@ -1,6 +1,6 @@
-列表页控制器
+标准列表页控制器
 -----------
-* 企业端通用数据列表控制器ListController /v1/list/{entity},数据实现了IOrgEntity接口 ，**控制器会自动筛选本企业的数据**，并且数据列表只有简单属性
+* 企业端通用数据列表控制器ListController /v1/list/{entity},数据如果实现了IOrgEntity接口 ，**控制器会自动筛选本企业的数据**，并且数据列表只有简单属性
 
 * 例如 /v1/list/role
 

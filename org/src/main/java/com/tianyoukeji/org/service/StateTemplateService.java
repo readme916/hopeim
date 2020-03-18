@@ -177,6 +177,7 @@ public class StateTemplateService {
 			}else {
 				role = new Role();
 				role.setCode(roleTemplate.getCode());
+				role.setTerminal(roleTemplate.getTerminal());
 				role.setName(roleTemplate.getName());
 				role.setRoleTemplate(roleTemplate);
 				role = roleRepository.saveAndFlush(role);
