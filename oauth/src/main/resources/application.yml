@@ -38,3 +38,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
         enable_lazy_load_no_trans: true
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/tianyoufile

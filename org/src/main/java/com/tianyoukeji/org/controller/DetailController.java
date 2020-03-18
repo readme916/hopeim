@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.liyang.jpa.smart.query.db.structure.EntityStructure;
 import com.liyang.jpa.smart.query.response.HTTPListResponse;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils.Collections;
 import com.tianyoukeji.org.service.OrgService;
 import com.tianyoukeji.org.service.StateService;
 import com.tianyoukeji.org.service.StateTemplateService;
@@ -34,7 +35,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequestMapping("/v1/detail")
 @Api(tags = "详细页的接口")
 public class DetailController extends DefaultHandler {
-	
+
 	@Autowired
 	private OrgService orgService;
 
@@ -44,7 +45,7 @@ public class DetailController extends DefaultHandler {
 		if (StateMachineService.services.containsKey(entity)) {
 			Map fetchOne = getOrgDetail(entity, "fields=*&uuid=" + uuid);
 			fetchOne.put("events", StateMachineService.services.get(entity)
-					.currentUserExecutableEvent(((Map)fetchOne.get("state")).get("code").toString()));
+					.currentUserExecutableEvent(((Map) fetchOne.get("state")).get("code").toString()));
 			return fetchOne;
 		}
 		return getOrgDetail(entity, "fields=*&uuid=" + uuid);
@@ -54,23 +55,27 @@ public class DetailController extends DefaultHandler {
 	@ApiOperation(value = "用户详细页", notes = "增加了role，org，state，department等对象", httpMethod = "POST")
 	public Map fetchUser(@PathVariable(required = true) Long uuid) {
 		Map fetchOne = getOrgDetail("user", "fields=*,role,org,department,state&uuid=" + uuid);
-		fetchOne.put("events",
-				StateMachineService.services.get("user").currentUserExecutableEvent((((Map)fetchOne.get("state")).get("code").toString())));
+
+		if (fetchOne.get("state") == null || ((Map) fetchOne.get("state")).isEmpty()) {
+			fetchOne.put("events", StateMachineService.services.get("user").currentUserExecutableEvent(null));
+		} else {
+			fetchOne.put("events", StateMachineService.services.get("user")
+					.currentUserExecutableEvent((((Map) fetchOne.get("state")).get("code").toString())));
+		}
 		return fetchOne;
 
 	}
 
-	
-	private  Map getOrgDetail(String entity,String query) {
+	private Map getOrgDetail(String entity, String query) {
 		/**
-		 * 	如果是企业类型的实体，则自动加入org筛选条件，让企业只能查看自己的数据
+		 * 如果是企业类型的实体，则自动加入org筛选条件，让企业只能查看自己的数据
 		 */
 		EntityStructure structure = SmartQuery.getStructure(entity);
 		Class<?> entityClass = structure.getEntityClass();
-		if(IOrgEntity.class.isAssignableFrom(entityClass)) {
-			if(orgService.getCurrentOrg()!=null) {
+		if (IOrgEntity.class.isAssignableFrom(entityClass)) {
+			if (orgService.getCurrentOrg() != null) {
 				Long orgId = orgService.getCurrentOrg().getUuid();
-				return SmartQuery.fetchOne(entity, query + "&org.uuid="+orgId);
+				return SmartQuery.fetchOne(entity, query + "&org.uuid=" + orgId);
 			}
 		}
 		return SmartQuery.fetchOne(entity, query);

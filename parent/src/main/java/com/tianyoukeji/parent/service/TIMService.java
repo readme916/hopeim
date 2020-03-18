@@ -35,7 +35,6 @@ import com.tianyoukeji.parent.entity.base.IQunEntity;
 import com.tianyoukeji.parent.service.TIMService.TIMMsgElement;
 import com.tianyoukeji.parent.service.TIMService.TIMResponse;
 
-@Service
 public class TIMService {
 	final static Logger logger = LoggerFactory.getLogger(TIMService.class);
 
