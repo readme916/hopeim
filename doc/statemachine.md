@@ -59,9 +59,63 @@ public class User implements IStateMachineEntity,IRegionEntity,IDepartmentEntity
 @Service
 public class UserService extends StateMachineService<User> {
 
+
 ```
 
+* StateMachineService<T>
 
+```java
+/**
+ * 状态机服务基础服务类
+ * 
+ * 封装了stateMachine的创建，和变换和持久化功能
+ * 
+ * @author Administrator
+ *
+ * @param <T>
+ */
+
+public abstract class StateMachineService<T extends IStateMachineEntity> extends BaseService<T> {	
+	/**
+	 * 不带log的事件触发器
+	 * @param id
+	 * @param eventCode
+	 * @return 
+	 */
+
+	@Transactional
+	public void dispatchEvent(Long id, String eventCode) {
+	}
+	/**
+	 * 带log的事件触发器
+	 * @param id
+	 * @param eventCode
+	 * @param params 这个是用于log的对象，一般可以设置为控制器接收的body
+	 */
+	@Transactional
+	public void dispatchEvent(Long id, String eventCode , Object params) {
+	}
+	
+	/**
+	 * 当前状态下的当前登录用户可执行事件，如果是null，则默认为start的状态
+	 * 
+	 * @param
+	 * @return
+	 */
+	public List<String> currentUserExecutableEvent(String state) {
+	}
+	/**
+	 * 根据query，返回一个具体的map格式的对象detail,包含了当前用户角色在当前状态机可执行事件events
+	 * 
+	 * @param queryString
+	 * @return
+	 */
+	@Override
+	public Map fetchOne(String queryString) {
+	}
+	
+
+```
 
 * 在控制器或者服务中调用, dispatchEvent 执行失败会抛出一个异常
 
