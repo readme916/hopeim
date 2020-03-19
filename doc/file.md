@@ -1,5 +1,15 @@
 文件上传
 -------
+* 文件保存在mongodb里
+
+```java
+@Controller
+public class FileUploadController extends DefaultHandler{
+	
+	@Resource
+	private GridFSBucket gridFSBucket;
+```
+
 
 * 文件上传，使用统一的上传接口，返回file的id，使用固定的url来访问文件
 
@@ -50,7 +60,7 @@ POST /v1/upload
     "height": 462
 }
 ```
-图片类型的全局配置，用来指定图片的裁剪大小，图片只会缩小，不会放大，所以middle和large对象，根据图片本身大小，可能会返回null：
+图片类型的全局配置，用来指定图片的裁剪大小，图片只会缩小，不会放大，所以middle和large对象，根据原始图片本身大小，可能会返回null：
 ```
 thumbnail:
   large:
