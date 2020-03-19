@@ -2,13 +2,18 @@ package com.tianyoukeji.parent.common;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -225,7 +230,96 @@ public class ContextUtils {
 		}
 		return result;
 	}
+	
+	/**
+	 * 	获取一个bean对象的属性列表，属性的值为null
+	 * @param source
+	 * @return
+	 */
+	public static String[] getNullPropertyNames(Object source) {
+		final BeanWrapper src = new BeanWrapperImpl(source);
+		java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
 
+		Set<String> emptyNames = new HashSet<String>();
+		for (java.beans.PropertyDescriptor pd : pds) {
+			Object srcValue = src.getPropertyValue(pd.getName());
+			if (srcValue == null)
+				emptyNames.add(pd.getName());
+		}
+		String[] result = new String[emptyNames.size()];
+		return emptyNames.toArray(result);
+	}
+
+	/**
+	 * 	获取一个bean对象的属性列表，属性的值不为null
+	 * @param source
+	 * @return
+	 */
+	public static Set<String> getNotNullPropertyNames(Object source) {
+		final BeanWrapper src = new BeanWrapperImpl(source);
+		java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
+		Set<String> notEmptyNames = new HashSet<String>();
+		for (java.beans.PropertyDescriptor pd : pds) {
+			Object srcValue = src.getPropertyValue(pd.getName());
+			if (!pd.getName().equals("class") && srcValue != null)
+				notEmptyNames.add(pd.getName());
+		}
+		return notEmptyNames;
+	}
+
+	
+	/**
+	 * 	把一个对象copy到目标对象，只复制非null的属性
+	 * @param src
+	 * @param target
+	 */
+	public static void copyPropertiesIgnoreNull(Object src, Object target) {
+		BeanUtils.copyProperties(src, target, getNullPropertyNames(src));
+	}
+	
+	
+	/**
+	 * 	根据keyset，copy对象到目标对象
+	 * @param src
+	 * @param target
+	 * @param keySet
+	 */
+	public static void copyPropertiesWithKeys(Object src, Object target,Set<String> keySet) {
+
+		final BeanWrapper source = new BeanWrapperImpl(src);
+		java.beans.PropertyDescriptor[] pds = source.getPropertyDescriptors();
+		Set<String> kes = new HashSet<String>();
+		for (java.beans.PropertyDescriptor pd : pds) {
+			Object srcValue = source.getPropertyValue(pd.getName());
+			if(keySet.contains(pd.getName())&&srcValue!=null){
+				continue;
+			}
+			kes.add(pd.getName());
+		}
+		BeanUtils.copyProperties(src, target, kes.toArray(new String[0]));
+	}
+	
+	public static boolean isPackageClassObject(Object obj) {
+		try {
+			return ((Class<?>) obj.getClass().getField("TYPE").get(null)).isPrimitive();
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	
+	/**
+	 * 	一个类是否是包装类型，例如Long，Integer等
+	 * @param cls
+	 * @return
+	 */
+	public static boolean isPackageClass(Class<?> cls) {
+		try {
+			return ((Class<?>) cls.getField("TYPE").get(null)).isPrimitive();
+		} catch (Exception e) {
+			return false;
+		}
+	}
 }
 	
 	

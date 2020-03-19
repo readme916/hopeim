@@ -75,13 +75,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 				.antMatchers("/configuration/security").permitAll()
 
-				.antMatchers("/unionLogin", "/login", "/oauth/authorize", "/oauth/token", "/logout", "/sms").permitAll()
+				.antMatchers("/unionLogin", "/login", "/oauth/authorize", "/oauth/token", "/logout", "/sms","/structure","/structure/*").permitAll()
 
 				.anyRequest().authenticated().and().formLogin().loginPage("/unionLogin").loginProcessingUrl("/login")
 				
 				.failureHandler(new SimpleAuthenticationFailureHandler()).permitAll().and().logout().permitAll();
 	}
-
 	public class SimpleAuthenticationFailureHandler implements AuthenticationFailureHandler {
 		@Override
 		public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,

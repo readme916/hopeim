@@ -29,8 +29,8 @@ import com.tianyoukeji.parent.entity.template.OrgTemplate;
 import com.tianyoukeji.parent.entity.template.OrgTemplateRepository;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
-import com.tianyoukeji.parent.service.TIMService;
 import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
+import com.tianyoukeji.parent.service.TIMService;
 
 @Service
 public class OrgTemplateService {

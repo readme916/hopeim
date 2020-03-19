@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta content="text/html;charset=UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
+	integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+	crossorigin="anonymous">
+
+<!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css"
+	integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+	crossorigin="anonymous">
+
+<!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"
+	integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+	crossorigin="anonymous"></script>
+
+</head>
+<body>
+	<nav class="navbar navbar-default  navbar-fixed-top">
+		<div class="container-fluid">
+		  <!-- Brand and toggle get grouped for better mobile display -->
+		  <div class="navbar-header">
+			<a class="navbar-brand" href="">数据库结构文档</a>
+		  </div>
+		  <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+			  <li class=""><a th:text="首页" th:href="@{${structure}}"></a></li>
+			  <li class="active"><a th:text="${resource.name}" th:href="@{${resource.resource}}"></a></li>
+			 
+			</ul>
+		</div>
+		
+		</div><!-- /.container-fluid -->
+	  </nav>
+	  <br /><br /><br /><br />
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-lg-2">
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title">Entity资源列表</h3>
+					</div>
+					<div class="panel-body">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>资源名字</th>
+									<th>详情</th>
+								</tr>
+							</thead>
+							<tbody th:if="${not #lists.isEmpty(resourceList)}">
+								<tr th:each="resource : ${resourceList}">
+									<td th:text="${resource.name}"></td>
+									<td><a th:text="详情"
+										th:href="@{${resource.structureUri}}"></a></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-10">
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title">资源名称</h3>
+					</div>
+					<div class="panel-body">
+						<div th:text="${resource.title}"></div>
+					</div>
+
+				</div>
+
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title">默认POST提交格式</h3>
+					</div>
+					<div class="panel-body">
+						<pre th:text="${resource.postStructureString}"></pre>
+					</div>
+
+				</div>
+
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title">字段详解</h3>
+					</div>
+					<div class="panel-body">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>字段</th>
+									<th>生命期</th>
+									<th>数据类型</th>
+									<th>关系</th>
+									<th>格式限制</th>
+								</tr>
+							</thead>
+							<tbody th:if="${not #lists.isEmpty(resource.fields)}">
+								<tr th:each="m : ${resource.fields}">
+									<td th:text="${m.name}" style="white-space:nowrap"></td>
+									<td th:text="${m.lifeCycle}" style="white-space:nowrap"></td>
+									<td th:text="${m.dataType}" style="white-space:nowrap"></td>
+									<td th:text="${m.relationship}" style="white-space:nowrap"></td>
+									
+									<td>
+										<ul th:if="${not #lists.isEmpty(m.constraints)}">
+											<li th:each="c : ${m.constraints}" th:text="${c}"></li>
+										</ul>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>
