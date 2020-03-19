@@ -63,7 +63,7 @@ public class UserService extends StateMachineService<User> {
 
 
 
-* 在控制器或者服务中调用
+* 在控制器或者服务中调用, dispatchEvent 执行失败会抛出一个异常
 
 ```java
 
