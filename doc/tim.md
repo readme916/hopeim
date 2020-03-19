@@ -19,7 +19,7 @@
 
 ```java
 
-public interface TIMInterface {
+public interface TIMServiceInterface {
 
 	/**
 	 * 生成用户签名
