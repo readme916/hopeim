@@ -17,6 +17,14 @@ public class FileUploadController extends DefaultHandler{
 POST /v1/upload
 
 ```
+文件访问
+----------
+
+```java
+GET /v1/file/{id}
+
+```
+
 
 
 普通文件上传，实例

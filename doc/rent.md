@@ -5,7 +5,7 @@
 
 * 每个类型的企业，具备一套完整的模板，位于com.tianyoukeji.parent.entity.template包，用于开通企业的时候部署使用
 
-![](1584450228.png)
+![图片1](1584450228.png)
 
 * 数据Entity，如果实现了IOrgEntity接口，则在企业端使用[标准list](list.md)和[标准detail](detail.md)时候，会自动筛选本企业数据
 
