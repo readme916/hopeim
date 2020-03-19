@@ -2,7 +2,7 @@
 --------------
 * 状态机的概念和用法，自行百度
 
-* 状态机框架，基于[Spring StateMachine](https://spring.io/projects/spring-statemachine#overview)
+* 状态机框架，基于[Spring StateMachine](https://spring.io/projects/spring-statemachine#overview)，了解细节可以查询使用文档
 
 * 我们进行了细微的功能扩展
 
