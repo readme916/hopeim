@@ -25,10 +25,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSDownloadStream;
+import com.tianyoukeji.parent.common.BusinessException;
+import com.tianyoukeji.parent.controller.DefaultHandler;
 import com.tianyoukeji.parent.service.FileUploadService;
 
 @Controller
-public class FileUploadController{
+public class FileUploadController extends DefaultHandler{
 	
 	@Autowired
 	FileUploadService fileUploadService;
@@ -56,7 +58,7 @@ public class FileUploadController{
         // 查询单个文件
 		com.mongodb.client.gridfs.model.GridFSFile gfsfile = gridFsTemplate.findOne(query);
         if (gfsfile == null) {
-            throw new RuntimeException("文件不存在");
+            throw new BusinessException(1863,"文件不存在");
         }
         String fileName = gfsfile.getFilename().replace(",", "");
         //处理中文文件名乱码
