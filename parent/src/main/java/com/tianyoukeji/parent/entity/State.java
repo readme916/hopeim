@@ -6,6 +6,8 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -61,17 +63,10 @@ public class State implements IBaseEntity,ISortEntity{
 	
 	@Column(name = "description")
 	private String description;
-	
-	@Column(name = "is_start")
-	private Boolean isStart;
-	
-	@Column(name = "is_end")
-	private Boolean isEnd;
-	
-	
-	//这一部分处理分支事件
-	@Column(name = "is_choice")
-	private Boolean isChoice;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "state_type")
+	private StateType stateType = StateType.COMMON;
 	
 	@ManyToOne
 	@JoinColumn(name = "first_target_id")
@@ -204,14 +199,6 @@ public class State implements IBaseEntity,ISortEntity{
 	}
 
 
-	public Boolean getIsStart() {
-		return isStart;
-	}
-
-	public void setIsStart(Boolean isStart) {
-		this.isStart = isStart;
-	}
-
 	public Set<Event> getEvents() {
 		return events;
 	}
@@ -220,20 +207,12 @@ public class State implements IBaseEntity,ISortEntity{
 		this.events = events;
 	}
 
-	public Boolean getIsEnd() {
-		return isEnd;
+	public StateType getStateType() {
+		return stateType;
 	}
 
-	public void setIsEnd(Boolean isEnd) {
-		this.isEnd = isEnd;
-	}
-
-	public Boolean getIsChoice() {
-		return isChoice;
-	}
-
-	public void setIsChoice(Boolean isChoice) {
-		this.isChoice = isChoice;
+	public void setStateType(StateType stateType) {
+		this.stateType = stateType;
 	}
 
 	public State getFirstTarget() {
@@ -252,8 +231,6 @@ public class State implements IBaseEntity,ISortEntity{
 	public void setThenTarget(State thenTarget) {
 		this.thenTarget = thenTarget;
 	}
-
-	
 
 	public String getFirstGuardSpel() {
 		return firstGuardSpel;
@@ -294,5 +271,7 @@ public class State implements IBaseEntity,ISortEntity{
 	public void setExitAction(String exitAction) {
 		this.exitAction = exitAction;
 	}
-	
+	public enum StateType{
+		COMMON,BEGIN,END,CHOICE
+	}
 }

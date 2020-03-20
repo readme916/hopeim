@@ -6,6 +6,8 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -22,6 +24,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.tianyoukeji.parent.entity.State.StateType;
 import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.base.ISortEntity;
 
@@ -58,18 +61,12 @@ public class StateTemplate implements IBaseEntity,ISortEntity{
 	@Column(name = "description")
 	private String description;
 	
-	@Column(name = "is_start")
-	private Boolean isStart;
-	
-	@Column(name = "is_end")
-	private Boolean isEnd;
-	
 	@Column(name = "sort")
 	private Integer sort;
 	
-	//这一部分处理分支事件
-	@Column(name = "is_choice")
-	private Boolean isChoice;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "state_type")
+	private StateType stateType = StateType.COMMON;
 	
 	@ManyToOne
 	@JoinColumn(name = "first_target_id")
@@ -195,29 +192,12 @@ public class StateTemplate implements IBaseEntity,ISortEntity{
 	}
 
 
-	public Boolean getIsStart() {
-		return isStart;
+	public StateType getStateType() {
+		return stateType;
 	}
 
-	public void setIsStart(Boolean isStart) {
-		this.isStart = isStart;
-	}
-
-
-	public Boolean getIsEnd() {
-		return isEnd;
-	}
-
-	public void setIsEnd(Boolean isEnd) {
-		this.isEnd = isEnd;
-	}
-
-	public Boolean getIsChoice() {
-		return isChoice;
-	}
-
-	public void setIsChoice(Boolean isChoice) {
-		this.isChoice = isChoice;
+	public void setStateType(StateType stateType) {
+		this.stateType = stateType;
 	}
 
 	public StateTemplate getFirstTarget() {

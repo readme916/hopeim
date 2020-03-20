@@ -7,18 +7,24 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.google.common.util.concurrent.Service.State;
 import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.entity.EventRepository;
 import com.tianyoukeji.parent.entity.Role;
 import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.TimerRepository;
+import com.tianyoukeji.parent.entity.State.StateType;
 import com.tianyoukeji.parent.entity.template.EventTemplate;
 import com.tianyoukeji.parent.entity.template.EventTemplateRepository;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
@@ -96,9 +102,7 @@ public class StateTemplateService {
 		state.setExitAction(stateTemplate.getExitAction());
 		state.setFirstGuardSpel(stateTemplate.getFirstGuardSpel());
 		state.setFirstTarget(stateTemplateTransfer(stateTemplate.getFirstTarget()));
-		state.setIsChoice(stateTemplate.getIsChoice());
-		state.setIsEnd(stateTemplate.getIsEnd());
-		state.setIsStart(stateTemplate.getIsStart());
+		state.setStateType(stateTemplate.getStateType());
 		state.setLastTarget(stateTemplateTransfer(stateTemplate.getLastTarget()));
 		state.setName(stateTemplate.getName());
 		state.setThenGuardSpel(stateTemplate.getThenGuardSpel());
@@ -234,10 +238,10 @@ public class StateTemplateService {
 			return this;
 		}
 
-		public Builder state(Integer sort , String code, String name, Boolean isStart, Boolean isEnd, Boolean isChoice,
+		public Builder state(Integer sort , String code, String name, StateType stateType,
 				String firstTarget, String firstGuardSpel, String thenTarget, String thenGuardSpel, String lastTarget,
 				String enterAction, String exitAction) {
-			State s = new State(sort ,code, name, isStart, isEnd, isChoice, firstTarget, firstGuardSpel, thenTarget,
+			State s = new State(sort ,code, name, stateType, firstTarget, firstGuardSpel, thenTarget,
 					thenGuardSpel, lastTarget, enterAction, exitAction);
 			if (allStates.containsKey(code)) {
 				throw new BusinessException(1746, "状态 ： " + code + "已经存在");
@@ -318,9 +322,7 @@ public class StateTemplateService {
 			stateTemplate.setExitAction(state.exitAction);
 			stateTemplate.setFirstGuardSpel(state.firstGuardSpel);
 			stateTemplate.setFirstTarget(convertToStateTemplate(getState(state.firstTarget)));
-			stateTemplate.setIsChoice(state.isChoice);
-			stateTemplate.setIsEnd(state.isEnd);
-			stateTemplate.setIsStart(state.isStart);
+			stateTemplate.setStateType(state.stateType);
 			stateTemplate.setLastTarget(convertToStateTemplate(getState(state.lastTarget)));
 			stateTemplate.setName(state.name);
 			stateTemplate.setThenGuardSpel(state.thenGuardSpel);
@@ -405,9 +407,7 @@ public class StateTemplateService {
 		private Integer sort;
 		private String code;
 		private String name;
-		private Boolean isStart;
-		private Boolean isEnd;
-		private Boolean isChoice;
+		private StateType stateType;
 		private String firstTarget;
 		private String firstGuardSpel;
 		private String thenTarget;
@@ -418,16 +418,14 @@ public class StateTemplateService {
 		private HashSet<Event> events = new HashSet<Event>();
 		private HashSet<Timer> timers = new HashSet<Timer>();
 
-		public State(Integer sort, String code, String name, Boolean isStart, Boolean isEnd, Boolean isChoice, String firstTarget,
+		public State(Integer sort, String code, String name, StateType stateType, String firstTarget,
 				String firstGuardSpel, String thenTarget, String thenGuardSpel, String lastTarget, String enterAction,
 				String exitAction) {
 			super();
 			this.sort = sort;
 			this.code = code;
 			this.name = name;
-			this.isStart = isStart;
-			this.isEnd = isEnd;
-			this.isChoice = isChoice;
+			this.stateType = stateType;
 			this.firstTarget = firstTarget;
 			this.firstGuardSpel = firstGuardSpel;
 			this.thenTarget = thenTarget;

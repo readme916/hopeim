@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.OrgRepository;
+import com.tianyoukeji.parent.entity.State.StateType;
 import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
@@ -68,9 +69,9 @@ public class InitService {
 		if (stateTemplateRepository.count() == 0) {
 			com.tianyoukeji.org.service.StateTemplateService.Builder builder = stateTemplateService.getBuilder();
 			builder.entity("user")
-					.state(10,"created", "初始状态", true, false, false, null, null, null, null, null, null, null)
-					.state(20,"enabled", "有效状态", false, false, false, null, null, null, null, null, null, null)
-					.state(30,"disabled", "禁止状态", false, false, false, null, null, null, null, null, null, null)
+					.state(10,"created", "初始状态", StateType.BEGIN, null, null, null, null, null, null, null)
+					.state(20,"enabled", "有效状态", StateType.COMMON, null, null, null, null, null, null, null)
+					.state(30,"disabled", "禁止状态", StateType.COMMON, null, null, null, null, null, null, null)
 					.event(10,"enable", "有效", "enabled", null, "doEnable",Terminal.ORG)
 					.event(20,"disable", "禁止", "disabled", null, "doDisable",Terminal.ORG)
 					.event(30,"kick", "强制下线", null, null, "doKick",Terminal.ORG)

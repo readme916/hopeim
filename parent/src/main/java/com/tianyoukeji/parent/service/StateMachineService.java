@@ -74,6 +74,7 @@ import com.tianyoukeji.parent.entity.Log;
 import com.tianyoukeji.parent.entity.LogRepository;
 import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.State;
+import com.tianyoukeji.parent.entity.State.StateType;
 import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.Timer;
 import com.tianyoukeji.parent.entity.TimerRepository;
@@ -200,7 +201,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 		// 状态是null，可能由于是一个新建的状态机，默认为start的状态
 		if (state == null) {
-			findByEntity = stateRepository.findByEntityAndIsStart(getServiceEntity(), true);
+			findByEntity = stateRepository.findByEntityAndStateType(getServiceEntity(), StateType.BEGIN);
 		} else {
 			findByEntity = stateRepository.findByEntityAndCode(getServiceEntity(), state);
 		}
@@ -402,13 +403,11 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		builder.configureStates().withStates()
 				.states(new HashSet<String>(states.stream().map(e -> e.getCode()).collect(Collectors.toSet())));
 		for (State state : states) {
-			if (state.getIsStart() != null && state.getIsStart()) {
+			if (state.getStateType().equals(StateType.BEGIN)) {
 				builder.configureStates().withStates().initial(state.getCode());
-			}
-			if (state.getIsEnd() != null && state.getIsEnd()) {
+			}else if (state.getStateType().equals(StateType.END)) {
 				builder.configureStates().withStates().end(state.getCode());
-			}
-			if (state.getIsChoice() != null && state.getIsChoice()) {
+			}else if (state.getStateType().equals(StateType.CHOICE)) {
 				builder.configureStates().withStates().choice(state.getCode());
 				builder.configureTransitions().withChoice().first(state.getFirstTarget().getCode(),
 						guardFactory(state.getFirstGuardSpel()));
