@@ -40,36 +40,59 @@ public class ListController extends DefaultHandler {
 	@Autowired
 	private OrgService orgService;
 
-	@PostMapping(path = "/{entity}")
-	@ApiOperation(value = "通用列表页", notes = "默认只包括实体普通的属性，如果有对象属性要求，自己实现mapping", httpMethod = "POST")
+	@GetMapping(path = "/{entity}")
+	@ApiOperation(value = "通用列表页", notes = "默认只包括实体普通的属性，如果有对象属性要求，自己实现mapping", httpMethod = "GET")
 	@ApiImplicitParam(dataType = "String", name = "params", value = "查询字符串", required = false, paramType = "query" ,example = "uuid=1&sort=name,desc&page=0&size=10")
 	public HTTPListResponse fetchList(@PathVariable(required = true) String entity,@RequestParam(required = false) HashMap<String, String> params) {
 		params.put("fields", "*");
 		return getOrgList(entity,params);
 	}
 
-	@PostMapping(path = "/user")
-	@ApiOperation(value = "用户列表页", notes = "增加了role，org，state，department等对象", httpMethod = "POST")
-	@ApiImplicitParams({
-		@ApiImplicitParam(dataType = "String", name = "params", value = "查询字符串", required = false, paramType = "query" ,example = "uuid=1&sort=name,desc&page=0&size=10") })
-	public HTTPListResponse fetchUserList(@RequestParam(required = false) HashMap<String, String> params) {
+	@GetMapping(path = "/user")
+	@ApiOperation(value = "公司员工列表页", notes = "增加了role，org，state，department等对象", httpMethod = "GET")
+	public HTTPListResponse fetchUserList() {
+		HashMap<String,String> params = new HashMap<String,String>();
 		params.put("fields", "*,role,org,department,state");
 		return getOrgList("user",params);
 	}
 	
-	@PostMapping(path = "/menu")
-	@ApiOperation(value = "菜单列表页", notes = "根据不同角色返回不同菜单,并且自动排序", httpMethod = "POST")
+	@GetMapping(path = "/menu")
+	@ApiOperation(value = "菜单列表页", notes = "根据不同角色返回不同菜单,并且自动排序", httpMethod = "GET")
 	public HTTPListResponse fetchMenuList() {
 		Long orgId = orgService.getCurrentOrg().getUuid();
 		String role = ContextUtils.getRole();
 		return SmartQuery.fetchTree("menu", "org.uuid="+orgId + "&roles.code="+role);
 	}
 	
+	@GetMapping(path = "/department")
+	@ApiOperation(value = "部门列表页", notes = "返回公司所有的部门列表", httpMethod = "GET")
+	public HTTPListResponse fetchDepartmentList() {
+		Long orgId = orgService.getCurrentOrg().getUuid();
+		return SmartQuery.fetchTree("department", "fields=*,manager&org.uuid="+orgId);
+	}
 	
+	@GetMapping(path = "/role")
+	@ApiOperation(value = "公司可用角色列表页", notes = "返回公司所有的相关角色列表", httpMethod = "GET")
+	public HTTPListResponse fetchRoleList() {
+		Long orgId = orgService.getCurrentOrg().getUuid();
+		return SmartQuery.fetchList("role", "fields=*&orgs.uuid="+orgId);
+	}
+	
+	@GetMapping(path = "/stateMachine")
+	@ApiOperation(value = "状态机的列表", notes = "根据Entity参数，返回对应的状态机细节", httpMethod = "GET")
+	public HTTPListResponse fetchStateList(@PathVariable(required = true) String entity) {
+		return SmartQuery.fetchGroup("state","fields=*&sort=sort,asc&group=entity");
+	}
+	
+	@GetMapping(path = "/stateMachine/{entity}")
+	@ApiOperation(value = "状态机的细节展示", notes = "根据Entity参数，返回对应的状态机细节", httpMethod = "GET")
+	public HTTPListResponse fetchStateMachine(@PathVariable(required = true) String entity) {
+		return SmartQuery.fetchList("state","fields=events,events.roles,events.target,firstTarget,thenTarget,lastTarget,timers,*&entity="+entity+"&sort=sort,asc");
+	}
+	/**
+	 * 	如果是企业类型的实体，则自动加入org筛选条件，让企业只能查看自己的数据
+	 */
 	private  HTTPListResponse getOrgList(String entity,HashMap<String, String> params) {
-		/**
-		 * 	如果是企业类型的实体，则自动加入org筛选条件，让企业只能查看自己的数据
-		 */
 		EntityStructure structure = SmartQuery.getStructure(entity);
 		Class<?> entityClass = structure.getEntityClass();
 		if(IOrgEntity.class.isAssignableFrom(entityClass)) {

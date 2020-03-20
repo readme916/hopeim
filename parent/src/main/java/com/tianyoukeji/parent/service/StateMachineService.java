@@ -63,6 +63,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.RateLimiter;
 import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.liyang.jpa.smart.query.db.structure.EntityStructure;
+import com.liyang.jpa.smart.query.response.HTTPListResponse;
 import com.liyang.jpa.smart.query.service.EntityRegister;
 import com.tianyoukeji.parent.annotation.StateMachineAction;
 import com.tianyoukeji.parent.common.BusinessException;
@@ -110,10 +111,10 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	@Autowired
 	private TimerRepository timerRepository;
-	
-	@Autowired 
+
+	@Autowired
 	private RateLimiterService rateLimiterService;
-	
+
 	@Autowired
 	private LogRepository logRepository;
 
@@ -135,37 +136,39 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 	/**
 	 * 不带log的事件触发器
+	 * 
 	 * @param id
 	 * @param eventCode
-	 * @return 
+	 * @return
 	 */
 
 	@Transactional
 	public void dispatchEvent(Long id, String eventCode) {
-		
-		//事件的频率限制一次/秒
-		RateLimiter rateLimiter = rateLimiterService.get(RateLimiterNamespace.STATEMACHINE_EVENT, getServiceEntity()+id+eventCode, 1);
+
+		// 事件的频率限制一次/秒
+		RateLimiter rateLimiter = rateLimiterService.get(RateLimiterNamespace.STATEMACHINE_EVENT,
+				getServiceEntity() + id + eventCode, 1);
 		rateLimiter.acquire();
-		
+
 		StateMachine<String, String> acquireStateMachine = this.acquireStateMachine(id);
 		boolean success = acquireStateMachine.sendEvent(eventCode);
 		Object error = acquireStateMachine.getExtendedState().getVariables().get("error");
 		if (success == false || error != null) {
 			throw new BusinessException(3000, "不能执行");
 		}
-		
+
 	}
-	
 
 	/**
 	 * 带log的事件触发器
+	 * 
 	 * @param id
 	 * @param eventCode
-	 * @param params 这个是用于log的对象，一般可以设置为控制器接收的body
+	 * @param params    这个是用于log的对象，一般可以设置为控制器接收的body
 	 */
 	@Transactional
-	public void dispatchEvent(Long id, String eventCode , Object params) {
-		dispatchEvent(id,eventCode);
+	public void dispatchEvent(Long id, String eventCode, Object params) {
+		dispatchEvent(id, eventCode);
 		Log log = new Log();
 		log.setEvent(eventCode);
 		log.setDepartment(getCurrentDepartment());
@@ -173,7 +176,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		log.setEntity(getServiceEntity());
 		log.setEntityId(id);
 		log.setOperator(getCurrentUser());
-		if(params!=null) {
+		if (params != null) {
 			ObjectMapper objectMapper = new ObjectMapper();
 			String writeValueAsString;
 			try {
@@ -186,7 +189,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		}
 		logRepository.save(log);
 	}
-	
 
 	/**
 	 * 当前状态下的当前登录用户可执行事件，如果是null，则默认为start的状态
@@ -237,7 +239,17 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			throw new BusinessException(1864, "当前实体，非状态机类型");
 		}
 		Map fetchOne = SmartQuery.fetchOne(getServiceEntity(), queryString);
-		fetchOne.put("events", currentUserExecutableEvent(fetchOne.get("state").toString()));
+		if (!fetchOne.isEmpty()) {
+			if(fetchOne.get("state") == null) {
+				fetchOne.put("events", currentUserExecutableEvent(null));
+			}else {
+				fetchOne.put("events", currentUserExecutableEvent(fetchOne.get("state").toString()));
+			}
+			HTTPListResponse fetchList = SmartQuery.fetchList("log",
+					"fields=*,operator,org,department&page=0&size=100&entity=" + getServiceEntity() + "&entityId="
+							+ fetchOne.get("uuid").toString());
+			fetchOne.put("logs", fetchList.getItems());
+		}
 		return fetchOne;
 	}
 

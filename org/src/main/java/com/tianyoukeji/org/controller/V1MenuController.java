@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tianyoukeji.org.controller.V1OrgController.InviteBody;
 import com.tianyoukeji.org.service.UserService;
 import com.tianyoukeji.parent.common.HttpPostReturnUuid;
 import com.tianyoukeji.parent.controller.DefaultHandler;
@@ -20,8 +21,6 @@ import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/v1/menu")
-@Api(tags = "菜单的接口")
+@Api(tags = "菜单的操作接口")
 public class V1MenuController extends DefaultHandler {
-
-
 }
