@@ -35,12 +35,12 @@
 |name|String|状态的中文名|例如：有效态 |
 |code|String|状态的英文码|例如：created|
 |stateType|enum|状态的类型|COMMON(正常状态类型)<br>BEGIN（启动类型，状态为null时候的默认状态）<br>END（结束类型）<br>CHOICE（选择类型，带分支条件的伪状态，一旦进入该状态会根据分支条件，自动跳转到目标状态）|
-|firstTarget|State|第一个分支的目标状态|符合条件，自动跳入|
+|firstTarget|State|CHOICE状态有效，第一个分支的目标状态|符合条件，自动跳入|
 |firstGuardSpel|String|第一个分支的条件|SPEL表达式，内置两个对象user（当前用户），entity（当前操作对象）|
-|thenTarget|State|第二个分支的目标状态|符合条件，自动跳入|
+|thenTarget|State|CHOICE状态有效，第二个分支的目标状态|符合条件，自动跳入|
 |thenGuardSpel|String|第二个分支的条件|SPEL表达式，内置两个对象user（当前用户），entity（当前操作对象）|
-|lastTarget|State|最后一个分支的目标状态|条件不满足一，二时候，会自动进入最后一个分支|
-|timers|Timer|状态内的定时器|可以是多个定时器|
+|lastTarget|State|CHOICE状态有效，最后一个分支的目标状态|条件不满足一，二时候，会自动进入最后一个分支|
+|timers|Timer|状态内的定时器|一个状态，可以有多个定时器|
 |enterAction|String|进入状态时候执行的方法名|函数位于StateMachineService<T>内，自定义的方法，必须存在，否则无法启动|
 |exitAction|String|退出状态时候执行的方法名|函数位于StateMachineService<T>内，自定义的方法，必须存在，否则无法启动|
 
@@ -57,7 +57,15 @@
 |roles|Role|事件可执行的角色||
 |terminal|enum|事件可执行的终端|ORG,USER|
 
-
+### Timer表
+|字段|类型|含义|用法|
+|---|---|---|---|
+|entity|String|实体名|例如：user|
+|name|String|定时器的中文名|例如：提醒|
+|code|String|定时器的英文码|例如：speak|
+|action|String|事件执行函数|定时器的执行函数位于StateMachineService<T>内，自定义的方法，必须存在，否则无法启动|
+|timerInterval|int|周期执行的间隔|只要state不变，会一直周期执行，切换state后自动取消|
+|timerOnce|int|只执行一次时间间隔|state下只执行一次，如果时间没到就切换state，则不执行|
 关系图（用户生命周期，简单例子）
 ----------------------
 
