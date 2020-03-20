@@ -22,7 +22,7 @@
 
 数据表
 -------------
-状态机涉及到的数据表包括 state ， event ， timer ，role
+状态机涉及到的数据表包括 state ， event ， timer 
  
  数据表的字段解释
 -----------------
@@ -31,12 +31,18 @@
 
 |字段|类型|含义|用法|
 |---|---|---|---|
-|entity|varchar|实体名|例如：user|
-|name|varchar|状态的中文名|例如：有效态 |
-|code|varchar|状态的英文码|例如：created|
-|stateType|enum|状态的类别|COMMON(正常状态类型)<br>BEGIN（启动类型，状态为null时候的默认状态）<br>END（结束类型）<br>CHOICE（选择类型，带分支条件的伪状态，一旦进入该状态会根据分支条件，自动跳转到目标状态）|
-
-
+|entity|String|实体名|例如：user|
+|name|String|状态的中文名|例如：有效态 |
+|code|String|状态的英文码|例如：created|
+|stateType|enum|状态的类型|COMMON(正常状态类型)<br>BEGIN（启动类型，状态为null时候的默认状态）<br>END（结束类型）<br>CHOICE（选择类型，带分支条件的伪状态，一旦进入该状态会根据分支条件，自动跳转到目标状态）|
+|firstTarget|State|第一个分支的目标状态||
+|firstGuardSpel|String|第一个分支的条件|SPEL表达式，内置两个对象user（当前用户），entity（当前操作对象）|
+|thenTarget|State|第二个分支的目标状态||
+|thenGuardSpel|String|第二个分支的条件|SPEL表达式，内置两个对象user（当前用户），entity（当前操作对象）|
+|lastTarget|State|最后一个分支的目标状态|条件不满足一，二时候，会自动进入最后一个分支|
+|timers|Timer|状态内的定时器|可以是多个定时器|
+|enterAction|String|进入状态时候执行的方法名|函数位于StateMachineService<T>内，自定义的方法，例子见客户端服务程序|
+|exitAction|String|退出状态时候执行的方法名|函数位于StateMachineService<T>内，自定义的方法，例子见客户端服务程序|
 
 
 关系图（用户生命周期，简单例子）
