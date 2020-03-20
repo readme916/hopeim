@@ -34,7 +34,7 @@
 |entity|varchar|实体名|例如：user|
 |name|varchar|状态的中文名|例如：有效态 |
 |code|varchar|状态的英文码|例如：created|
-|stateType|enum|状态的类别|COMMON(正常类型)<br>BEGIN（启动类型）,END（结束类型）,CHOICE（选择类型）|
+|stateType|enum|状态的类别|COMMON(正常状态类型)<br>BEGIN（启动类型，状态为null时候的默认状态）<br>END（结束类型）<br>CHOICE（选择类型，带分支条件的伪状态，一旦进入该状态会根据分支条件，自动跳转到目标状态）|
 
 
 
