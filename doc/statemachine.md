@@ -31,7 +31,10 @@
 
 |字段|类型|含义|用法|
 |---|---|---|---|
-|name|varchar|中文名||
+|entity|varchar|实体名|例如：user|
+|name|varchar|状态的中文名|例如：有效态 |
+|code|varchar|状态的英文码|例如：created|
+|stateType|枚举|状态的类别|COMMON(正常类型),BEGIN（启动类型）,END（结束类型）,CHOICE（选择类型）|
 
 
 
