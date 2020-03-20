@@ -42,11 +42,12 @@
     "state": {},
     "department": {},
     "events": [],
+    "logs":[],
     "updatedAt": "2020-03-17 19:01:02"
 }
 ```
 
-* 如果数据实现了IStateMachineEntity接口 ，则返回对象内部会自动加入events字段。即当前状态，当前用户可以执行的event，用于在详细页的显示
+* 如果数据实现了IStateMachineEntity接口 ，则返回对象内部会自动加入events字段。即当前状态，当前用户可以执行的event，用于在详细页的显示，logs字段，表示历史操作记录
 
 ```java
 {
@@ -86,6 +87,7 @@
         "enable",
         "disable"
     ],
+    "logs":[],
     "updatedAt": "2020-03-17 23:17:16"
 }
 ```
