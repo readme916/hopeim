@@ -66,6 +66,8 @@
 |action|String|事件执行函数|定时器的执行函数位于StateMachineService<T>内，自定义的方法，必须存在，否则无法启动|
 |timerInterval|int|周期执行的间隔|只要state不变，会一直周期执行，切换state后自动取消|
 |timerOnce|int|只执行一次时间间隔|state下只执行一次，如果时间没到就切换state，则不执行|
+
+
 关系图（用户生命周期，简单例子）
 ----------------------
 

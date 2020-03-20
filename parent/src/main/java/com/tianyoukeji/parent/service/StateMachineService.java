@@ -196,7 +196,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	 * @param
 	 * @return
 	 */
-	public List<String> currentUserExecutableEvent(String state) {
+	public List<String> currentUserExecutableEvent(Long uuid , String state) {
 		State findByEntity = null;
 
 		// 状态是null，可能由于是一个新建的状态机，默认为start的状态
@@ -206,6 +206,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			findByEntity = stateRepository.findByEntityAndCode(getServiceEntity(), state);
 		}
 
+		//如果状态不存在，返回空 
 		if (findByEntity == null) {
 			return new ArrayList<String>();
 		}
@@ -217,7 +218,20 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			findBySourcesUuidAndRolesCode = eventRepository.findBySourcesUuidAndRolesCode(findByEntity.getUuid(),
 					ContextUtils.getRole());
 		}
-		List<String> collect = findBySourcesUuidAndRolesCode.stream().sorted(new Comparator<Event>() {
+		//如果角色不允许，返回空
+		if(findBySourcesUuidAndRolesCode==null || findBySourcesUuidAndRolesCode.isEmpty()) {
+			return new ArrayList<String>();
+		}
+		
+		User user = getCurrentUser();
+		T findById = findById(uuid);
+		ExpressionParser parser = new SpelExpressionParser();
+		EvaluationContext spelContext = new StandardEvaluationContext();
+		spelContext.setVariable("user", user);
+		spelContext.setVariable("entity", findById);
+		List<String> collect = findBySourcesUuidAndRolesCode.stream()
+				.filter(e -> parser.parseExpression(e.getGuardSpel(), new TemplateParserContext()).getValue(spelContext, Boolean.class))
+				.sorted(new Comparator<Event>() {
 			@Override
 			public int compare(Event o1, Event o2) {
 				return o1.getSort() - o2.getSort();
@@ -238,12 +252,35 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		if (!entityInstanceOf(IStateMachineEntity.class)) {
 			throw new BusinessException(1864, "当前实体，非状态机类型");
 		}
-		Map fetchOne = SmartQuery.fetchOne(getServiceEntity(), queryString);
+
+		ArrayList<String> ret = new ArrayList<String>();
+		String[] split = queryString.split("&");
+		for (String str : split) {
+			String[] split2 = str.split("=");
+			if (split2[0].equals("fields")) {
+				String[] split3 = split2[1].split(",");
+				boolean flag = false;
+				for (String str2 : split3) {
+					if (str2.equals("state")) {
+						flag = true;
+					}
+				}
+				if (flag) {
+					ret.add(str);
+				} else {
+					ret.add(str + ",state");
+				}
+			} else {
+				ret.add(str);
+			}
+		}
+
+		Map fetchOne = SmartQuery.fetchOne(getServiceEntity(), String.join("&", ret));
 		if (!fetchOne.isEmpty()) {
 			if (fetchOne.get("state") == null || ((Map) fetchOne.get("state")).isEmpty()) {
-				fetchOne.put("events", currentUserExecutableEvent(null));
+				fetchOne.put("events", currentUserExecutableEvent(Long.valueOf(fetchOne.get("uuid").toString()),null));
 			} else {
-				fetchOne.put("events", currentUserExecutableEvent(fetchOne.get("state").toString()));
+				fetchOne.put("events", currentUserExecutableEvent(Long.valueOf(fetchOne.get("uuid").toString()),fetchOne.get("state").toString()));
 			}
 			HTTPListResponse fetchList = SmartQuery.fetchList("log",
 					"fields=*,operator,org,department&page=0&size=100&entity=" + getServiceEntity() + "&entityId="
@@ -405,9 +442,9 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		for (State state : states) {
 			if (state.getStateType().equals(StateType.BEGIN)) {
 				builder.configureStates().withStates().initial(state.getCode());
-			}else if (state.getStateType().equals(StateType.END)) {
+			} else if (state.getStateType().equals(StateType.END)) {
 				builder.configureStates().withStates().end(state.getCode());
-			}else if (state.getStateType().equals(StateType.CHOICE)) {
+			} else if (state.getStateType().equals(StateType.CHOICE)) {
 				builder.configureStates().withStates().choice(state.getCode());
 				builder.configureTransitions().withChoice().first(state.getFirstTarget().getCode(),
 						guardFactory(state.getFirstGuardSpel()));
