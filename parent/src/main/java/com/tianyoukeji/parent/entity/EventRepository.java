@@ -15,6 +15,4 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 	List<Event> findBySourcesUuidAndRolesCode(Long uuid , String role);
 	List<Event> findBySourcesUuid(Long uuid);
 	
-	int countByUuidAndRolesTerminal(Long uuid , Terminal terminal);
-	
 }

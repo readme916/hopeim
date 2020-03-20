@@ -16,6 +16,7 @@ import com.tianyoukeji.parent.entity.UserRepository;
 import com.tianyoukeji.parent.entity.template.OrgTemplateRepository;
 import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
 import com.tianyoukeji.parent.entity.template.StateTemplateRepository;
+import com.tianyoukeji.parent.service.StateMachineService;
 
 @Service
 public class InitService {
@@ -70,9 +71,9 @@ public class InitService {
 					.state(10,"created", "初始状态", true, false, false, null, null, null, null, null, null, null)
 					.state(20,"enabled", "有效状态", false, false, false, null, null, null, null, null, null, null)
 					.state(30,"disabled", "禁止状态", false, false, false, null, null, null, null, null, null, null)
-					.event(10,"enable", "有效", "enabled", null, "doEnable")
-					.event(20,"disable", "禁止", "disabled", null, "doDisable")
-					.event(30,"kick", "强制下线", null, null, "doKick")
+					.event(10,"enable", "有效", "enabled", null, "doEnable",Terminal.ORG)
+					.event(20,"disable", "禁止", "disabled", null, "doDisable",Terminal.ORG)
+					.event(30,"kick", "强制下线", null, null, "doKick",Terminal.ORG)
 					.timer("speak", "说话定时器", "enabled", "doSpeak", null, 20);
 
 			builder.getState("created").addEvent("enable").addEvent("disable");
@@ -88,6 +89,8 @@ public class InitService {
 		// 创建用户的状态机states
 		if (stateRepository.count() == 0) {
 			stateTemplateService.entityStateDeploy("user");
+			//初始化用户状态机
+			StateMachineService.services.get("user").base_init();
 		}
 
 		// 创建第一个企业

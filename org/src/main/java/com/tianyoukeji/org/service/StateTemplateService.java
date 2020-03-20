@@ -22,6 +22,7 @@ import com.tianyoukeji.parent.entity.TimerRepository;
 import com.tianyoukeji.parent.entity.template.EventTemplate;
 import com.tianyoukeji.parent.entity.template.EventTemplateRepository;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
+import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
 import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
 import com.tianyoukeji.parent.entity.template.StateTemplate;
 import com.tianyoukeji.parent.entity.template.StateTemplateRepository;
@@ -158,6 +159,7 @@ public class StateTemplateService {
 		event.setName(eventTemplate.getName());
 		event.setRoles(getRoles(eventTemplate.getRoleTemplates()));
 		event.setSort(eventTemplate.getSort());
+		event.setTerminal(eventTemplate.getTerminal());
 		event.setEventTemplate(eventTemplate);
 		event = eventRepository.saveAndFlush(event);
 		event.setTarget(stateTemplateTransfer(eventTemplate.getTarget()));
@@ -245,8 +247,8 @@ public class StateTemplateService {
 			return this;
 		}
 
-		public Builder event( int sort, String code, String name, String target, String guardSpel, String action) {
-			Event e = new Event(sort ,code, name, target, guardSpel, action);
+		public Builder event( int sort, String code, String name, String target, String guardSpel, String action,Terminal terminal) {
+			Event e = new Event(sort ,code, name, target, guardSpel, action, terminal);
 			if (allEvents.containsKey(code)) {
 				throw new BusinessException(1746, "事件： " + code + "已经存在");
 			}
@@ -341,6 +343,7 @@ public class StateTemplateService {
 			eventTemplate.setGuardSpel(event.guardSpel);
 			eventTemplate.setName(event.name);
 			eventTemplate.setSort(event.sort);
+			eventTemplate.setTerminal(event.terminal);
 			eventTemplate.setTarget(convertToStateTemplate(getState(event.target)));
 			HashSet<String> roles = event.roles;
 			HashSet<RoleTemplate> roleTemplates = new HashSet<>();
@@ -464,9 +467,10 @@ public class StateTemplateService {
 		private String guardSpel;
 		private String action;
 		private int sort;
+		private Terminal terminal;
 		private HashSet<String> roles = new HashSet<String>();
 
-		public Event(int sort ,String code, String name, String target, String guardSpel, String action) {
+		public Event(int sort ,String code, String name, String target, String guardSpel, String action,Terminal terminal) {
 			super();
 			this.code = code;
 			this.name = name;
@@ -474,6 +478,7 @@ public class StateTemplateService {
 			this.guardSpel = guardSpel;
 			this.action = action;
 			this.sort = sort;
+			this.terminal = terminal;
 		}
 
 		public Event addRole(String role) {

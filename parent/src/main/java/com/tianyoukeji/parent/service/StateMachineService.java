@@ -156,7 +156,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		if (success == false || error != null) {
 			throw new BusinessException(3000, "不能执行");
 		}
-
 	}
 
 	/**
@@ -240,9 +239,9 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		}
 		Map fetchOne = SmartQuery.fetchOne(getServiceEntity(), queryString);
 		if (!fetchOne.isEmpty()) {
-			if(fetchOne.get("state") == null) {
+			if (fetchOne.get("state") == null || ((Map) fetchOne.get("state")).isEmpty()) {
 				fetchOne.put("events", currentUserExecutableEvent(null));
-			}else {
+			} else {
 				fetchOne.put("events", currentUserExecutableEvent(fetchOne.get("state").toString()));
 			}
 			HTTPListResponse fetchList = SmartQuery.fetchList("log",
@@ -289,65 +288,65 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 
 			StateMachine<String, String> stateMachine = builder.build();
 			// findById.getState()为null，可能是刚创建的数据，没有为其设置state，这时状态机的state为start状态
+			String stateCode = null;
 			if (findById.getState() != null) {
-				DefaultExtendedState defaultExtendedState = new DefaultExtendedState();
-				defaultExtendedState.getVariables().put("id", id);
-				defaultExtendedState.getVariables().put("entity", getServiceEntity());
-				DefaultStateMachineContext<String, String> stateMachineContext = new DefaultStateMachineContext<String, String>(
-						findById.getState().getCode(), null, null, defaultExtendedState, null, null);
-				stateMachine.getStateMachineAccessor()
-						.doWithRegion(new StateMachineFunction<StateMachineAccess<String, String>>() {
-							@Override
-							public void apply(StateMachineAccess<String, String> function) {
-								// 这里把状态初始化进去
-								function.resetStateMachine(stateMachineContext);
-								// 这里处理状态机状态变化的持久化和定时器方法
-								function.addStateMachineInterceptor(
-										new StateMachineInterceptorAdapter<String, String>() {
-											@Override
-											public void postStateChange(
-													org.springframework.statemachine.state.State<String, String> state,
-													Message<String> message, Transition<String, String> transition,
-													StateMachine<String, String> stateMachine) {
-												User user = getCurrentUser();
-												State findByEntityAndCode = stateRepository
-														.findByEntityAndCode(getServiceEntity(), state.getId());
-
-												if (findByEntityAndCode == null) {
-													throw new BusinessException(1274,
-															"不存在的状态" + stateMachine.getState().getId());
-												}
-												findById.setState(findByEntityAndCode);
-												save(findById);
-
-												stopJobs(getServiceEntity(), id);
-												Set<Timer> timers = null;
-
-												timers = timerRepository.findByEntityAndSource(getServiceEntity(),
-														findByEntityAndCode);
-
-												if (timers != null && !timers.isEmpty()) {
-													startJobs(getServiceEntity(), id, timers);
-												}
-											}
-
-											@Override
-											public StateContext<String, String> preTransition(
-													StateContext<String, String> stateContext) {
-												if (stateContext.getTransition().getGuard() != null) {
-													boolean evaluate = stateContext.getTransition().getGuard()
-															.evaluate(stateContext);
-													if (!evaluate) {
-														stateContext.getExtendedState().getVariables().put("error", 1);
-													}
-												}
-												return stateContext;
-											}
-
-										});
-							}
-						});
+				stateCode = findById.getState().getCode();
 			}
+			DefaultExtendedState defaultExtendedState = new DefaultExtendedState();
+			defaultExtendedState.getVariables().put("id", id);
+			defaultExtendedState.getVariables().put("entity", getServiceEntity());
+			DefaultStateMachineContext<String, String> stateMachineContext = new DefaultStateMachineContext<String, String>(
+					stateCode, null, null, defaultExtendedState, null, null);
+			stateMachine.getStateMachineAccessor()
+					.doWithRegion(new StateMachineFunction<StateMachineAccess<String, String>>() {
+						@Override
+						public void apply(StateMachineAccess<String, String> function) {
+							// 这里把状态初始化进去
+							function.resetStateMachine(stateMachineContext);
+							// 这里处理状态机状态变化的持久化和定时器方法
+							function.addStateMachineInterceptor(new StateMachineInterceptorAdapter<String, String>() {
+								@Override
+								public void postStateChange(
+										org.springframework.statemachine.state.State<String, String> state,
+										Message<String> message, Transition<String, String> transition,
+										StateMachine<String, String> stateMachine) {
+									User user = getCurrentUser();
+									State findByEntityAndCode = stateRepository.findByEntityAndCode(getServiceEntity(),
+											state.getId());
+
+									if (findByEntityAndCode == null) {
+										throw new BusinessException(1274, "不存在的状态" + stateMachine.getState().getId());
+									}
+									findById.setState(findByEntityAndCode);
+									save(findById);
+
+									stopJobs(getServiceEntity(), id);
+									Set<Timer> timers = null;
+
+									timers = timerRepository.findByEntityAndSource(getServiceEntity(),
+											findByEntityAndCode);
+
+									if (timers != null && !timers.isEmpty()) {
+										startJobs(getServiceEntity(), id, timers);
+									}
+								}
+
+								@Override
+								public StateContext<String, String> preTransition(
+										StateContext<String, String> stateContext) {
+									if (stateContext.getTransition().getGuard() != null) {
+										boolean evaluate = stateContext.getTransition().getGuard()
+												.evaluate(stateContext);
+										if (!evaluate) {
+											stateContext.getExtendedState().getVariables().put("error", 1);
+										}
+									}
+									return stateContext;
+								}
+
+							});
+						}
+					});
 			stateMachine.getExtendedState().getVariables().put("id", id);
 			stateMachine.getExtendedState().getVariables().put("entity", getServiceEntity());
 			stateMachine.start();
@@ -399,7 +398,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	private void _init_org_statemachine_builder(Set<State> states) throws Exception {
 		Builder<String, String> builder = StateMachineBuilder.<String, String>builder();
 		// builder可以为空状态，空事件
-		builder.configureConfiguration().withVerifier().enabled(false);
+		builder.configureConfiguration().withVerifier().enabled(true);
 		builder.configureStates().withStates()
 				.states(new HashSet<String>(states.stream().map(e -> e.getCode()).collect(Collectors.toSet())));
 		for (State state : states) {
@@ -460,10 +459,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			}
 			Set<Event> events = state.getEvents();
 			for (Event event : events) {
-
-				int countByUuidAndRolesTerminal = eventRepository.countByUuidAndRolesTerminal(event.getUuid(),
-						Terminal.valueOf(terminal));
-				if (countByUuidAndRolesTerminal == 0) {
+				if (!event.getTerminal().equals(Terminal.valueOf(terminal))) {
 					continue;
 				}
 				if (event.getTarget() == null) {

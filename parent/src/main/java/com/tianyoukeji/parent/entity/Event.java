@@ -6,6 +6,8 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -25,6 +27,7 @@ import com.tianyoukeji.parent.entity.base.IBaseEntity;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
 import com.tianyoukeji.parent.entity.base.ISortEntity;
 import com.tianyoukeji.parent.entity.template.EventTemplate;
+import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
 
 @Entity
 @Table(name = "event", uniqueConstraints= {@UniqueConstraint(columnNames= {"entity","code"})})
@@ -85,7 +88,18 @@ public class Event implements IBaseEntity,ISortEntity{
 	@JoinColumn(name="event_template_id")
 	private EventTemplate eventTemplate;
 	
+	@Enumerated(EnumType.STRING)
+	@Column(name = "terminal")
+	private Terminal terminal;
 	
+	public Terminal getTerminal() {
+		return terminal;
+	}
+
+	public void setTerminal(Terminal terminal) {
+		this.terminal = terminal;
+	}
+
 	public EventTemplate getEventTemplate() {
 		return eventTemplate;
 	}
