@@ -56,17 +56,16 @@ public class TestController extends DefaultHandler{
 	@GetMapping(path = "/test/enable")
 	public void enable(Authentication authentication) {
 		
-		List<String> currentUserExecutableEvent = userService.currentUserExecutableEvent(1l,null);
+		List<String> currentUserExecutableEvent = userService.currentUserExecutableEvent(1l);
 		System.out.println(currentUserExecutableEvent);
-		userService.dispatchEvent(1l, "enable");
+		userService.dispatchEvent(1l, "enable",null);
 		User findById = userService.findById(1l);
 		State state = findById.getState();
 		System.out.println(state.toString());
 	}
-	
 	@GetMapping(path = "/test/forbid")
 	public void forbid(Authentication authentication) {
-		userService.dispatchEvent(1l, "forbid");
+		userService.dispatchEvent(1l, "forbid",null);
 //		User findById = userService.findById(5l);
 //		State state = findById.getState();
 //		System.out.println(userService.stateExecutableEvent(state));
@@ -75,7 +74,7 @@ public class TestController extends DefaultHandler{
 	}
 	@GetMapping(path = "/test/status")
 	public Object test(Authentication authentication) {
-		return userService.currentUserExecutableEvent(1l,"enabled");
+		return userService.currentUserExecutableEvent(1l);
 	}
 	@GetMapping(path = "/test/state")
 	public Object state(Authentication authentication) {

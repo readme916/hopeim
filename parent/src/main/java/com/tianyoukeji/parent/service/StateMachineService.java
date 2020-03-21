@@ -136,16 +136,14 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	public static HashMap<String, StateMachineService> services = new HashMap<String, StateMachineService>();
 
 	/**
-	 * 不带log的事件触发器
+	 * 带log的事件触发器
 	 * 
 	 * @param id
 	 * @param eventCode
-	 * @return
+	 * @param params    这个是用于log的对象，一般可以设置为控制器接收的body
 	 */
-
 	@Transactional
-	public void dispatchEvent(Long id, String eventCode) {
-
+	public void dispatchEvent(Long id, String eventCode, Object params) {
 		// 事件的频率限制一次/秒
 		RateLimiter rateLimiter = rateLimiterService.get(RateLimiterNamespace.STATEMACHINE_EVENT,
 				getServiceEntity() + id + eventCode, 1);
@@ -157,18 +155,6 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		if (success == false || error != null) {
 			throw new BusinessException(3000, "不能执行");
 		}
-	}
-
-	/**
-	 * 带log的事件触发器
-	 * 
-	 * @param id
-	 * @param eventCode
-	 * @param params    这个是用于log的对象，一般可以设置为控制器接收的body
-	 */
-	@Transactional
-	public void dispatchEvent(Long id, String eventCode, Object params) {
-		dispatchEvent(id, eventCode);
 		Log log = new Log();
 		log.setEvent(eventCode);
 		log.setDepartment(getCurrentDepartment());
@@ -191,52 +177,62 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	}
 
 	/**
-	 * 当前状态下的当前登录用户可执行事件，如果是null，则默认为start的状态
+	 * 	当前对象，登录用户角色可执行事件，如果id是null，则默认为start的状态
 	 * 
 	 * @param
 	 * @return
 	 */
-	public List<String> currentUserExecutableEvent(Long uuid , String state) {
-		State findByEntity = null;
-
-		// 状态是null，可能由于是一个新建的状态机，默认为start的状态
-		if (state == null) {
-			findByEntity = stateRepository.findByEntityAndStateType(getServiceEntity(), StateType.BEGIN);
-		} else {
-			findByEntity = stateRepository.findByEntityAndCode(getServiceEntity(), state);
+	public List<String> currentUserExecutableEvent(Long uuid) {
+		State stateEntity = null;
+		T findById=null;
+		if (uuid == null) {
+			stateEntity = stateRepository.findByEntityAndStateType(getServiceEntity(), StateType.BEGIN);
+		}else {
+			findById = findById(uuid);
+			if(findById==null) {
+				stateEntity = stateRepository.findByEntityAndStateType(getServiceEntity(), StateType.BEGIN);
+			}else {
+				State state = findById.getState();
+				if(state==null) {
+					stateEntity = stateRepository.findByEntityAndStateType(getServiceEntity(), StateType.BEGIN);
+				}else {
+					stateEntity = state;
+				}
+			}
+		
 		}
-
-		//如果状态不存在，返回空 
-		if (findByEntity == null) {
+		// 如果状态不存在，返回空
+		if (stateEntity == null) {
 			return new ArrayList<String>();
 		}
 		List<Event> findBySourcesUuidAndRolesCode = null;
 
 		if (ContextUtils.getRole().equals("developer")) {
-			findBySourcesUuidAndRolesCode = eventRepository.findBySourcesUuid(findByEntity.getUuid());
+			findBySourcesUuidAndRolesCode = eventRepository.findBySourcesUuid(stateEntity.getUuid());
 		} else {
-			findBySourcesUuidAndRolesCode = eventRepository.findBySourcesUuidAndRolesCode(findByEntity.getUuid(),
+			findBySourcesUuidAndRolesCode = eventRepository.findBySourcesUuidAndRolesCode(stateEntity.getUuid(),
 					ContextUtils.getRole());
 		}
-		//如果角色不允许，返回空
-		if(findBySourcesUuidAndRolesCode==null || findBySourcesUuidAndRolesCode.isEmpty()) {
+
+		// 如果角色不允许，返回空
+		if (findBySourcesUuidAndRolesCode == null || findBySourcesUuidAndRolesCode.isEmpty()) {
 			return new ArrayList<String>();
 		}
-		
+
 		User user = getCurrentUser();
-		T findById = findById(uuid);
 		ExpressionParser parser = new SpelExpressionParser();
 		EvaluationContext spelContext = new StandardEvaluationContext();
 		spelContext.setVariable("user", user);
 		spelContext.setVariable("entity", findById);
-		List<String> collect = findBySourcesUuidAndRolesCode.stream()
-				.filter(e -> parser.parseExpression(e.getGuardSpel(), new TemplateParserContext()).getValue(spelContext, Boolean.class))
-				.sorted(new Comparator<Event>() {
-			@Override
-			public int compare(Event o1, Event o2) {
-				return o1.getSort() - o2.getSort();
-			}
-		}).map(e -> e.getCode()).collect(Collectors.toList());
+		List<String> collect = findBySourcesUuidAndRolesCode.stream().filter(e -> StringUtils.hasText(e.getGuardSpel())
+				? parser.parseExpression(e.getGuardSpel(), new TemplateParserContext()).getValue(spelContext,
+						Boolean.class)
+				: true).sorted(new Comparator<Event>() {
+					@Override
+					public int compare(Event o1, Event o2) {
+						return o1.getSort() - o2.getSort();
+					}
+				}).map(e -> e.getCode()).collect(Collectors.toList());
 
 		return collect;
 	}
@@ -252,36 +248,9 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 		if (!entityInstanceOf(IStateMachineEntity.class)) {
 			throw new BusinessException(1864, "当前实体，非状态机类型");
 		}
-
-		ArrayList<String> ret = new ArrayList<String>();
-		String[] split = queryString.split("&");
-		for (String str : split) {
-			String[] split2 = str.split("=");
-			if (split2[0].equals("fields")) {
-				String[] split3 = split2[1].split(",");
-				boolean flag = false;
-				for (String str2 : split3) {
-					if (str2.equals("state")) {
-						flag = true;
-					}
-				}
-				if (flag) {
-					ret.add(str);
-				} else {
-					ret.add(str + ",state");
-				}
-			} else {
-				ret.add(str);
-			}
-		}
-
-		Map fetchOne = SmartQuery.fetchOne(getServiceEntity(), String.join("&", ret));
+		Map fetchOne = SmartQuery.fetchOne(getServiceEntity(), queryString);
 		if (!fetchOne.isEmpty()) {
-			if (fetchOne.get("state") == null || ((Map) fetchOne.get("state")).isEmpty()) {
-				fetchOne.put("events", currentUserExecutableEvent(Long.valueOf(fetchOne.get("uuid").toString()),null));
-			} else {
-				fetchOne.put("events", currentUserExecutableEvent(Long.valueOf(fetchOne.get("uuid").toString()),fetchOne.get("state").toString()));
-			}
+			fetchOne.put("events", currentUserExecutableEvent(Long.valueOf(fetchOne.get("uuid").toString())));
 			HTTPListResponse fetchList = SmartQuery.fetchList("log",
 					"fields=*,operator,org,department&page=0&size=100&entity=" + getServiceEntity() + "&entityId="
 							+ fetchOne.get("uuid").toString());

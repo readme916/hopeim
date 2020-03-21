@@ -119,16 +119,7 @@ public class UserService extends StateMachineService<User> {
  */
 
 public abstract class StateMachineService<T extends IStateMachineEntity> extends BaseService<T> {	
-	/**
-	 * 不带log的事件触发器
-	 * @param id
-	 * @param eventCode
-	 * @return 
-	 */
 
-	@Transactional
-	public void dispatchEvent(Long id, String eventCode) {
-	}
 	/**
 	 * 带log的事件触发器
 	 * @param id
@@ -140,15 +131,16 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	}
 	
 	/**
-	 * 当前状态下的当前登录用户可执行事件，如果是null，则默认为start的状态
+	 * 	当前对象，登录用户角色可执行事件，如果id是null，则默认为start的状态
 	 * 
 	 * @param
 	 * @return
 	 */
-	public List<String> currentUserExecutableEvent(String state) {
+	public List<String> currentUserExecutableEvent(Long uuid) {
 	}
+	
 	/**
-	 * 根据query，返回一个具体的map格式的对象detail,包含了当前用户角色在当前状态机可执行事件events
+	 * 根据query，返回一个具体的map格式的对象detail,包含了当前用户角色在当前状态机可执行事件events和历史操作logs
 	 * 
 	 * @param queryString
 	 * @return
@@ -157,6 +149,15 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	public Map fetchOne(String queryString) {
 	}
 	
+	/**
+	 * 根据当前实体的id，得到他的状态机
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public StateMachine<String, String> acquireStateMachine(Long id) {
+	}
 
 ```
 
@@ -175,7 +176,7 @@ public class V1UserController extends DefaultHandler {
 	@PostMapping(path = "/{uuid}/kick")
 	@ApiOperation(value = "踢下线", notes = "如果用户在线则直接踢下线", httpMethod = "POST")
 	public HttpPostReturnUuid kick(@PathVariable(required = true) Long uuid) {
-		userService.dispatchEvent(uuid, "kick");
+		userService.dispatchEvent(uuid, "kick",null);
 		return new HttpPostReturnUuid(uuid);
 	}
 	

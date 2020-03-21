@@ -67,7 +67,7 @@ public class ContextUtils {
 	}
 	
 	  /**
-     * 取得客户端client_id
+	 *	取得当前用户角色，没有登录默认为user
      * @return
      */
 	public static String getRole() {

@@ -44,7 +44,7 @@ public class DetailController extends DefaultHandler {
 	@ApiOperation(value = "通用详细页", notes = "默认只包括实体普通的属性，如果有对象属性要求，自己实现mapping", httpMethod = "GET")
 	public Map fetchOne(@PathVariable(required = true) String entity, @PathVariable(required = true) Long uuid) {
 		if (StateMachineService.services.containsKey(entity)) {
-			if (isAddOrg(entity)) {
+			if (isOrg(entity)) {
 				Long orgId = orgService.getCurrentOrg().getUuid();
 				return StateMachineService.services.get(entity)
 						.fetchOne("fields=*&org.uuid=" + orgId + "&uuid=" + uuid);
@@ -52,7 +52,7 @@ public class DetailController extends DefaultHandler {
 				return StateMachineService.services.get(entity).fetchOne("fields=*&uuid=" + uuid);
 			}
 		} else {
-			if (isAddOrg(entity)) {
+			if (isOrg(entity)) {
 				Long orgId = orgService.getCurrentOrg().getUuid();
 				return SmartQuery.fetchOne(entity, "fields=*&org.uuid=" + orgId + "&uuid=" + uuid);
 			} else {
@@ -73,7 +73,7 @@ public class DetailController extends DefaultHandler {
 	/**
 	 * 是否添加企业筛选
 	 */
-	private boolean isAddOrg(String entity) {
+	private boolean isOrg(String entity) {
 		EntityStructure structure = SmartQuery.getStructure(entity);
 		Class<?> entityClass = structure.getEntityClass();
 		if (IOrgEntity.class.isAssignableFrom(entityClass)) {
