@@ -43,7 +43,7 @@ spring:
         enable_lazy_load_no_trans: true
   data:
     mongodb:
-      uri: mongodb://localhost:27017/tianyoufile
+      uri: mongodb://localhost:27017/tianyoukeji
   thymeleaf:
     cache: false
     prefix: classpath:/templates/

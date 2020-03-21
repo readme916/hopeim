@@ -40,7 +40,7 @@ spring:
         enable_lazy_load_no_trans: true
   data:
     mongodb:
-      uri: mongodb://localhost:27017/tianyoufile        
+      uri: mongodb://localhost:27017/tianyoukeji        
   quartz:
     #持久化到数据库方式
     job-store-type: jdbc
