@@ -29,7 +29,11 @@ import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.controller.DefaultHandler;
 import com.tianyoukeji.parent.service.FileUploadService;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 @Controller
+@Api(tags = "文件上传的接口")
 public class FileUploadController extends DefaultHandler{
 	
 	@Autowired
@@ -44,6 +48,7 @@ public class FileUploadController extends DefaultHandler{
 	
 	@RequestMapping(path="/v1/upload",method=RequestMethod.POST)
 	@ResponseBody
+	@ApiOperation(value = "上传", notes = "", httpMethod = "POST")
 	public Object upload(@RequestParam("file") MultipartFile file,Principal principal) {
 		 if (file != null) {   // 表示现在已经有文件上传了
 			 return fileUploadService.upload(file,principal);
@@ -52,6 +57,7 @@ public class FileUploadController extends DefaultHandler{
 	}
 	
 	@RequestMapping(path="/v1/file/{id}",method=RequestMethod.GET)
+	@ApiOperation(value = "根据id获取图像或者文件", notes = "", httpMethod = "GET")
 	public void download(@PathVariable("id") String id,HttpServletRequest request, HttpServletResponse response) {
 		
 		Query query = Query.query(Criteria.where("_id").is(id));

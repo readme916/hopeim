@@ -23,7 +23,7 @@ import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/v1/user")
-@Api(tags = "用户的接口")
+@Api(tags = "管理用户的接口")
 public class V1UserController extends DefaultHandler {
 
 	@Autowired

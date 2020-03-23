@@ -22,7 +22,7 @@ import io.swagger.models.auth.In;
 
 @RestController
 @RequestMapping("/v1/org")
-@Api(tags = "企业的接口")
+@Api(tags = "管理企业的接口")
 public class V1OrgController extends DefaultHandler {
 
 	@Autowired

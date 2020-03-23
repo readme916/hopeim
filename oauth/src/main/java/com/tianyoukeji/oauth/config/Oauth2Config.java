@@ -1,5 +1,6 @@
 package com.tianyoukeji.oauth.config;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,10 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.tencentyun.TLSSigAPIv2;
@@ -32,6 +37,7 @@ import com.tianyoukeji.oauth.filter.UsernamePasswordAuthenticationProvider;
 import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
+import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
 import com.tianyoukeji.parent.service.NamespaceRedisService;
 import com.tianyoukeji.parent.service.NamespaceRedisService.RedisNamespace;
 
@@ -64,7 +70,6 @@ public class Oauth2Config extends AuthorizationServerConfigurerAdapter {
 	@Value("${SDKAPPSecret}")
 	private String SDKAPPSecret;
 	
-
 	@Override
 	public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
 		security.tokenKeyAccess("permitAll()").checkTokenAccess("isAuthenticated()");
@@ -101,8 +106,8 @@ public class Oauth2Config extends AuthorizationServerConfigurerAdapter {
 				User u = userRepository.findByUserinfoMobile(user);
 				
 				String terminal = u.getRole().getTerminal().toString();
-				if(authentication.getOAuth2Request().getClientId().equals("org")) {
-					if(!terminal.equals("org")) {
+				if(authentication.getOAuth2Request().getClientId().equals(Terminal.ORG.toString())) {
+					if(!terminal.equals(Terminal.ORG.toString())) {
 						throw new BadCredentialsException("角色不允许登录");
 					}
 				}

@@ -80,7 +80,7 @@ public class ListController extends DefaultHandler {
 	
 	@GetMapping(path = "/stateMachine")
 	@ApiOperation(value = "状态机的列表", notes = "根据Entity参数，返回对应的状态机细节", httpMethod = "GET")
-	public HTTPListResponse fetchStateList(@PathVariable(required = true) String entity) {
+	public HTTPListResponse fetchStateList() {
 		return SmartQuery.fetchGroup("state","fields=*&sort=sort,asc&group=entity");
 	}
 	
