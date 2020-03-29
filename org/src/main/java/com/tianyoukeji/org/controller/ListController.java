@@ -1,7 +1,10 @@
 package com.tianyoukeji.org.controller;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -89,6 +92,21 @@ public class ListController extends DefaultHandler {
 	public HTTPListResponse fetchStateMachine(@PathVariable(required = true) String entity) {
 		return SmartQuery.fetchList("state","fields=events,events.roles,events.target,firstTarget,thenTarget,lastTarget,timers,*&entity="+entity+"&sort=sort,asc");
 	}
+	
+	@GetMapping(path = "/stateMachine/uselessEvent/{entity}")
+	@ApiOperation(value = "状态机还没有使用的事件列表", notes = "", httpMethod = "GET")
+	public HTTPListResponse fetchStateMachineUselessEvent(@PathVariable(required = true) String entity) {
+		HTTPListResponse fetchList = SmartQuery.fetchList("event","fields=target,roles,sources,*&entity="+entity+"&sort=sort,asc");
+		if(fetchList.getTotal()>0) {
+			List items = (List)fetchList.getItems();
+			List collect = (List)items.stream().filter(e -> ((Map)e).get("sources").equals(Collections.EMPTY_MAP)).collect(Collectors.toList());
+			fetchList.setItems(collect);
+			fetchList.setTotal(collect.size());
+		}
+		return fetchList;
+		
+	}
+	
 	/**
 	 * 	如果是企业类型的实体，则自动加入org筛选条件，让企业只能查看自己的数据
 	 */
