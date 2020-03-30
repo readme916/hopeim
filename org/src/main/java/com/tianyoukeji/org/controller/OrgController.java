@@ -1,5 +1,11 @@
 package com.tianyoukeji.org.controller;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,39 +29,41 @@ import io.swagger.models.auth.In;
 @RestController
 @RequestMapping("/v1/org")
 @Api(tags = "管理企业的接口")
-public class V1OrgController extends DefaultHandler {
+public class OrgController extends DefaultHandler {
 
 	@Autowired
 	private OrgService orgService;
 
 	@PostMapping(path = "/addUser")
 	@ApiOperation(value = "邀请员工", notes = "直接把普通用户变成公司员工，如果已经有其他企业的不能邀请", httpMethod = "POST")
-	public HttpPostReturnUuid addUser(@RequestBody(required = true) InviteBody body) {
+	public HttpPostReturnUuid addUser(@Valid @RequestBody(required = true) InviteBody body) {
 		orgService.addUser(body.getUnionId());
 		return new HttpPostReturnUuid(0l);
 	}
 	
 	@PostMapping(path = "/deleteUser")
 	@ApiOperation(value = "删除员工", notes = "直接把公司员工踢出公司", httpMethod = "POST")
-	public HttpPostReturnUuid deleteUser(@RequestBody(required = true) InviteBody body) {
+	public HttpPostReturnUuid deleteUser(@Valid @RequestBody(required = true) InviteBody body) {
 		orgService.deleteUser(body.getUnionId());
 		return new HttpPostReturnUuid(0l);
 	}
 	
 	@PostMapping(path = "/locateUserDepartment")
 	@ApiOperation(value = "分配员工部门", notes = "", httpMethod = "POST")
-	public HttpPostReturnUuid locateUserDepartment(@RequestBody(required = true) UserDepartmentBody body) {
+	public HttpPostReturnUuid locateUserDepartment(@Valid @RequestBody(required = true) UserDepartmentBody body) {
 		orgService.locateUserDepartment(body.getUuid() , body.getDepartmentId());
 		return new HttpPostReturnUuid(0l);
 	}
 	@PostMapping(path = "/locateUserRole")
 	@ApiOperation(value = "分配员工角色", notes = "", httpMethod = "POST")
-	public HttpPostReturnUuid locateUserRole(@RequestBody(required = true) UserRoleBody body) {
+	public HttpPostReturnUuid locateUserRole(@Valid @RequestBody(required = true) UserRoleBody body) {
 		orgService.locateUserRole(body.getUuid() , body.getRoleId());
 		return new HttpPostReturnUuid(0l);
 	}
 	
 	public static class InviteBody {
+		@NotEmpty
+		@Length(min = 32,max=32)
 		private String unionId;
 
 		public String getUnionId() {
@@ -68,8 +76,13 @@ public class V1OrgController extends DefaultHandler {
 
 	}
 	public static class UserDepartmentBody {
+		@NotNull
+		@Min(1)
 		private Long uuid;
+		@NotNull
+		@Min(1)
 		private Long departmentId;
+		
 		public Long getUuid() {
 			return uuid;
 		}
@@ -85,7 +98,11 @@ public class V1OrgController extends DefaultHandler {
 
 	}
 	public static class UserRoleBody {
+		@NotNull
+		@Min(1)
 		private Long uuid;
+		@NotNull
+		@Min(1)
 		private Long roleId;
 		public Long getUuid() {
 			return uuid;

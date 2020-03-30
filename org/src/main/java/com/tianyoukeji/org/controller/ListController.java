@@ -1,17 +1,10 @@
 package com.tianyoukeji.org.controller;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.statemachine.StateMachine;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,20 +13,13 @@ import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.liyang.jpa.smart.query.db.structure.EntityStructure;
 import com.liyang.jpa.smart.query.response.HTTPListResponse;
 import com.tianyoukeji.org.service.OrgService;
-import com.tianyoukeji.org.service.StateService;
-import com.tianyoukeji.org.service.StateTemplateService;
-import com.tianyoukeji.org.service.UserService;
 import com.tianyoukeji.parent.common.ContextUtils;
-import com.tianyoukeji.parent.common.HttpPostReturnUuid;
 import com.tianyoukeji.parent.controller.DefaultHandler;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
-import com.tianyoukeji.parent.service.StateMachineService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
 @RequestMapping("/v1/list")
@@ -81,31 +67,6 @@ public class ListController extends DefaultHandler {
 		return SmartQuery.fetchList("role", "fields=*&orgs.uuid="+orgId);
 	}
 	
-	@GetMapping(path = "/stateMachine")
-	@ApiOperation(value = "状态机的列表", notes = "根据Entity参数，返回对应的状态机细节", httpMethod = "GET")
-	public HTTPListResponse fetchStateList() {
-		return SmartQuery.fetchGroup("state","fields=*&sort=sort,asc&group=entity");
-	}
-	
-	@GetMapping(path = "/stateMachine/{entity}")
-	@ApiOperation(value = "状态机的细节展示", notes = "根据Entity参数，返回对应的状态机细节", httpMethod = "GET")
-	public HTTPListResponse fetchStateMachine(@PathVariable(required = true) String entity) {
-		return SmartQuery.fetchList("state","fields=events,events.roles,events.target,firstTarget,thenTarget,lastTarget,timers,*&entity="+entity+"&sort=sort,asc");
-	}
-	
-	@GetMapping(path = "/stateMachine/uselessEvent/{entity}")
-	@ApiOperation(value = "状态机还没有使用的事件列表", notes = "", httpMethod = "GET")
-	public HTTPListResponse fetchStateMachineUselessEvent(@PathVariable(required = true) String entity) {
-		HTTPListResponse fetchList = SmartQuery.fetchList("event","fields=target,roles,sources,*&entity="+entity+"&sort=sort,asc");
-		if(fetchList.getTotal()>0) {
-			List items = (List)fetchList.getItems();
-			List collect = (List)items.stream().filter(e -> ((Map)e).get("sources").equals(Collections.EMPTY_MAP)).collect(Collectors.toList());
-			fetchList.setItems(collect);
-			fetchList.setTotal(collect.size());
-		}
-		return fetchList;
-		
-	}
 	
 	/**
 	 * 	如果是企业类型的实体，则自动加入org筛选条件，让企业只能查看自己的数据

@@ -24,7 +24,7 @@ import io.swagger.annotations.ApiOperation;
 @RestController
 @RequestMapping("/v1/user")
 @Api(tags = "管理用户的接口")
-public class V1UserController extends DefaultHandler {
+public class UserController extends DefaultHandler {
 
 	@Autowired
 	private UserService userService;
@@ -65,19 +65,6 @@ public class V1UserController extends DefaultHandler {
 		}
 
 	}
-	public static class InviteBody {
-		private Long orgId;
 
-		public Long getOrgId() {
-			return orgId;
-		}
-
-		public void setOrgId(Long orgId) {
-			this.orgId = orgId;
-		}
-
-		
-
-	}
 	
 }
