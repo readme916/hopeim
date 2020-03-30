@@ -181,3 +181,8 @@ public class V1UserController extends DefaultHandler {
 	}
 	
 ```
+
+* 状态机的配置接口
+```
+http://localhost:40001/swagger-ui.html#/管理状态机的接口
+```
