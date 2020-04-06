@@ -53,6 +53,7 @@ import com.tianyoukeji.parent.service.TIMService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 
 @RestController
@@ -172,7 +173,6 @@ public class StateMachineController extends DefaultHandler {
 		}
 		return fetchList;
 	}
-	
 	
 	public static class AddStateRequest{
 		@NotBlank

@@ -332,7 +332,7 @@ public class StateMachineManagementService {
 				throw new BusinessException(1765, "timer间隔不低于10s");
 			}
 		}
-		if (!StringUtils.hasText(timer.getAction())) {
+		if (!StringUtils.hasText(body.getAction())) {
 			throw new BusinessException(1521, "Timer的动作不能为空");
 		}
 		
