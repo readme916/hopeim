@@ -40,6 +40,7 @@ import com.tianyoukeji.parent.entity.StateRepository;
 import com.tianyoukeji.parent.entity.Timer;
 import com.tianyoukeji.parent.entity.TimerRepository;
 import com.tianyoukeji.parent.service.BaseService;
+import com.tianyoukeji.parent.service.StateMachineService;
 
 @Service
 public class StateMachineManagementService {
@@ -132,6 +133,17 @@ public class StateMachineManagementService {
 			throw new BusinessException(1371, "请先删除目标是自己的事件关联和定时器");
 		}
 		return new HttpPostReturnUuid(body.getUuid());
+	}
+	
+	@Transactional
+	public HttpPostReturnUuid updateCache(String entity) {
+		StateMachineService stateMachineService = StateMachineService.services.get(entity);
+		if(stateMachineService!=null) {
+			stateMachineService.refreshBuilder();
+			return new HttpPostReturnUuid();
+		}else {
+			throw new BusinessException(1741, "实体不存在");
+		}
 	}
 	
 	@Transactional

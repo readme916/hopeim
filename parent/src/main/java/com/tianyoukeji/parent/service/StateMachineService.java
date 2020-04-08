@@ -129,8 +129,8 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	@Value("${server.terminal}")
 	private String terminal;
 
-	// 状态机池子
-	private static HashMap<String, Builder<String, String>> pools = new HashMap<String, Builder<String, String>>();
+	// 状态机builder池子
+	private static HashMap<String, Builder<String, String>> builders = new HashMap<String, Builder<String, String>>();
 
 	// 所有服务的静态引用
 	public static HashMap<String, StateMachineService> services = new HashMap<String, StateMachineService>();
@@ -262,7 +262,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	/**
 	 * 刷新企业的当前实体的状态机builder
 	 * 
-	 * @param orgId 可以为null
+	 * @param 
 	 * @return
 	 */
 
@@ -275,7 +275,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 			e.printStackTrace();
 			throw new BusinessException(2612, getServiceEntity() + "状态机 ,更新失败");
 		}
-		return pools.get(getServiceEntity());
+		return builders.get(getServiceEntity());
 	}
 
 	/**
@@ -288,7 +288,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 	public StateMachine<String, String> acquireStateMachine(Long id) {
 		T findById = findById(id);
 		if (findById != null) {
-			Builder<String, String> builder = pools.get(getServiceEntity());
+			Builder<String, String> builder = builders.get(getServiceEntity());
 			if (builder == null) {
 				throw new BusinessException(1857, "状态机获取失败");
 			}
@@ -490,7 +490,7 @@ public abstract class StateMachineService<T extends IStateMachineEntity> extends
 				}
 			}
 		}
-		pools.put(getServiceEntity(), builder);
+		builders.put(getServiceEntity(), builder);
 	}
 
 	private Action<String, String> AuthorizeActionFactory(State state, String actionStr) {

@@ -63,7 +63,7 @@ public class StateMachineController extends DefaultHandler {
 	
 	@Autowired
 	private StateMachineManagementService stateMachineManagementService;
-
+	
 
 	@PostMapping(path = "/addState")
 	@ApiOperation(value = "添加状态", notes = "新增一个state", httpMethod = "POST")
@@ -82,6 +82,13 @@ public class StateMachineController extends DefaultHandler {
 	public HttpPostReturnUuid updateState(@Valid @RequestBody(required = true) UpdateStateRequest body) {
 		return stateMachineManagementService.updateState(body);
 	}
+	
+	@PostMapping(path = "/updateCache/{entity}")
+	@ApiOperation(value = "更新缓存", notes = "每次重新更改设置后，需要更新缓存才能生效", httpMethod = "POST")
+	public HttpPostReturnUuid updateCache(@PathVariable(required = true) String entity) {
+		return stateMachineManagementService.updateCache(entity);
+	}
+	
 	
 	@PostMapping(path = "/addEvent")
 	@ApiOperation(value = "添加事件", notes = "新增一个event,可执行角色也一并设置", httpMethod = "POST")
