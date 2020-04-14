@@ -77,7 +77,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 				.antMatchers("/configuration/security").permitAll()
 
-				.antMatchers("/unionLogin", "/login", "/oauth/authorize", "/oauth/token", "/logout", "/sms","/structure","/structure/*").permitAll()
+				.antMatchers("/unionLogin", "/login", "/oauth/authorize", "/oauth/token", "/logout", "/sms","/structure","/structure/*","/registerUser").permitAll()
 
 				.anyRequest().authenticated().and().formLogin().loginPage("/unionLogin").loginProcessingUrl("/login")
 				
