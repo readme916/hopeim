@@ -19,6 +19,7 @@ import com.liyang.jpa.smart.query.response.HTTPListResponse;
 import com.tianyoukeji.org.service.OrgService;
 import com.tianyoukeji.org.service.StateTemplateService;
 import com.tianyoukeji.org.service.UserService;
+import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.common.HttpPostReturnUuid;
 import com.tianyoukeji.parent.controller.DefaultHandler;
 import com.tianyoukeji.parent.entity.base.IOrgEntity;
@@ -63,10 +64,28 @@ public class DetailController extends DefaultHandler {
 	@ApiOperation(value = "用户详细页", notes = "增加了role，org，state，department等对象，并且使用unionId来定位，防止遍历", httpMethod = "GET")
 	public Map fetchUser(@PathVariable(required = true) String unionId) {
 		Map fetchOne = StateMachineService.services.get("user")
-				.fetchOne("fields=*,role,org,department,state&unionId=" + unionId);
+				.fetchOne("fields=*,country,province,city,role,org,department,state&unionId=" + unionId);
 		return fetchOne;
 
 	}
+	
+	@GetMapping(path = "/role/{uuid}")
+	@ApiOperation(value = "角色详细页", notes = "增加了orgs,menus", httpMethod = "GET")
+	public Map fetchRole(@PathVariable(required = true) String uuid) {
+		Map fetchOne = SmartQuery.fetchOne("role","fields=*,orgs,menus&uuid=" + uuid);
+		return fetchOne;
+
+	}
+	
+	@GetMapping(path = "/myInfo")
+	@ApiOperation(value = "登录后自己的信息", notes = "增加了role，org，state，department等", httpMethod = "GET")
+	public Map myInfo() {
+		String currentUserName = ContextUtils.getCurrentUserName();
+		Map fetchOne = SmartQuery.fetchOne("user","fields=*,country,province,city,role,org,department,state,userinfo.mobile&userinfo.mobile=" + currentUserName);
+		return fetchOne;
+
+	}
+	
 
 	/**
 	 * 是否添加企业筛选

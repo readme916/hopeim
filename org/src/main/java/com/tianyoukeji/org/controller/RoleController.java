@@ -24,6 +24,7 @@ import com.tianyoukeji.org.controller.StateMachineController.AddStateRequest;
 import com.tianyoukeji.org.controller.StateMachineController.DeleteStateRequest;
 import com.tianyoukeji.org.controller.StateMachineController.UpdateStateRequest;
 import com.tianyoukeji.org.service.MenuService;
+import com.tianyoukeji.org.service.RoleService;
 import com.tianyoukeji.org.service.UserService;
 import com.tianyoukeji.parent.common.HttpPostReturnUuid;
 import com.tianyoukeji.parent.controller.DefaultHandler;
@@ -32,6 +33,7 @@ import com.tianyoukeji.parent.entity.Menu;
 import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.Role;
 import com.tianyoukeji.parent.entity.template.MenuTemplate;
+import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
 import com.tianyoukeji.parent.service.TIMService;
 
 import io.swagger.annotations.Api;
@@ -40,49 +42,41 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 @RestController
-@RequestMapping("/v1/menu")
-@Api(tags = "菜单的管理接口")
-public class MenuController extends DefaultHandler {
+@RequestMapping("/v1/role")
+@Api(tags = "角色的管理接口")
+public class RoleController extends DefaultHandler {
 
 	@Autowired
-	private MenuService menuService;
+	private RoleService roleService;
 
 	@PostMapping(path = "/add")
-	@ApiOperation(value = "添加菜单", notes = "新增一个菜单", httpMethod = "POST")
-	public HttpPostReturnUuid addMenu(@Valid @RequestBody(required = true) AddMenuRequest body) {
-		return menuService.add(body);
+	@ApiOperation(value = "添加角色", notes = "新增一个企业角色", httpMethod = "POST")
+	public HttpPostReturnUuid addRole(@Valid @RequestBody(required = true) AddRoleRequest body) {
+		return roleService.add(body);
 	}
 
 	@PostMapping(path = "/delete")
-	@ApiOperation(value = "删除菜单", notes = "删除一个菜单，必须先删除下级菜单和自己的角色的关联", httpMethod = "POST")
-	public HttpPostReturnUuid deleteMenu(@Valid @RequestBody(required = true) DeleteMenuRequest body) {
-		return menuService.delete(body);
+	@ApiOperation(value = "删除角色", notes = "删除一个企业角色，逻辑没有写完，暂时能用，后续需要补充，不建议使用删除功能", httpMethod = "POST")
+	public HttpPostReturnUuid deleteRole(@Valid @RequestBody(required = true) DeleteRoleRequest body) {
+		return roleService.delete(body);
 	}
 
 	@PostMapping(path = "/update")
-	@ApiOperation(value = "更新菜单", notes = "更新一个菜单,把所有字段重新提交一次", httpMethod = "POST")
-	public HttpPostReturnUuid updateMenu(@Valid @RequestBody(required = true) UpdateMenuRequest body) {
-		return menuService.update(body);
+	@ApiOperation(value = "更新角色", notes = "更新一个企业角色,把所有字段重新提交一次，角色和菜单的关系在菜单里维护", httpMethod = "POST")
+	public HttpPostReturnUuid updateRole(@Valid @RequestBody(required = true) UpdateRoleRequest body) {
+		return roleService.update(body);
 	}
 
-	public static class AddMenuRequest {
+	public static class AddRoleRequest {
 		@NotBlank
 		private String name;
 		@NotBlank
 		private String code;
-
-		private Integer sort = 0;
-
-		private String iconUrl;
-		@NotBlank
-		private String url;
-
-		private Set<Long> roles;
-
-		private Long parent;
 		@NotNull
 		private Long org;
-
+		@NotNull
+		private Terminal terminal;
+		
 		public String getName() {
 			return name;
 		}
@@ -99,46 +93,6 @@ public class MenuController extends DefaultHandler {
 			this.code = code;
 		}
 
-		public Integer getSort() {
-			return sort;
-		}
-
-		public void setSort(Integer sort) {
-			this.sort = sort;
-		}
-
-		public String getIconUrl() {
-			return iconUrl;
-		}
-
-		public void setIconUrl(String iconUrl) {
-			this.iconUrl = iconUrl;
-		}
-
-		public String getUrl() {
-			return url;
-		}
-
-		public void setUrl(String url) {
-			this.url = url;
-		}
-
-		public Set<Long> getRoles() {
-			return roles;
-		}
-
-		public void setRoles(Set<Long> roles) {
-			this.roles = roles;
-		}
-
-		public Long getParent() {
-			return parent;
-		}
-
-		public void setParent(Long parent) {
-			this.parent = parent;
-		}
-
 		public Long getOrg() {
 			return org;
 		}
@@ -147,11 +101,31 @@ public class MenuController extends DefaultHandler {
 			this.org = org;
 		}
 
+		public Terminal getTerminal() {
+			return terminal;
+		}
+
+		public void setTerminal(Terminal terminal) {
+			this.terminal = terminal;
+		}
+
+
 	}
 
-	public static class DeleteMenuRequest {
+	public static class DeleteRoleRequest {
 		@NotNull
 		private Long uuid;
+		
+		@NotNull
+		private Long org;
+
+		public Long getOrg() {
+			return org;
+		}
+
+		public void setOrg(Long org) {
+			this.org = org;
+		}
 
 		public Long getUuid() {
 			return uuid;
@@ -163,7 +137,7 @@ public class MenuController extends DefaultHandler {
 
 	}
 
-	public static class UpdateMenuRequest extends AddMenuRequest {
+	public static class UpdateRoleRequest extends AddRoleRequest {
 		@NotNull
 		private Long uuid;
 

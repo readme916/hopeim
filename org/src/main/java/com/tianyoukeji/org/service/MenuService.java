@@ -46,6 +46,7 @@ public class MenuService extends BaseService<Menu> {
 	 * 	添加菜单
 	 * @param 
 	 */
+	@Transactional
 	public HttpPostReturnUuid add(AddMenuRequest body) {
 		
 		Menu menu = new Menu();

@@ -38,27 +38,35 @@ public class OrgController extends DefaultHandler {
 	@ApiOperation(value = "邀请员工", notes = "直接把普通用户变成公司员工，如果已经有其他企业的不能邀请", httpMethod = "POST")
 	public HttpPostReturnUuid addUser(@Valid @RequestBody(required = true) InviteBody body) {
 		orgService.addUser(body.getUnionId());
-		return new HttpPostReturnUuid(0l);
+		return new HttpPostReturnUuid();
 	}
 	
 	@PostMapping(path = "/deleteUser")
 	@ApiOperation(value = "删除员工", notes = "直接把公司员工踢出公司", httpMethod = "POST")
 	public HttpPostReturnUuid deleteUser(@Valid @RequestBody(required = true) InviteBody body) {
 		orgService.deleteUser(body.getUnionId());
-		return new HttpPostReturnUuid(0l);
+		return new HttpPostReturnUuid();
 	}
 	
 	@PostMapping(path = "/locateUserDepartment")
 	@ApiOperation(value = "分配员工部门", notes = "", httpMethod = "POST")
 	public HttpPostReturnUuid locateUserDepartment(@Valid @RequestBody(required = true) UserDepartmentBody body) {
 		orgService.locateUserDepartment(body.getUuid() , body.getDepartmentId());
-		return new HttpPostReturnUuid(0l);
+		return new HttpPostReturnUuid();
 	}
+	
+	@PostMapping(path = "/locateDepartmentManager")
+	@ApiOperation(value = "分配部门主管", notes = "", httpMethod = "POST")
+	public HttpPostReturnUuid locateDepartmentManager(@Valid @RequestBody(required = true) ManagerDepartmentBody body) {
+		orgService.locateManagerDepartment(body.getManagerId() , body.getDepartmentId());
+		return new HttpPostReturnUuid();
+	}
+	
 	@PostMapping(path = "/locateUserRole")
 	@ApiOperation(value = "分配员工角色", notes = "", httpMethod = "POST")
 	public HttpPostReturnUuid locateUserRole(@Valid @RequestBody(required = true) UserRoleBody body) {
 		orgService.locateUserRole(body.getUuid() , body.getRoleId());
-		return new HttpPostReturnUuid(0l);
+		return new HttpPostReturnUuid();
 	}
 	
 	public static class InviteBody {
@@ -75,6 +83,32 @@ public class OrgController extends DefaultHandler {
 		}
 
 	}
+	
+	
+	public static class ManagerDepartmentBody {
+		@NotNull
+		@Min(1)
+		private Long managerId;
+		@NotNull
+		@Min(1)
+		private Long departmentId;
+		
+
+		public Long getManagerId() {
+			return managerId;
+		}
+		public void setManagerId(Long managerId) {
+			this.managerId = managerId;
+		}
+		public Long getDepartmentId() {
+			return departmentId;
+		}
+		public void setDepartmentId(Long departmentId) {
+			this.departmentId = departmentId;
+		}
+
+	}
+	
 	public static class UserDepartmentBody {
 		@NotNull
 		@Min(1)

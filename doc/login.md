@@ -79,4 +79,5 @@ Oauth2登录
 ![图片2](1584446601.png)
 
 * 一个web的oauth2登录的例子 [http://localhost:40000/unionLogin]
+* 登录后查看自己的info   /v1/detail/myInfo
 

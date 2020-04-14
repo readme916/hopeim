@@ -6,6 +6,8 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -25,6 +27,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.tianyoukeji.parent.entity.base.IDepartmentEntity;
 import com.tianyoukeji.parent.entity.base.IRegionEntity;
 import com.tianyoukeji.parent.entity.base.IStateMachineEntity;
+import com.tianyoukeji.parent.service.TIMService.Gender;
 
 @Entity
 @Table(name = "user" , uniqueConstraints= {@UniqueConstraint(columnNames= {"union_id"})})
@@ -80,8 +83,9 @@ public class User implements IStateMachineEntity,IRegionEntity,IDepartmentEntity
 	@Column(name="nickname")
 	private String nickname;
 	
-	@Column(name="sex")
-	private String sex;
+	@Column(name="gender")
+	@Enumerated(EnumType.STRING)
+	private Gender gender;
 	
 	@Column(name="headimgurl")
 	private String headimgurl;
@@ -208,12 +212,13 @@ public class User implements IStateMachineEntity,IRegionEntity,IDepartmentEntity
 		this.nickname = nickname;
 	}
 
-	public String getSex() {
-		return sex;
+
+	public Gender getGender() {
+		return gender;
 	}
 
-	public void setSex(String sex) {
-		this.sex = sex;
+	public void setGender(Gender gender) {
+		this.gender = gender;
 	}
 
 	public String getHeadimgurl() {

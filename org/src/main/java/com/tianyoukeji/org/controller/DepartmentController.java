@@ -23,6 +23,7 @@ import com.tianyoukeji.org.controller.OrgController.InviteBody;
 import com.tianyoukeji.org.controller.StateMachineController.AddStateRequest;
 import com.tianyoukeji.org.controller.StateMachineController.DeleteStateRequest;
 import com.tianyoukeji.org.controller.StateMachineController.UpdateStateRequest;
+import com.tianyoukeji.org.service.DepartmentService;
 import com.tianyoukeji.org.service.MenuService;
 import com.tianyoukeji.org.service.UserService;
 import com.tianyoukeji.parent.common.HttpPostReturnUuid;
@@ -40,44 +41,36 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 @RestController
-@RequestMapping("/v1/menu")
-@Api(tags = "菜单的管理接口")
-public class MenuController extends DefaultHandler {
+@RequestMapping("/v1/department")
+@Api(tags = "部门的管理接口")
+public class DepartmentController extends DefaultHandler {
 
 	@Autowired
-	private MenuService menuService;
+	private DepartmentService departmentService;
 
 	@PostMapping(path = "/add")
-	@ApiOperation(value = "添加菜单", notes = "新增一个菜单", httpMethod = "POST")
-	public HttpPostReturnUuid addMenu(@Valid @RequestBody(required = true) AddMenuRequest body) {
-		return menuService.add(body);
+	@ApiOperation(value = "添加部门", notes = "新增一个部门", httpMethod = "POST")
+	public HttpPostReturnUuid addDepartment(@Valid @RequestBody(required = true) AddDepartmentRequest body) {
+		return departmentService.add(body);
 	}
 
 	@PostMapping(path = "/delete")
-	@ApiOperation(value = "删除菜单", notes = "删除一个菜单，必须先删除下级菜单和自己的角色的关联", httpMethod = "POST")
-	public HttpPostReturnUuid deleteMenu(@Valid @RequestBody(required = true) DeleteMenuRequest body) {
-		return menuService.delete(body);
+	@ApiOperation(value = "删除部门", notes = "删除一个部门，必须先把所有的用户和下级部门删除才能成功", httpMethod = "POST")
+	public HttpPostReturnUuid deleteDepartment(@Valid @RequestBody(required = true) DeleteDepartmentRequest body) {
+		return departmentService.delete(body);
 	}
 
 	@PostMapping(path = "/update")
-	@ApiOperation(value = "更新菜单", notes = "更新一个菜单,把所有字段重新提交一次", httpMethod = "POST")
-	public HttpPostReturnUuid updateMenu(@Valid @RequestBody(required = true) UpdateMenuRequest body) {
-		return menuService.update(body);
+	@ApiOperation(value = "更新部门", notes = "更新一个部门,把所有字段重新提交一次", httpMethod = "POST")
+	public HttpPostReturnUuid updateDepartment(@Valid @RequestBody(required = true) UpdateDepartmentRequest body) {
+		return departmentService.update(body);
 	}
 
-	public static class AddMenuRequest {
+	public static class AddDepartmentRequest {
 		@NotBlank
 		private String name;
 		@NotBlank
 		private String code;
-
-		private Integer sort = 0;
-
-		private String iconUrl;
-		@NotBlank
-		private String url;
-
-		private Set<Long> roles;
 
 		private Long parent;
 		@NotNull
@@ -99,38 +92,6 @@ public class MenuController extends DefaultHandler {
 			this.code = code;
 		}
 
-		public Integer getSort() {
-			return sort;
-		}
-
-		public void setSort(Integer sort) {
-			this.sort = sort;
-		}
-
-		public String getIconUrl() {
-			return iconUrl;
-		}
-
-		public void setIconUrl(String iconUrl) {
-			this.iconUrl = iconUrl;
-		}
-
-		public String getUrl() {
-			return url;
-		}
-
-		public void setUrl(String url) {
-			this.url = url;
-		}
-
-		public Set<Long> getRoles() {
-			return roles;
-		}
-
-		public void setRoles(Set<Long> roles) {
-			this.roles = roles;
-		}
-
 		public Long getParent() {
 			return parent;
 		}
@@ -149,7 +110,7 @@ public class MenuController extends DefaultHandler {
 
 	}
 
-	public static class DeleteMenuRequest {
+	public static class DeleteDepartmentRequest {
 		@NotNull
 		private Long uuid;
 
@@ -163,7 +124,7 @@ public class MenuController extends DefaultHandler {
 
 	}
 
-	public static class UpdateMenuRequest extends AddMenuRequest {
+	public static class UpdateDepartmentRequest extends AddDepartmentRequest {
 		@NotNull
 		private Long uuid;
 

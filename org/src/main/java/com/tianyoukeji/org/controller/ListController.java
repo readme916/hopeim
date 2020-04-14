@@ -45,6 +45,16 @@ public class ListController extends DefaultHandler {
 		return getOrgList("user",params);
 	}
 	
+	@GetMapping(path = "/user/{departmentId}")
+	@ApiOperation(value = "部门员工列表页", notes = "根据部门id，返回员工列表", httpMethod = "GET")
+	public HTTPListResponse fetchDepartmentUserList(@PathVariable(required = true) Long departmentId) {
+		HashMap<String,String> params = new HashMap<String,String>();
+		params.put("fields", "*,role,org,department,state");
+		params.put("department.uuid", departmentId.toString());
+		return getOrgList("user",params);
+	}
+	
+	
 	@GetMapping(path = "/menu")
 	@ApiOperation(value = "菜单列表页", notes = "根据不同角色返回不同菜单,并且自动排序", httpMethod = "GET")
 	public HTTPListResponse fetchMenuList() {

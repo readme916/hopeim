@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.entity.Department;
@@ -45,6 +46,7 @@ public class OrgService extends BaseService<Org> {
 	 * 	企业添加员工
 	 * @param unionId
 	 */
+	@Transactional
 	public void addUser(String unionId) {
 		User findByUnionId = userRepository.findByUnionId(unionId);
 		if(findByUnionId==null) {
@@ -125,6 +127,36 @@ public class OrgService extends BaseService<Org> {
 		timService.updateUser(findById.get().getUserinfo().getMobile(), null, null, null, null, null, departmentId);
 	}
 	
+	/**
+	 * 	企业分配部门主管
+	 * @param 
+	 */
+	public void locateManagerDepartment(Long MangerId, Long departmentId) {
+		Optional<User> findById = userRepository.findById(MangerId);
+		if(!findById.isPresent()) {
+			throw new BusinessException(1716, "用户不存在");
+		}
+		
+		User user = findById.get();
+		if(user.getOrg()==null) {
+			throw new BusinessException(1769, "用户没有加入企业");
+		}
+		if(!user.getOrg().getUuid().equals(getCurrentOrg().getUuid())) {
+			throw new BusinessException(1787, "无权分配企业用户");
+		}
+		Optional<Department> departmentOptional = departmentRepository.findById(departmentId);
+		if(!departmentOptional.isPresent()) {
+			throw new BusinessException(1712, "部门不存在");
+		}
+		if(!departmentOptional.get().getOrg().getUuid().equals(getCurrentOrg().getUuid())) {
+			throw new BusinessException(1789, "部门不属于自己企业");
+		}
+		
+		Department department = user.getDepartment();
+		department.setManager(user);
+		departmentRepository.save(department);
+
+	}
 	/**
 	 * 	企业分配员工角色
 	 * @param 
