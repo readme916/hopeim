@@ -71,6 +71,7 @@ public class OauthUserService extends BaseService<User> {
 		if (userRepository.findByUserinfoMobile(username) != null) {
 			throw new BusinessException(1000, "用户名已存在");
 		}
+		
 		User user = new User();
 		user.setEnabled(true);
 		Role r = roleRepository.findByCode(role);
