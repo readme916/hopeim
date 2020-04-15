@@ -41,16 +41,7 @@ public class OauthUserService extends BaseService<User> {
 	private RoleRepository roleRepository;
 
 	@Autowired
-	private OrgRepository orgRepository;
-
-	@Autowired
-	private RoleTemplateRepository roleTemplateRepository;
-
-	@Autowired
 	private UserinfoRepository userInfoRepository;
-
-	@Autowired
-	private MenuRepository menuRepository;
 	
 	@Autowired
 	private TIMService timService;

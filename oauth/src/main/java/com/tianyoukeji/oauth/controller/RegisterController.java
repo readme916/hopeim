@@ -26,12 +26,12 @@ public class RegisterController extends DefaultHandler {
 	private OauthUserService oauthUserService;
     
     /** 
-     * 	直接注册
+     * 	直接注册,不公开的注册接口，没有启动sms校验，不安全
      * @param mobile
      * @return
      */
     @PostMapping("/registerUser")
-    @ApiOperation(value = "手机号密码注册",notes = "username的格式为mobile",httpMethod = "POST")
+    @ApiOperation(value = "手机号密码注册",notes = "username的格式为mobile ， 不公开的注册接口，没有启动sms校验，不安全",httpMethod = "POST")
     public Res registerUser(@Valid @RequestBody(required = true) RegisterBody body){
     	if(!ContextUtils.isMobile(body.getUsername())) {
     		throw new BusinessException(1422, "手机号不合法");
@@ -41,7 +41,6 @@ public class RegisterController extends DefaultHandler {
 		res.setUuid(user.getUuid());
 		res.setUnionId(user.getUnionId());
 		return res;
-		
     	
     }
     public static class Res{
