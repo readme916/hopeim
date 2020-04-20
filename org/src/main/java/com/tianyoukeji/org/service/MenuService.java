@@ -133,6 +133,8 @@ public class MenuService extends BaseService<Menu> {
 				throw new BusinessException(1767, "父菜单不存在");
 			}
 			menu.setParent(findById2.get());
+		}else {
+			menu.setParent(null);
 		}
 		Set<Long> roles = body.getRoles();
 		if(roles!=null) {

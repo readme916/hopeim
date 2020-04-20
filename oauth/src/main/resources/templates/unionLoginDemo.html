@@ -1,0 +1,36 @@
+<h1>统一登录页面</h1>
+
+<h2>登录频率限制,10秒1次</h2>
+
+<h2>内部系统登录，统一使用oauth2的 password模式登录，额外添加type参数</h2>
+
+<p>username=手机号&password=密码&type=pwd</p>
+
+<p>username=手机号&password=短信号码&type=sms</p>
+
+<hr/>
+
+<h2>第三方用户登录</h2>
+<p>申请通过后，获得client_id和client_secret</p>
+<p>使用oauth2的code模式登录,在我们网站上登录后跳回对方页面，登录页面/unionLogin</p>
+
+<div class="form-group" th:if="${param.error}">
+                    <p th:if="${session.SPRING_SECURITY_LAST_EXCEPTION}">
+                    <p style="color: red" th:text="${session.SPRING_SECURITY_LAST_EXCEPTION.message}"></p>
+                    </p>
+</div>
+
+<form action="/login" method="post">
+  <p>username: <input type="text" name="username"  value = "username"/></p>
+  <p>password: <input type="text" name="password" value="password"/></p>
+  <p>type: <input type="text" name="type" value="pwd/sms"/></p>
+  <input type="submit" value="Submit" />
+</form>
+
+
+
+<h2>模拟获取登录验证码</h2>
+<form action="/sms" method="get">
+  <p>username: <input type="text" name="username"  value = "13700000001"/></p>
+  <input type="submit" value="Submit" />
+</form>

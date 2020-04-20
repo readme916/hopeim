@@ -27,6 +27,7 @@ import com.tianyoukeji.parent.entity.OrgRepository;
 import com.tianyoukeji.parent.entity.Role;
 import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.service.BaseService;
+import com.tianyoukeji.parent.service.TIMService;
 
 @Service
 public class DepartmentService extends BaseService<Department> {
@@ -39,6 +40,10 @@ public class DepartmentService extends BaseService<Department> {
 	
 	@Autowired
 	private OrgRepository orgRepository;
+	
+	
+	@Autowired
+	private TIMService timService;
 
 	
 	@Override
@@ -71,6 +76,7 @@ public class DepartmentService extends BaseService<Department> {
 			department.setParent(findById2.get());
 		}
 		department = departmentRepository.save(department);
+		timService.getOrCreateEntityQun("department",department.getUuid(), "部门群", null, null);
 		return new HttpPostReturnUuid(department.getUuid());
 	}
 	
@@ -118,6 +124,8 @@ public class DepartmentService extends BaseService<Department> {
 				throw new BusinessException(1767, "父部门不存在");
 			}
 			department.setParent(findById2.get());
+		}else {
+			department.setParent(null);
 		}
 		department = departmentRepository.save(department);
 		return new HttpPostReturnUuid(department.getUuid());
