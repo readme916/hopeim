@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登录</title>
+    <!-- <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"
+    /> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css"
+    />
+    <script src="https://cdn.bootcss.com/qs/6.7.0/qs.min.js"></script>
+    <script src="https://libs.cdnjs.net/axios/0.19.2/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+    <style>
+      #app {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        background: url("images/bg.jpg") no-repeat;
+        /* background-size: 100% 100%; */
+      }
+      .login-bg {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+      }
+      .login-bg div {
+        width: 50vw;
+        height: 100%;
+        display: inline-block;
+      }
+      .login-bg div:first-child {
+        background: url("./assets/bg.jpg") no-repeat;
+      }
+      .login-form {
+        max-width: 458px;
+        margin: 0 auto;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 45%;
+        transform: translateY(-50%);
+      }
+      .login-tab li {
+        /* display: flex; */
+        flex: 1;
+        text-align: center;
+      }
+      .form-item {
+        /* display: flex; */
+        /* align-items: center; */
+        margin-bottom: 20px;
+        position: relative;
+        text-align: left;
+      }
+      .form-item label {
+        width: 80px;
+        margin-bottom: 2px;
+      }
+      #app .card-body {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+      }
+
+      .fade-enter-active {
+        transition: opacity 0.5s;
+      }
+      .fade-leave-active {
+        transition: opacity;
+      }
+      .fade-enter, .fade-leave-to, .fade-leave/* .fade-leave-active below version 2.1.8 */ {
+        opacity: 0;
+      }
+      .phonecode {
+        position: absolute;
+        right: 20px;
+        top: 3px;
+      }
+      .ph-active {
+        border: none;
+        box-shadow: none;
+      }
+      .btn-primary:focus {
+        box-shadow: none !important;
+      }
+      @media (max-width: 578px) {
+        .login-form {
+          max-width: 300px;
+        }
+        html {
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <strong
+        >We're sorry but doesn't work properly without JavaScript enabled.
+        Please enable it to continue.</strong
+      >
+    </noscript>
+    <div id="app">
+      <transition name="fade">
+        <b-card
+          class="login-form ml-md-auto mr-md-auto"
+          title="手机号登录"
+          align="center"
+          v-show="showFlag"
+        >
+          <b-form
+            style="margin-top: 2.5rem;"
+            @submit="onSubmitByUser"
+            ref="userform"
+          >
+            <div class="form-item fs-sm-3">
+              <b-row>
+                <b-col cols="2" class="pt-1">
+                  <label for="feedback-user">手机号：</label>
+                </b-col>
+                <b-col cols="10">
+                  <b-input
+                    v-model="userForm.username"
+                    :state="phoneValidation"
+                    id="feedback-user"
+                    name="username"
+                    @blur="phValidFunc"
+                    trim
+                    aria-describedby="phone-live-feedback"
+                    class="input-sm input-md input-lg"
+                  ></b-input>
+                  <b-form-invalid-feedback id="phone-live-feedback" v-html="message">
+                    <!-- {{ message }} -->
+                  </b-form-invalid-feedback>
+                </b-col>
+              </b-row>
+            </div>
+
+            <div class="form-item">
+              <b-row>
+                <b-col cols="2" class="pt-1">
+                  <label for="feedback-user">密码：</label>
+                </b-col>
+                <b-col cols="10">
+                  <b-input
+                    v-model="userForm.password"
+                    type="password"
+                    :state="passValidation"
+                    name="password"
+                    @blur="passValidFunc"
+                    trim
+                    aria-describedby="pass-live-feedback"
+                    id="feedback-user"
+                  ></b-input>
+                  <b-form-invalid-feedback id="pass-live-feedback" v-html="passmessage">
+                    <!-- {{ passmessage }} -->
+                  </b-form-invalid-feedback>
+                  <b-input
+                    :state="null"
+                    name="type"
+                    value="pwd"
+                    style="display: none;"
+                  ></b-input>
+                </b-col>
+              </b-row>
+            </div>
+
+            <div
+              style="
+                margin-bottom: 20px;
+                font-size: 0.75rem;
+                display: flex;
+                justify-content: space-between;
+              "
+            >
+              <span style="flex: 1; text-align: left; color: red;" v-html="messageToasts"
+                >
+                <!-- {{ messageToasts }} -->
+                </span
+              >
+              <a
+                href="javascript:void(0)"
+                @click="changeShowFlag"
+                style="flex: 1; text-align: right;"
+                >验证码登录>></a
+              >
+            </div>
+            <div>
+              <b-button block variant="primary" type="submit" v-show="!loading"
+                >登录</b-button
+              >
+              <b-button block variant="primary" disabled v-show="loading">
+                <b-spinner
+                  small
+                  label="Loading..."
+                  style="margin-right: 5px;"
+                ></b-spinner>
+                登录中...
+              </b-button>
+            </div>
+          </b-form>
+        </b-card>
+      </transition>
+      <transition name="fade">
+        <b-card
+          class="login-form"
+          title="验证码登录"
+          align="center"
+          v-show="!showFlag"
+        >
+          <!-- <b-tabs pills card class="login-tab">
+            <b-tab title="用户登录" active><b-card-text>用户登录</b-card-text></b-tab>
+            <b-tab title="验证码登录"><b-card-text>验证码登录</b-card-text></b-tab>
+          </b-tabs> -->
+          <b-form
+            style="margin-top: 2.5rem;"
+            @submit="onSubmitByPhone"
+            ref="phoneform"
+          >
+            <div class="form-item">
+              <b-row>
+                <b-col cols="2" class="pt-1">
+                  <label for="feedback-user">手机号：</label>
+                </b-col>
+                <b-col cols="10">
+                  <b-input
+                    v-model="phoneForm.username"
+                    :state="phone2validation"
+                    @blur="ph2ValidFunc"
+                    trim
+                    aria-describedby="phone2-live-feedback"
+                    id="feedback-user"
+                    name="username"
+                  ></b-input>
+                  <b-button
+                    variant="primary"
+                    class="phonecode"
+                    size="sm"
+                    active-class="ph-active"
+                    no-prefetch
+                    @click="getPhoneCode"
+                    v-if="!codeLoading"
+                    >获取验证码</b-button
+                  >
+                  <b-button
+                    variant="primary"
+                    class="phonecode"
+                    size="sm"
+                    active-class="ph-active"
+                    no-prefetch
+                    disabled
+                    v-if="codeLoading"
+                    >获取中...</b-button
+                  >
+                  <b-form-invalid-feedback id="phone2-live-feedback" v-html="phone2message">
+                    <!-- {{ phone2message }} -->
+                  </b-form-invalid-feedback>
+                </b-col>
+              </b-row>
+            </div>
+            <div class="form-item">
+              <b-row>
+                <b-col cols="2" class="pt-1">
+                  <label for="feedback-user">验证码：</label>
+                </b-col>
+                <b-col cols="10">
+                  <b-input
+                    v-model="phoneForm.password"
+                    :state="codeValidation"
+                    @blur="codeValidFunc"
+                    id="feedback-user"
+                    trim
+                    name="password"
+                    aria-describedby="code-live-feedback"
+                  ></b-input>
+                  <b-form-invalid-feedback id="code-live-feedback" v-html="codemessage">
+                    <!-- {{ codemessage }} -->
+                  </b-form-invalid-feedback>
+                  <b-input
+                    :state="null"
+                    name="type"
+                    value="sms"
+                    style="display: none;"
+                  ></b-input>
+                </b-col>
+              </b-row>
+            </div>
+            <div
+              style="
+                margin-bottom: 20px;
+                font-size: 0.75rem;
+                display: flex;
+                justify-content: space-between;
+              "
+            >
+              <span style="flex: 1; text-align: left; color: red;" v-html="messageToasts1"
+                >
+                <!-- {{ messageToasts1 }} -->
+                </span
+              >
+              <a
+                href="javascript:void(0)"
+                @click="changeShowFlag"
+                style="flex: 1; text-align: right;"
+                >手机号登录>></a
+              >
+            </div>
+            <div>
+              <b-button block variant="primary" type="submit" v-show="!loading"
+                >登录</b-button
+              >
+              <b-button block variant="primary" disabled v-show="loading">
+                <b-spinner
+                  small
+                  label="Loading..."
+                  style="margin-right: 5px;"
+                ></b-spinner>
+                登录中...
+              </b-button>
+              <!-- <b-button block variant="primary" disabled>
+          <b-spinner small  label="Loading..." style="margin-right:5px"></b-spinner> 登录中...
+        </b-button> -->
+            </div>
+          </b-form>
+        </b-card>
+      </transition>
+      <!-- <div class="login-bg">
+        <div></div>
+        <div style="background-color:#CAF0D3"></div>
+      </div> -->
+      <b-modal id="my-modal" title="验证码" >
+        <!-- {{ phoneCode }} -->
+        <div v-text="phoneCode">
+          
+        </div>
+      </b-modal>
+    </div>
+
+    <!-- <script
+      src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"
+      crossorigin="anonymous"
+    ></script> -->
+    <!-- <script src="https://yarnpkg.com/en/package/normalize.css"></script> -->
+    <!-- <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js"></script> -->
+
+    <script>
+      const qs = Qs;
+      new Vue({
+        // el: "app",
+        data() {
+          return {
+            showFlag: true,
+            validation: "true",
+            userId: "",
+            phone2validation: null,
+            codeValidation: null,
+            passValidation: null,
+            phoneValidation: null,
+            loading: false,
+            codeLoading: false,
+            passmessage: "",
+            message: "",
+            phone2message: "",
+            messageToasts: "",
+            messageToasts1: "",
+            codemessage: "",
+            phoneCode: "",
+            userForm: {
+              username: "",
+              password: "",
+              type: "pwd",
+            },
+            phoneForm: {
+              username: "",
+              password: "",
+              type: "sms",
+            },
+          };
+        },
+        mounted () {
+          let url = window.location.href;
+          if(url.includes("?")){
+            let param = url.split("?")[1];
+            if("error" == param.split("=")[0]){
+              this.messageToasts =  this.messageToasts1 = "用户名或者密码不正确"
+            }
+          }
+        },
+        methods: {
+          changeShowFlag() {
+            this.showFlag = !this.showFlag;
+          },
+          phValidFunc() {
+            if (this.userForm.username.length == 0) {
+              this.message = "手机号不能为空";
+              this.phoneValidation = false;
+              return;
+            } else if (
+              !/^1([38]\d|5[0-35-9]|7[3678])\d{8}$/.test(this.userForm.username)
+            ) {
+              this.message = "手机号不合法";
+              this.phoneValidation = false;
+              return;
+            }
+            this.phoneValidation = true;
+          },
+          passValidFunc() {
+            if (this.userForm.password.length < 6) {
+              this.passmessage = "长度必须必须大于6";
+              this.passValidation = false;
+              return;
+            }
+            this.passValidation = true;
+            return;
+          },
+          codeValidFunc() {
+            // if (this.phoneForm.password.length == 6) {
+            //   this.codemessage = "长度必须为6位";
+            //   this.codeValidation = false;
+            //   return;
+            // } else 
+            if (!/^[\d]{6}$/.test(this.phoneForm.password)) {
+              this.codemessage = "验证码不合法";
+              this.codeValidation = false;
+              return;
+            }
+            this.codeValidation = true;
+            return;
+          },
+          ph2ValidFunc() {
+            // this.phone2validation
+            if (this.phoneForm.username.length == 0) {
+              this.phone2message = "手机号不能为空";
+              this.phone2validation = false;
+              return;
+            } else if (
+              !/^1([38]\d|5[0-35-9]|7[3678])\d{8}$/.test(
+                this.phoneForm.username
+              )
+            ) {
+              this.phone2message = "手机号不合法";
+              this.phone2validation = false;
+              return;
+            }
+            this.phone2validation = true;
+            return;
+          },
+          getPhoneCode() {
+            if (this.phone2validation) {
+              this.codeLoading = true;
+              window
+                .axios({
+                  url: "http://10.10.10.105:40000/sms",
+                  method: "GET",
+                  params: {
+                    username: this.phoneForm.username,
+                  },
+                })
+                .then((result) => {
+                  console.log(result);
+                  this.phoneCode = result.data;
+                  this.$bvModal.show("my-modal");
+                  this.codeLoading = false;
+                })
+                .catch((err) => {
+                  this.messageToasts = err.response.data.msg;
+                  this.codeLoading = false;
+                });
+            }
+          },
+          onSubmitByUser(event) {
+            event.preventDefault();
+            this.messageToasts = "";
+            this.phValidFunc();
+            this.passValidFunc();
+            if (!this.phoneValidation || !this.passValidation) return;
+            this.loading = true;
+            this.$refs["userform"].action = "/login";
+            this.$refs["userform"].method = "POST";
+            // debugger
+            this.$refs["userform"].submit();
+            this.loading = false;
+            // window.axios({
+            //   url: "/login",
+            //   method: "POST",
+            //   data: qs.stringify(this.userForm),
+            // })
+            //   .then((result) => {
+            //     //   console.log(result);
+            //     this.$refs["userform"].action = "/login";
+            //     this.$refs["userform"].method = "POST";
+            //     // debugger
+            //     this.$refs["userform"].submit();
+            //     this.loading = false;
+            //   })
+            //   .catch((err) => {
+            //     //   console.log(err.response);
+            //     this.messageToasts = err.response.data.msg;
+            //     this.loading = false;
+            //   });
+          },
+          onSubmitByPhone(event) {
+            event.preventDefault();
+            this.messageToasts = "";
+            this.ph2ValidFunc();
+            this.codeValidFunc();
+            if (!this.phone2validation || !this.codeValidation) return;
+            this.loading = true;
+            this.$refs["phoneform"].action = "/login";
+            this.$refs["phoneform"].method = "POST";
+            // debugger
+            this.$refs["phoneform"].submit();
+            this.loading = false;
+            // window.axios({
+            //   url: "/login",
+            //   method: "POST",
+            //   data: qs.stringify(this.phoneForm),
+            // })
+            //   .then((result) => {
+            //     //   console.log(result);
+            //     this.$refs["phoneform"].action = "/login";
+            //     this.$refs["phoneform"].method = "POST";
+            //     // debugger
+            //     this.$refs["phoneform"].submit();
+            //     // window.location.href = "http://10.10.10."
+            //     this.loading = false;
+            //   })
+            //   .catch((err) => {
+            //     //   console.log(err.response);
+            //     this.messageToasts1 = err.response.data.msg;
+            //     this.loading = false;
+            //   });
+          },
+        },
+      }).$mount("#app");
+    </script>
+  </body>
+</html>
