@@ -27,8 +27,8 @@ public final class RateLimiterService {
 	/**
 	 * 取得限流器
 	 * @param namespace 业务名
-	 * @param key  每个用户名独立限流，如果对业务限流可以为空字符串
-	 * @param rate   每分钟几个请求
+	 * @param key  每个key独立限流，如果对业务限流可以为空字符串
+	 * @param rate   每秒几个请求
 	 * @return RateLimiter
 	 */
 	public  RateLimiter  get(final RateLimiterNamespace namespace, final String key ,final double rate) {

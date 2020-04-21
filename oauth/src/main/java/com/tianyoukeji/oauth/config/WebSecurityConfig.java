@@ -80,8 +80,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/unionLogin", "/login", "/oauth/authorize", "/oauth/token", "/logout", "/sms","/structure","/structure/*","/registerUser").permitAll()
 
 				.anyRequest().authenticated().and().formLogin().loginPage("/unionLogin").loginProcessingUrl("/login")
-				
-				.failureHandler(new SimpleAuthenticationFailureHandler()).permitAll().and().logout().permitAll();
+				.failureUrl("/unionLogin?error=1")
+//				.failureHandler(new SimpleAuthenticationFailureHandler())
+				.permitAll().and().logout().permitAll();
 	}
 	public class SimpleAuthenticationFailureHandler implements AuthenticationFailureHandler {
 		@Override
