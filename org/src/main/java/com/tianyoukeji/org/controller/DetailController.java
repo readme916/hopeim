@@ -77,6 +77,14 @@ public class DetailController extends DefaultHandler {
 
 	}
 	
+	@GetMapping(path = "/department/{uuid}")
+	@ApiOperation(value = "部门详细页", notes = "增加了manager,users，parent，children", httpMethod = "GET")
+	public Map fetch(@PathVariable(required = true) String uuid) {
+		Map fetchOne = SmartQuery.fetchOne("department","fields=*,manager,users,parent,children&uuid=" + uuid);
+		return fetchOne;
+
+	}
+	
 	@GetMapping(path = "/myInfo")
 	@ApiOperation(value = "登录后自己的信息", notes = "增加了role，org，state，department等", httpMethod = "GET")
 	public Map myInfo() {

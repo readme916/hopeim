@@ -39,23 +39,38 @@ public class ListController extends DefaultHandler {
 
 	@GetMapping(path = "/user")
 	@ApiOperation(value = "公司员工列表页", notes = "增加了role，org，state，department等对象", httpMethod = "GET")
-	public HTTPListResponse fetchUserList() {
+	public HTTPListResponse fetchUserList(@RequestParam(name = "page" , defaultValue = "0") Integer page
+										, @RequestParam(name = "size" , defaultValue = "20") Integer size 
+										, @RequestParam(name = "sort" , required = false) String sort) {
 		HashMap<String,String> params = new HashMap<String,String>();
 		params.put("fields", "*,role,org,department,state");
+		params.put("page", String.valueOf(page));
+		params.put("size", String.valueOf(size));
+		if(sort!=null) {
+			params.put("sort", sort);
+		}
 		return getOrgList("user",params);
 	}
 	
-	@GetMapping(path = "/user/{departmentId}")
+	@GetMapping(path = "/user/department/{id}")
 	@ApiOperation(value = "部门员工列表页", notes = "根据部门id，返回员工列表", httpMethod = "GET")
-	public HTTPListResponse fetchDepartmentUserList(@PathVariable(required = true) Long departmentId) {
+	public HTTPListResponse fetchDepartmentUserList(@PathVariable(required = true) Long id 
+			, @RequestParam(name = "page" , defaultValue = "0") Integer page
+			, @RequestParam(name = "size" , defaultValue = "20") Integer size 
+			, @RequestParam(name = "sort" , required = false) String sort) {
 		HashMap<String,String> params = new HashMap<String,String>();
 		params.put("fields", "*,role,org,department,state");
-		params.put("department.uuid", departmentId.toString());
+		params.put("department.uuid", id.toString());
+		params.put("page", String.valueOf(page));
+		params.put("size", String.valueOf(size));
+		if(sort!=null) {
+			params.put("sort", sort);
+		}
 		return getOrgList("user",params);
 	}
 	
 	
-	@GetMapping(path = "/menu")
+	@GetMapping(path = "/menuTree")
 	@ApiOperation(value = "菜单列表页", notes = "根据不同角色返回不同菜单,并且自动排序", httpMethod = "GET")
 	public HTTPListResponse fetchMenuList() {
 		Long orgId = orgService.getCurrentOrg().getUuid();
@@ -63,7 +78,7 @@ public class ListController extends DefaultHandler {
 		return SmartQuery.fetchTree("menu", "org.uuid="+orgId + "&roles.code="+role);
 	}
 	
-	@GetMapping(path = "/department")
+	@GetMapping(path = "/departmentTree")
 	@ApiOperation(value = "部门列表页", notes = "返回公司所有的部门列表", httpMethod = "GET")
 	public HTTPListResponse fetchDepartmentList() {
 		Long orgId = orgService.getCurrentOrg().getUuid();
@@ -72,9 +87,16 @@ public class ListController extends DefaultHandler {
 	
 	@GetMapping(path = "/role")
 	@ApiOperation(value = "公司可用角色列表页", notes = "返回公司所有的相关角色列表", httpMethod = "GET")
-	public HTTPListResponse fetchRoleList() {
-		Long orgId = orgService.getCurrentOrg().getUuid();
-		return SmartQuery.fetchList("role", "fields=*&orgs.uuid="+orgId);
+	public HTTPListResponse fetchRoleList(@RequestParam(name = "page" , defaultValue = "0") Integer page
+			, @RequestParam(name = "size" , defaultValue = "20") Integer size 
+			, @RequestParam(name = "sort" , required = false) String sort) {
+		HashMap<String,String> params = new HashMap<String,String>();
+		params.put("page", String.valueOf(page));
+		params.put("size", String.valueOf(size));
+		if(sort!=null) {
+			params.put("sort", sort);
+		}
+		return getOrgList("role",params);
 	}
 	
 	
