@@ -90,6 +90,10 @@ public class User implements IStateMachineEntity,IRegionEntity,IDepartmentEntity
 	@Column(name="headimgurl")
 	private String headimgurl;
 	
+	@Column(name="position")
+	@Enumerated(EnumType.STRING)
+	private Position position ;
+	
 	@OneToOne
 	@JoinColumn(name="userinfo_id")
 	private Userinfo userinfo;
@@ -113,8 +117,15 @@ public class User implements IStateMachineEntity,IRegionEntity,IDepartmentEntity
 	@ManyToMany(mappedBy = "cc")
 	private Set<Task> ccTasks;
 	
-
 	
+	public Position getPosition() {
+		return position;
+	}
+
+	public void setPosition(Position position) {
+		this.position = position;
+	}
+
 	public Set<Order> getOrders() {
 		return orders;
 	}
@@ -292,6 +303,10 @@ public class User implements IStateMachineEntity,IRegionEntity,IDepartmentEntity
 
 	public Region getCity() {
 		return city;
+	}
+	
+	public static enum Position{
+		MANAGER
 	}
 
 	

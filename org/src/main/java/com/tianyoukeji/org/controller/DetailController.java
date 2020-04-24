@@ -61,13 +61,22 @@ public class DetailController extends DefaultHandler {
 	}
 
 	@GetMapping(path = "/user/{unionId}")
-	@ApiOperation(value = "用户详细页", notes = "增加了role，org，state，department等对象，并且使用unionId来定位，防止遍历", httpMethod = "GET")
+	@ApiOperation(value = "通过unionId查询的用户详细页", notes = "增加了role，org，state，department等对象，并且使用unionId来定位，防止遍历", httpMethod = "GET")
 	public Map fetchUser(@PathVariable(required = true) String unionId) {
 		Map fetchOne = StateMachineService.services.get("user")
 				.fetchOne("fields=*,country,province,city,role,org,department,state&unionId=" + unionId);
 		return fetchOne;
 
 	}
+	
+	@GetMapping(path = "/user/mobile/{username}")
+	@ApiOperation(value = "通过手机号查询的用户详细页", notes = "通过手机号查询，增加了role，org，state，department等对象，并且使用mobile来定位，防止遍历，后台使用", httpMethod = "GET")
+	public Map fetchUserMobile(@PathVariable(required = true) String username) {
+		Map fetchOne = SmartQuery.fetchOne("user","fields=*,country,province,city,role,org,department,state&userinfo.mobile=" + username);
+		return fetchOne;
+
+	}
+	
 	
 	@GetMapping(path = "/role/{uuid}")
 	@ApiOperation(value = "角色详细页", notes = "增加了orgs,menus", httpMethod = "GET")

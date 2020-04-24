@@ -15,6 +15,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -27,7 +28,7 @@ import com.tianyoukeji.parent.entity.template.MenuTemplate;
 import com.tianyoukeji.parent.entity.template.RoleTemplate;
 
 @Entity
-@Table(name = "menu")
+@Table(name = "menu",uniqueConstraints= {@UniqueConstraint(columnNames= {"code","org_id"})})
 @EntityListeners(AuditingEntityListener.class)
 public class Menu implements IOrgEntity{
 	@Id

@@ -1,5 +1,6 @@
 package com.tianyoukeji.org.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import com.tianyoukeji.parent.entity.Role;
 import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
+import com.tianyoukeji.parent.entity.User.Position;
 import com.tianyoukeji.parent.service.BaseService;
 import com.tianyoukeji.parent.service.TIMService;
 
@@ -56,6 +58,9 @@ public class OrgService extends BaseService<Org> {
 			throw new BusinessException(1767, "用户已有企业");
 		}
 		findByUnionId.setOrg(getCurrentOrg());
+		
+		Role findByCode = roleRepository.findByCode("platform_employee");
+		findByUnionId.setRole(findByCode);
 		userRepository.save(findByUnionId);
 		timService.addOrgFriends(findByUnionId.getUserinfo().getMobile(), getCurrentOrg());
 	}
@@ -131,8 +136,8 @@ public class OrgService extends BaseService<Org> {
 	 * 	企业分配部门主管
 	 * @param 
 	 */
-	public void locateManagerDepartment(Long MangerId, Long departmentId) {
-		Optional<User> findById = userRepository.findById(MangerId);
+	public void locateManagerDepartment(Long mangerId, Long departmentId) {
+		Optional<User> findById = userRepository.findById(mangerId);
 		if(!findById.isPresent()) {
 			throw new BusinessException(1716, "用户不存在");
 		}
@@ -151,10 +156,25 @@ public class OrgService extends BaseService<Org> {
 		if(!departmentOptional.get().getOrg().getUuid().equals(getCurrentOrg().getUuid())) {
 			throw new BusinessException(1789, "部门不属于自己企业");
 		}
+		Department department = departmentOptional.get();
+		if(department.getManager()!=null) {
+			User manager = department.getManager();
+			//如果没有变化，直接返回
+			if(manager.getUuid().equals(mangerId)) {
+				return;
+			}
+			//部门主管，可能管理多个部门，所以判断是否完全辞去主管职位
+			List<Department> findByManager = departmentRepository.findByManager(manager);
+			if(findByManager.size()==1) {
+				manager.setPosition(null);
+			}
+			userRepository.save(manager);
+		}
 		
-		Department department = user.getDepartment();
 		department.setManager(user);
 		departmentRepository.save(department);
+		user.setPosition(Position.MANAGER);
+		userRepository.save(user);
 
 	}
 	/**

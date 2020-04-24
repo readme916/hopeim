@@ -43,7 +43,7 @@ public class ListController extends DefaultHandler {
 										, @RequestParam(name = "size" , defaultValue = "20") Integer size 
 										, @RequestParam(name = "sort" , required = false) String sort) {
 		HashMap<String,String> params = new HashMap<String,String>();
-		params.put("fields", "*,role,org,department,state");
+		params.put("fields", "*,role,org,department,state,userinfo.mobile");
 		params.put("page", String.valueOf(page));
 		params.put("size", String.valueOf(size));
 		if(sort!=null) {
@@ -59,7 +59,7 @@ public class ListController extends DefaultHandler {
 			, @RequestParam(name = "size" , defaultValue = "20") Integer size 
 			, @RequestParam(name = "sort" , required = false) String sort) {
 		HashMap<String,String> params = new HashMap<String,String>();
-		params.put("fields", "*,role,org,department,state");
+		params.put("fields", "*,role,org,department,state,userinfo.mobile");
 		params.put("department.uuid", id.toString());
 		params.put("page", String.valueOf(page));
 		params.put("size", String.valueOf(size));
@@ -85,6 +85,21 @@ public class ListController extends DefaultHandler {
 		return SmartQuery.fetchTree("department", "fields=*,manager&org.uuid="+orgId);
 	}
 	
+	@GetMapping(path = "/department")
+	@ApiOperation(value = "部门列表页", notes = "返回公司所有的部门列表", httpMethod = "GET")
+	public HTTPListResponse fetchDepartmentList(@RequestParam(name = "page" , defaultValue = "0") Integer page
+			, @RequestParam(name = "size" , defaultValue = "20") Integer size 
+			, @RequestParam(name = "sort" , required = false) String sort) {
+		Long orgId = orgService.getCurrentOrg().getUuid();
+		HashMap<String,String> params = new HashMap<String,String>();
+		params.put("fields", "*,manager");
+		params.put("page", String.valueOf(page));
+		params.put("size", String.valueOf(size));
+		if(sort!=null) {
+			params.put("sort", sort);
+		}
+		return getOrgList("department",params);
+	}
 	@GetMapping(path = "/role")
 	@ApiOperation(value = "公司可用角色列表页", notes = "返回公司所有的相关角色列表", httpMethod = "GET")
 	public HTTPListResponse fetchRoleList(@RequestParam(name = "page" , defaultValue = "0") Integer page

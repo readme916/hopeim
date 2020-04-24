@@ -27,7 +27,7 @@ import com.tianyoukeji.parent.entity.base.IQunEntity;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
 
 @Entity
-@Table(name = "department")
+@Table(name = "department" ,uniqueConstraints= {@UniqueConstraint(columnNames= {"code","org_id"})})
 @EntityListeners(AuditingEntityListener.class)
 public class Department implements IOrgEntity,IQunEntity{
 	@Id

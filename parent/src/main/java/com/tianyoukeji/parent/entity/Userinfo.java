@@ -50,20 +50,6 @@ public class Userinfo implements IBaseEntity{
 	@Column(name="password")
 	private String password;
 	
-	@Column(name="wx_openid")
-	private String wxOpenid;
-	
-	@Column(name="wx_unionid")
-	private String wxUnionid;
-	
-	@Column(name="wx_nickname")
-	private String wxNickname;
-	
-	@Column(name="wx_sex")
-	private String wxSex;
-	
-	@Column(name="wx_headimgurl")
-	private String wxHeadimgurl;
 	
 	@OneToOne(mappedBy = "userinfo")
 	private User user;
@@ -114,46 +100,6 @@ public class Userinfo implements IBaseEntity{
 
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	public String getWxOpenid() {
-		return wxOpenid;
-	}
-
-	public void setWxOpenid(String wxOpenid) {
-		this.wxOpenid = wxOpenid;
-	}
-
-	public String getWxUnionid() {
-		return wxUnionid;
-	}
-
-	public void setWxUnionid(String wxUnionid) {
-		this.wxUnionid = wxUnionid;
-	}
-
-	public String getWxNickname() {
-		return wxNickname;
-	}
-
-	public void setWxNickname(String wxNickname) {
-		this.wxNickname = wxNickname;
-	}
-
-	public String getWxSex() {
-		return wxSex;
-	}
-
-	public void setWxSex(String wxSex) {
-		this.wxSex = wxSex;
-	}
-
-	public String getWxHeadimgurl() {
-		return wxHeadimgurl;
-	}
-
-	public void setWxHeadimgurl(String wxHeadimgurl) {
-		this.wxHeadimgurl = wxHeadimgurl;
 	}
 
 	public User getUser() {

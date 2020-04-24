@@ -10,6 +10,9 @@ import javax.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.TransactionSystemException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -68,6 +71,17 @@ public abstract class DefaultHandler {
 		return response;
 	}
 	
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	@ResponseBody
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public Object ExceptionHandler2(MethodArgumentNotValidException ex) {
+		BindingResult bindingResult = ex.getBindingResult();
+		FieldError fieldError = bindingResult.getFieldError();
+		BusinessException business503Exception;
+		business503Exception = new BusinessException(1503,fieldError.getField() + fieldError.getDefaultMessage());	
+		Response response = new Response(business503Exception);
+		return response;
+	}
 	@ExceptionHandler(BusinessException.class)
 	@ResponseBody
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
