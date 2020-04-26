@@ -59,18 +59,27 @@ public class DetailController extends DefaultHandler {
 			}
 		}
 	}
-
-	@GetMapping(path = "/user/{unionId}")
-	@ApiOperation(value = "通过unionId查询的用户详细页", notes = "增加了role，org，state，department等对象，并且使用unionId来定位，防止遍历", httpMethod = "GET")
-	public Map fetchUser(@PathVariable(required = true) String unionId) {
+	
+	@GetMapping(path = "/user/{uuid}")
+	@ApiOperation(value = "通过id查询的用户详细页", notes = "增加了role，org，state，department等对象，主要给管理后台的详细页使用,带状态机的事件管理和log记录", httpMethod = "GET")
+	public Map fetchUserById(@PathVariable(required = true) String uuid) {
 		Map fetchOne = StateMachineService.services.get("user")
-				.fetchOne("fields=*,country,province,city,role,org,department,state&unionId=" + unionId);
+				.fetchOne("fields=*,country,province,city,role,org,department,state&uuid=" + uuid);
+		return fetchOne;
+
+	}
+	
+
+	@GetMapping(path = "/user/unionId/{unionId}")
+	@ApiOperation(value = "通过unionId查询的用户详细页", notes = "增加了role，org，state，department等对象，并且使用unionId来定位，防止遍历，一般暴露给用户端查询使用，或者用二维码格式扫码查询", httpMethod = "GET")
+	public Map fetchUserByUnionId(@PathVariable(required = true) String unionId) {
+		Map fetchOne = SmartQuery.fetchOne("user","fields=*,country,province,city,role,org,department,state&unionId=" + unionId);
 		return fetchOne;
 
 	}
 	
 	@GetMapping(path = "/user/mobile/{username}")
-	@ApiOperation(value = "通过手机号查询的用户详细页", notes = "通过手机号查询，增加了role，org，state，department等对象，并且使用mobile来定位，防止遍历，后台使用", httpMethod = "GET")
+	@ApiOperation(value = "通过手机号查询的用户详细页", notes = "通过手机号查询，增加了role，org，state，department等对象，并且使用mobile来定位，后台使用", httpMethod = "GET")
 	public Map fetchUserMobile(@PathVariable(required = true) String username) {
 		Map fetchOne = SmartQuery.fetchOne("user","fields=*,country,province,city,role,org,department,state&userinfo.mobile=" + username);
 		return fetchOne;

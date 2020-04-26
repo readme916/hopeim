@@ -71,6 +71,14 @@ public class StateMachineManagementService {
 		state.setDescription(body.getDescription());
 		state.setName(body.getName());
 		StateType stateType = body.getStateType();
+		
+		if(body.getStateType().equals(StateType.BEGIN)) {
+			State stateEntity = stateRepository.findByEntityAndStateType(body.getEntity(), StateType.BEGIN);
+			if(stateEntity!=null) {
+				throw new BusinessException(1344, body.getEntity()+"的启动状态已经存在");
+			}
+		}
+		
 		state.setStateType(body.getStateType());
 		state.setSort(body.getSort());
 		Long firstTarget = body.getFirstTarget();
@@ -161,6 +169,12 @@ public class StateMachineManagementService {
 		state.setDescription(body.getDescription());
 		state.setName(body.getName());
 		StateType stateType = body.getStateType();
+		
+		State stateEntity = stateRepository.findByEntityAndStateType(body.getEntity(), StateType.BEGIN);
+		if(stateEntity!=null && !stateEntity.getUuid().equals(body.getUuid())) {
+			throw new BusinessException(1344, body.getEntity()+"的启动状态已经存在");
+		}
+		
 		state.setStateType(body.getStateType());
 		state.setSort(body.getSort());
 		Long firstTarget = body.getFirstTarget();

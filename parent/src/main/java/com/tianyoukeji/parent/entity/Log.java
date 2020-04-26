@@ -69,7 +69,7 @@ public class Log implements IDepartmentEntity{
 	private Org org;
 
 	@ManyToOne
-	@JoinColumn(name = "user_id")
+	@JoinColumn(name = "operator_id")
 	private User operator;
 	
 	@Lob
