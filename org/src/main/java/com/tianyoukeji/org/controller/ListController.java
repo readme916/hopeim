@@ -82,7 +82,7 @@ public class ListController extends DefaultHandler {
 	@ApiOperation(value = "部门列表页", notes = "返回公司所有的部门列表", httpMethod = "GET")
 	public HTTPListResponse fetchDepartmentList() {
 		Long orgId = orgService.getCurrentOrg().getUuid();
-		return SmartQuery.fetchTree("department", "fields=*,manager,parent&org.uuid="+orgId);
+		return SmartQuery.fetchTree("department", "fields=*,manager,parent,users.uuid&org.uuid="+orgId);
 	}
 	
 	@GetMapping(path = "/department")
@@ -92,7 +92,7 @@ public class ListController extends DefaultHandler {
 			, @RequestParam(name = "sort" , required = false) String sort) {
 		Long orgId = orgService.getCurrentOrg().getUuid();
 		HashMap<String,String> params = new HashMap<String,String>();
-		params.put("fields", "*,manager,parent");
+		params.put("fields", "*,manager,parent,users.uuid");
 		params.put("page", String.valueOf(page));
 		params.put("size", String.valueOf(size));
 		if(sort!=null) {

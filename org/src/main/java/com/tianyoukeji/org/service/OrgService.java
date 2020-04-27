@@ -82,7 +82,7 @@ public class OrgService extends BaseService<Org> {
 		}
 		
 		Department department = findByUnionId.getDepartment();
-		if(department.getGroupId()!=null) {
+		if(department!=null && department.getGroupId()!=null) {
 			timService.quitQun(findByUnionId.getUserinfo().getMobile(), department.getGroupId());
 		}
 		Role findByCode = roleRepository.findByCode("user");
@@ -120,7 +120,7 @@ public class OrgService extends BaseService<Org> {
 		}
 		
 		Department department = user.getDepartment();
-		if(department.getGroupId()!=null) {
+		if(department !=null && department.getGroupId()!=null) {
 			timService.quitQun(findById.get().getUserinfo().getMobile(), department.getGroupId());
 		}
 		

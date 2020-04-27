@@ -45,6 +45,8 @@ hopeim 是最新一代基于事务，人，任务的交互和反馈的工作流�
 
 - 状态机：[Spring StateMachine](https://spring.io/projects/spring-statemachine#overview)
 
+- 动态解析字符串: [Spring SpEL](https://blog.csdn.net/demon7552003/article/details/93378034)
+
 - 登录：Spring Security Oauth2
 
 - 持久层：Spring Data Jpa
