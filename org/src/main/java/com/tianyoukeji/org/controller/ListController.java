@@ -52,15 +52,15 @@ public class ListController extends DefaultHandler {
 		return getOrgList("user",params);
 	}
 	
-	@GetMapping(path = "/user/department/{id}")
+	@GetMapping(path = "/user/department/{uuid}")
 	@ApiOperation(value = "部门员工列表页", notes = "根据部门id，返回员工列表", httpMethod = "GET")
-	public HTTPListResponse fetchDepartmentUserList(@PathVariable(required = true) Long id 
+	public HTTPListResponse fetchDepartmentUserList(@PathVariable(required = true) Long uuid 
 			, @RequestParam(name = "page" , defaultValue = "0") Integer page
 			, @RequestParam(name = "size" , defaultValue = "20") Integer size 
 			, @RequestParam(name = "sort" , required = false) String sort) {
 		HashMap<String,String> params = new HashMap<String,String>();
 		params.put("fields", "*,role,org,department,state,userinfo.mobile");
-		params.put("department.uuid", id.toString());
+		params.put("department.uuid", uuid.toString());
 		params.put("page", String.valueOf(page));
 		params.put("size", String.valueOf(size));
 		if(sort!=null) {
@@ -70,12 +70,26 @@ public class ListController extends DefaultHandler {
 	}
 	
 	
-	@GetMapping(path = "/menuTree")
-	@ApiOperation(value = "菜单列表页", notes = "根据不同角色返回不同菜单,并且自动排序", httpMethod = "GET")
-	public HTTPListResponse fetchMenuList() {
+	@GetMapping(path = "/myMenuTree")
+	@ApiOperation(value = "我的菜单", notes = "根据自己的角色返回菜单,并且自动排序", httpMethod = "GET")
+	public HTTPListResponse myMenuTree() {
 		Long orgId = orgService.getCurrentOrg().getUuid();
 		String role = ContextUtils.getRole();
-		return SmartQuery.fetchTree("menu", "org.uuid="+orgId + "&roles.code="+role);
+		return SmartQuery.fetchTree("menu", "org.uuid="+orgId + "&roles.code="+role+"&sort=sort,asc");
+	}
+	
+	@GetMapping(path = "/menuTree/role/{uuid}")
+	@ApiOperation(value = "角色菜单", notes = "根据不同角色返回不同菜单,并且自动排序", httpMethod = "GET")
+	public HTTPListResponse fetchMenuList(@PathVariable(required = true) Long uuid) {
+		Long orgId = orgService.getCurrentOrg().getUuid();
+		return SmartQuery.fetchTree("menu", "org.uuid="+orgId + "&roles.uuid="+uuid+"&sort=sort,asc");
+	}
+	
+	@GetMapping(path = "/menuTree")
+	@ApiOperation(value = "全部菜单", notes = "返回企业全部菜单，并且自动排序", httpMethod = "GET")
+	public HTTPListResponse fetchMyMenuList() {
+		Long orgId = orgService.getCurrentOrg().getUuid();
+		return SmartQuery.fetchTree("menu", "org.uuid="+orgId+"&sort=sort,asc");
 	}
 	
 	@GetMapping(path = "/departmentTree")
