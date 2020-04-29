@@ -1,8 +1,6 @@
 package com.tianyoukeji.org.service;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,19 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.tianyoukeji.org.controller.DepartmentController.AddDepartmentRequest;
 import com.tianyoukeji.org.controller.DepartmentController.DeleteDepartmentRequest;
 import com.tianyoukeji.org.controller.DepartmentController.UpdateDepartmentRequest;
-import com.tianyoukeji.org.controller.MenuController.AddMenuRequest;
-import com.tianyoukeji.org.controller.MenuController.DeleteMenuRequest;
-import com.tianyoukeji.org.controller.MenuController.UpdateMenuRequest;
 import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.common.HttpPostReturnUuid;
 import com.tianyoukeji.parent.entity.Department;
 import com.tianyoukeji.parent.entity.DepartmentRepository;
-import com.tianyoukeji.parent.entity.Menu;
-import com.tianyoukeji.parent.entity.MenuRepository;
 import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.OrgRepository;
-import com.tianyoukeji.parent.entity.Role;
-import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.service.BaseService;
 import com.tianyoukeji.parent.service.TIMService;
 

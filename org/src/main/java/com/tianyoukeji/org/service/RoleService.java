@@ -12,9 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tianyoukeji.org.controller.MenuController.AddMenuRequest;
 import com.tianyoukeji.org.controller.MenuController.DeleteMenuRequest;
-import com.tianyoukeji.org.controller.MenuController.UpdateMenuRequest;
 import com.tianyoukeji.org.controller.RoleController.AddRoleRequest;
 import com.tianyoukeji.org.controller.RoleController.DeleteRoleRequest;
+import com.tianyoukeji.org.controller.RoleController.LinkMenuRequest;
 import com.tianyoukeji.org.controller.RoleController.UpdateRoleRequest;
 import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.common.HttpPostReturnUuid;
@@ -37,6 +37,9 @@ public class RoleService extends BaseService<Role> {
 	
 	@Autowired
 	private OrgRepository orgRepository;
+	
+	@Autowired
+	private MenuRepository menuRepository;
 	
 	@Override
 	public void init() {
@@ -144,6 +147,24 @@ public class RoleService extends BaseService<Role> {
 		}
 		roles.add(role);
 		orgRepository.save(org);
+		return new HttpPostReturnUuid(role.getUuid());
+	}
+	
+	/**
+	 * 角色链接到菜单的服务
+	 * @param body
+	 * @return
+	 */
+	public HttpPostReturnUuid linkMenu(LinkMenuRequest body) {
+		Optional<Role> findById4 = roleRepository.findById(body.getUuid());
+		if(!findById4.isPresent()) {
+			throw new BusinessException(1391, "角色不存在");
+		}
+		Role role = findById4.get();
+		
+		Set<Menu> findByUuidIn = menuRepository.findByUuidIn(body.getMenuIds());
+		role.setMenus(findByUuidIn);
+		roleRepository.save(role);
 		return new HttpPostReturnUuid(role.getUuid());
 	}
 	

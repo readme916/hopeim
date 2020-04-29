@@ -37,9 +37,9 @@ public class ListController extends DefaultHandler {
 		return getOrgList(entity,params);
 	}
 
-	@GetMapping(path = "/user")
+	@GetMapping(path = "/org/user")
 	@ApiOperation(value = "公司员工列表页", notes = "增加了role，org，state，department等对象", httpMethod = "GET")
-	public HTTPListResponse fetchUserList(@RequestParam(name = "page" , defaultValue = "0") Integer page
+	public HTTPListResponse fetchOrgUserList(@RequestParam(name = "page" , defaultValue = "0") Integer page
 										, @RequestParam(name = "size" , defaultValue = "20") Integer size 
 										, @RequestParam(name = "sort" , required = false) String sort) {
 		HashMap<String,String> params = new HashMap<String,String>();
@@ -51,6 +51,22 @@ public class ListController extends DefaultHandler {
 		}
 		return getOrgList("user",params);
 	}
+	
+	@GetMapping(path = "/user")
+	@ApiOperation(value = "用户列表页", notes = "增加了role，org，state，department等对象", httpMethod = "GET")
+	public HTTPListResponse fetchUserList(@RequestParam(name = "page" , defaultValue = "0") Integer page
+										, @RequestParam(name = "size" , defaultValue = "20") Integer size 
+										, @RequestParam(name = "sort" , required = false) String sort) {
+		HashMap<String,String> params = new HashMap<String,String>();
+		params.put("fields", "*,role,org,department,state,userinfo.mobile");
+		params.put("page", String.valueOf(page));
+		params.put("size", String.valueOf(size));
+		if(sort!=null) {
+			params.put("sort", sort);
+		}
+		return SmartQuery.fetchList("user",params);
+	}
+	
 	
 	@GetMapping(path = "/user/department/{uuid}")
 	@ApiOperation(value = "部门员工列表页", notes = "根据部门id，返回员工列表", httpMethod = "GET")
@@ -89,7 +105,7 @@ public class ListController extends DefaultHandler {
 	@ApiOperation(value = "全部菜单", notes = "返回企业全部菜单，并且自动排序", httpMethod = "GET")
 	public HTTPListResponse fetchMyMenuList() {
 		Long orgId = orgService.getCurrentOrg().getUuid();
-		return SmartQuery.fetchTree("menu", "org.uuid="+orgId+"&sort=sort,asc");
+		return SmartQuery.fetchTree("menu", "fields=*,roles&org.uuid="+orgId+"&sort=sort,asc");
 	}
 	
 	@GetMapping(path = "/departmentTree")

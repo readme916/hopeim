@@ -1,5 +1,11 @@
 package com.tianyoukeji.org.controller;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -48,8 +54,42 @@ public class TestController extends DefaultHandler{
 	
 	@GetMapping(path="/test/test")
 	public Object test1() {
-		return SmartQuery.fetchGroup("user", "group=nickname");
+		return getHostIP();
 	}
+	
+	
+	private String getHostIP(){
+
+        Enumeration<NetworkInterface> allNetInterfaces = null;
+        String resultIP=null;
+        try {
+            allNetInterfaces = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        InetAddress ip = null;
+        while (allNetInterfaces.hasMoreElements())
+        {
+        NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
+        System.out.println(netInterface.getName());
+        Enumeration<InetAddress> addresses = netInterface.getInetAddresses();
+        while (addresses.hasMoreElements())
+        {
+        ip = (InetAddress) addresses.nextElement();
+        if (ip != null && ip instanceof Inet4Address)
+        { 
+           if(resultIP==null)
+            resultIP= ip.getHostAddress();  
+           System.out.println("本机地址是："+ip.getHostAddress());
+        
+        } 
+        }
+        }
+          return resultIP;
+         
+    }
+	
 	@GetMapping(path = "/test/enable")
 	public void enable(Authentication authentication) {
 		
@@ -71,7 +111,7 @@ public class TestController extends DefaultHandler{
 	}
 	@GetMapping(path = "/test/status")
 	public Object test(Authentication authentication) {
-		return userService.currentUserExecutableEvent(1l);
+		return SmartQuery.fetchList("event","fields=*&group=entity");
 	}
 //	@GetMapping(path = "/test/state")
 //	public Object state(Authentication authentication) {

@@ -138,6 +138,14 @@ public class StateMachineController extends DefaultHandler {
 		return SmartQuery.fetchGroup("state","fields=*&sort=sort,asc&group=entity");
 	}
 	
+	@GetMapping(path = "/listEvent")
+	@ApiOperation(value = "状态机事件分组显示", notes = "返回一个分组列表", httpMethod = "GET")
+	public HTTPListResponse listEvent() {
+		return SmartQuery.fetchGroup("event","fields=*&group=entity");
+	}
+	
+	
+	
 	@GetMapping(path = "/list/{entity}")
 	@ApiOperation(value = "状态机的细节展示", notes = "根据Entity参数，返回对应的状态机的状态-事件细节", httpMethod = "GET")
 	public HTTPListResponse fetchStateMachine(@PathVariable(required = true) String entity) {

@@ -19,6 +19,7 @@ import com.tianyoukeji.parent.entity.MenuRepository;
 import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.OrgRepository;
 import com.tianyoukeji.parent.entity.RegionRepository;
+import com.tianyoukeji.parent.entity.Role;
 import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.template.DepartmentTemplate;
@@ -148,21 +149,23 @@ public class OrgTemplateService {
 		if(menu!=null) {
 			return menu;
 		}
-	
 		menu = new com.tianyoukeji.parent.entity.Menu();
 		menu.setCode(menuTemplate.getCode());
 		menu.setName(menuTemplate.getName());
 		menu.setMenuTemplate(menuTemplate);
 		menu.setOrg(org);
 		menu.setSort(menuTemplate.getSort());
-		Set<RoleTemplate> roleTemplates = menuTemplate.getRoleTemplates();
-		HashSet<com.tianyoukeji.parent.entity.Role> roles = new HashSet<>();
-		for (RoleTemplate roleTemplate : roleTemplates) {
-			roles.add(roleRepository.findByCode(roleTemplate.getCode()));
-		}
-		menu.setRoles(roles);
 		menu.setParent(menuTemplateTransfer(menuTemplate.getParent(),org));
 		menu = menuRepository.saveAndFlush(menu);
+		
+		Set<RoleTemplate> roleTemplates = menuTemplate.getRoleTemplates();
+		for (RoleTemplate roleTemplate : roleTemplates) {
+			com.tianyoukeji.parent.entity.Role findByCode = roleRepository.findByCode(roleTemplate.getCode());
+			if(findByCode!=null) {
+				findByCode.getMenus().add(menu);
+				roleRepository.save(findByCode);
+			}
+		}
 		return menu;
 		
 	}

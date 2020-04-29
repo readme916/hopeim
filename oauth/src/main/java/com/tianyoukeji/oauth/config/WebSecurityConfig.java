@@ -61,6 +61,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		// 覆盖了默认配置，不能删除
+		http.headers().frameOptions().disable();
 		http.csrf().disable().authorizeRequests()
 		
 				.antMatchers("/swagger-ui.html").permitAll()

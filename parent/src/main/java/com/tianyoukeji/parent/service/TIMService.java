@@ -23,11 +23,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.liyang.jpa.smart.query.db.SmartQuery;
 import com.liyang.jpa.smart.query.db.structure.EntityStructure;
 import com.tencentyun.TLSSigAPIv2;
 import com.tianyoukeji.parent.common.AvatarUtils;
 import com.tianyoukeji.parent.common.BusinessException;
+import com.tianyoukeji.parent.common.ContextUtils;
 import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.User;
 import com.tianyoukeji.parent.entity.UserRepository;
@@ -102,7 +104,7 @@ public class TIMService {
 		String url = "https://console.tim.qq.com/v4/profile/portrait_set?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
-		hashMap.put("Identifier", username);
+		hashMap.put("From_Account", username);
 		ArrayList<ProfileItem> items = new ArrayList<ProfileItem>();
 		if (nick != null) {
 			items.add(new ProfileItem("Tag_Profile_IM_Nick", nick));
@@ -111,7 +113,7 @@ public class TIMService {
 			items.add(new ProfileItem("Tag_Profile_IM_Gender", gender));
 		}
 		if (selfSignature != null) {
-			items.add(new ProfileItem("Tag_Profile_IM_SelfSignature", gender));
+			items.add(new ProfileItem("Tag_Profile_IM_SelfSignature", selfSignature));
 		}
 		if (faceUrl != null) {
 			items.add(new ProfileItem("Tag_Profile_IM_Image", faceUrl));
@@ -123,6 +125,14 @@ public class TIMService {
 			items.add(new ProfileItem("Tag_Profile_IM_Level", departmentId));
 		}
 		hashMap.put("ProfileItem", items);
+		
+//		try {
+//			String objectToString = ContextUtils.objectToString(hashMap);
+//		} catch (JsonProcessingException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
 		TIMResponse postForObject = restTemplate.postForObject(url, hashMap, TIMResponse.class);
 		return postForObject;
 	}

@@ -65,7 +65,8 @@ public class Role implements IBaseEntity{
 	@JoinColumn(name= "role_template_id")
 	private RoleTemplate roleTemplate;
 
-	@ManyToMany(mappedBy = "roles")
+	@ManyToMany
+	@JoinTable(name="menu_role",joinColumns = { @JoinColumn(name = "role_id") }, inverseJoinColumns = { @JoinColumn(name = "menu_id") })
 	private Set<Menu> menus;
 
 	@ManyToMany(mappedBy = "roles")

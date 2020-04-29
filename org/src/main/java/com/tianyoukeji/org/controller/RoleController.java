@@ -1,5 +1,7 @@
 package com.tianyoukeji.org.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -48,6 +50,8 @@ public class RoleController extends DefaultHandler {
 
 	@Autowired
 	private RoleService roleService;
+	
+	
 
 	@PostMapping(path = "/add")
 	@ApiOperation(value = "添加角色", notes = "新增一个企业角色", httpMethod = "POST")
@@ -65,6 +69,32 @@ public class RoleController extends DefaultHandler {
 	@ApiOperation(value = "更新角色", notes = "更新一个企业角色,把所有字段重新提交一次，角色和菜单的关系在菜单里维护", httpMethod = "POST")
 	public HttpPostReturnUuid updateRole(@Valid @RequestBody(required = true) UpdateRoleRequest body) {
 		return roleService.update(body);
+	}
+	
+	@PostMapping(path = "/linkMenu")
+	@ApiOperation(value = "链接到菜单", notes = "一次提交所有的menu ids", httpMethod = "POST")
+	public HttpPostReturnUuid linkMenu(@Valid @RequestBody(required = true) LinkMenuRequest body) {
+		return roleService.linkMenu(body);
+	}
+	
+	public static class LinkMenuRequest {
+		@NotNull
+		private Long uuid;
+		private List<Long> menuIds = new ArrayList<Long>();
+
+		public Long getUuid() {
+			return uuid;
+		}
+		public void setUuid(Long uuid) {
+			this.uuid = uuid;
+		}
+		public List<Long> getMenuIds() {
+			return menuIds;
+		}
+		public void setMenuIds(List<Long> menuIds) {
+			this.menuIds = menuIds;
+		}
+		
 	}
 
 	public static class AddRoleRequest {

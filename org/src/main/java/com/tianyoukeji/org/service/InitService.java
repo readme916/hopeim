@@ -58,7 +58,11 @@ public class InitService {
 					.role("平台管理员", "platform_manager", Terminal.ORG)
 					.role("平台员工", "platform_employee", Terminal.ORG)
 					.menu("主页", "home", "/", 0, null).menu("第一页", "one", "/one", 1, "home")
-					.menu("第二页", "two", "/two", 2, "home").menu("第一页二级页", "one_one", "/oneone", 3, "one");
+					.menu("第二页", "two", "/two", 2, "home").menu("第一页二级页", "one_one", "/oneone", 3, "one")
+					.menu("企业端接口", "orgInterface", "http://localhost:40001/swagger-ui.html#/", 100, null)
+					.menu("登录端接口", "oauthInterface", "http://localhost:40000/swagger-ui.html#/", 200, null)
+					.menu("数据格式", "dbStructure", "http://localhost:40000/structure", 300, null);
+					
 			builder.getMenu("home").addRole("platform_manager").addRole("platform_super");
 			builder.getMenu("one").addRole("platform_super");
 			builder.getMenu("two").addRole("platform_manager");
