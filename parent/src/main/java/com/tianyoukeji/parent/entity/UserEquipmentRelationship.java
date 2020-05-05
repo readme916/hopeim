@@ -42,9 +42,6 @@ public class UserEquipmentRelationship implements IStateMachineEntity{
 	@Column(name="uuid")
 	private Long uuid;
 	
-	@Column(name="union_id")
-	private String unionId;
-	
 	@CreatedDate
 	@Column(name = "created_at")
 	private Date createdAt;
@@ -120,14 +117,6 @@ public class UserEquipmentRelationship implements IStateMachineEntity{
 
 	public void setUuid(Long uuid) {
 		this.uuid = uuid;
-	}
-
-	public String getUnionId() {
-		return unionId;
-	}
-
-	public void setUnionId(String unionId) {
-		this.unionId = unionId;
 	}
 
 	public Date getCreatedAt() {

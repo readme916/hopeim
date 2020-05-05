@@ -96,9 +96,9 @@ public class TestController extends DefaultHandler{
 		List<String> currentUserExecutableEvent = userService.currentUserExecutableEvent(1l);
 		System.out.println(currentUserExecutableEvent);
 		userService.dispatchEvent(1l, "enable",null);
-		User findById = userService.findById(1l);
-		State state = findById.getState();
-		System.out.println(state.toString());
+//		User findById = userService.findById(1l);
+//		State state = findById.getState();
+//		System.out.println(state.toString());
 	}
 	@GetMapping(path = "/test/forbid")
 	public void forbid(Authentication authentication) {
