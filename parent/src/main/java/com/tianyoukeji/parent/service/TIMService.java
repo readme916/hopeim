@@ -80,7 +80,7 @@ public class TIMService {
 	 */
 	public TIMResponse registerUser(String username, String nick, String faceUrl) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/im_open_login_svc/account_import?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, String> hashMap = new HashMap<String, String>();
@@ -100,7 +100,7 @@ public class TIMService {
 	public TIMResponse updateUser(String username, String nick, Gender gender, String faceUrl, String selfSignature,
 			Long roleId , Long departmentId) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/profile/portrait_set?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -145,7 +145,7 @@ public class TIMService {
 	 */
 	public TIMResponse kickUser(Long uuid) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/im_open_login_svc/kick?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, String> hashMap = new HashMap<String, String>();
@@ -171,7 +171,7 @@ public class TIMService {
 		}
 
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/openim/querystate?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -210,7 +210,7 @@ public class TIMService {
 		List<String> mobiles = findByUuidIn.stream().map(u -> u.getUserinfo().getMobile()).collect(Collectors.toList());
 
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/openim/batchsendmsg?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -239,7 +239,7 @@ public class TIMService {
 		List<String> mobiles = findByUuidIn.stream().map(u -> u.getUserinfo().getMobile()).collect(Collectors.toList());
 
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/openim/batchsendmsg?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -266,7 +266,7 @@ public class TIMService {
 	 */
 	public TIMResponse addOrgFriends(String username, Org org) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/sns/friend_add?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 
@@ -300,7 +300,7 @@ public class TIMService {
 	 */
 	public TIMResponse deleteOrgFriends(String username, Org org) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/sns/friend_delete?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 
@@ -329,7 +329,7 @@ public class TIMService {
 	 */
 	public TIMResponse addFriend(String username, User user) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/sns/friend_add?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		if (user == null) {
@@ -357,7 +357,7 @@ public class TIMService {
 	 */
 	public TIMResponse deleteFriend(String username, User user) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/sns/friend_delete?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 
@@ -403,7 +403,7 @@ public class TIMService {
 //			throw new BusinessException(1482, "不能创建无人群组");
 //		}
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/create_group?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 
@@ -453,7 +453,7 @@ public class TIMService {
 			return null;
 		}
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/add_group_member?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -479,7 +479,7 @@ public class TIMService {
 			return null;
 		}
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/delete_group_member?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -499,7 +499,7 @@ public class TIMService {
 	 */
 	public TIMResponse sendQunMessage(String groupId, TIMMsgElement element) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/send_group_msg?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -521,7 +521,7 @@ public class TIMService {
 	public TIMResponse sendQunMessageOffline(String groupId, TIMMsgElement element, String offlineTitle,
 			String offlineDesc) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/send_group_msg?sdkappid=" + SDKAppID
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -547,7 +547,7 @@ public class TIMService {
 	 */
 	public TIMResponse sendQunNotice(String groupId, String content) {
 		Random random = new Random();
-		String nextInt = String.valueOf(random.nextInt());
+		String nextInt = String.valueOf(random.nextInt(100000000));
 		String url = "https://console.tim.qq.com/v4/group_open_http_svc/send_group_system_notification?sdkappid="
 				+ SDKAppID + "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt
 				+ "&contenttype=json";
