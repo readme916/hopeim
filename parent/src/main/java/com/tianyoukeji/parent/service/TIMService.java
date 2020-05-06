@@ -774,7 +774,7 @@ public class TIMService {
 		 * 内部传输数据enityt Json字符串 {"name":"kaka","id":2222}
 		 */
 		@JsonProperty("Data")
-		Object data;
+		String data;
 
 		/**
 		 * 显示的文本，例如： 用户{{name}}的名片
@@ -791,11 +791,11 @@ public class TIMService {
 		@JsonProperty("Sound")
 		String sound;
 
-		public Object getData() {
+		public String getData() {
 			return data;
 		}
 
-		public void setData(Object data) {
+		public void setData(String data) {
 			this.data = data;
 		}
 
