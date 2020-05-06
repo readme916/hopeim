@@ -1,33 +1,33 @@
 package com.tianyoukeji.oauth.service;
 
+import java.sql.SQLException;
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.io.Resource;
+import org.springframework.jdbc.datasource.init.ScriptException;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-import com.tianyoukeji.parent.common.AvatarUtils;
-import com.tianyoukeji.parent.common.BusinessException;
 import com.tianyoukeji.parent.entity.Oauth2Client;
 import com.tianyoukeji.parent.entity.Oauth2ClientRepository;
-import com.tianyoukeji.parent.entity.Org;
 import com.tianyoukeji.parent.entity.Role;
 import com.tianyoukeji.parent.entity.RoleRepository;
 import com.tianyoukeji.parent.entity.User;
-import com.tianyoukeji.parent.entity.Userinfo;
-import com.tianyoukeji.parent.entity.UserinfoRepository;
-import com.tianyoukeji.parent.entity.template.RoleTemplate;
-import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
-import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
 import com.tianyoukeji.parent.entity.UserRepository;
+import com.tianyoukeji.parent.entity.template.RoleTemplate;
+import com.tianyoukeji.parent.entity.template.RoleTemplate.Terminal;
+import com.tianyoukeji.parent.entity.template.RoleTemplateRepository;
 import com.tianyoukeji.parent.service.BaseService;
 
-import java.util.*;
-
-import javax.annotation.PostConstruct;
-
 @Service
-public class InitService extends BaseService<User> {
+public class InitService extends BaseService<User>  implements ApplicationContextAware {
 
 	@Autowired
 	private RoleTemplateRepository roleTemplateRepository;
@@ -44,10 +44,36 @@ public class InitService extends BaseService<User> {
 	@Autowired
 	private Oauth2ClientRepository oauth2ClientRepository;
 
+	
+	private ApplicationContext applicationContext;
+
+	@Autowired
+	private DataSource datasource;
+
+	public ApplicationContext getApplicationContext() {
+		return applicationContext;
+	}
+
 	@Override
-	public void init() {
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
+	}
+
+	
+	@Override
+	public void init(){
 
 		if (oauth2ClientRepository.count() == 0) {
+			
+			Resource resource = applicationContext.getResource("classpath:quartz_tables_mysql_innodb.sql");
+			try {
+				ScriptUtils.executeSqlScript(datasource.getConnection(), resource);
+			} catch (ScriptException | SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
 			Oauth2Client oauth2ClientPlatform = new Oauth2Client();
 			oauth2ClientPlatform.setAccessTokenValidity(86400 * 30);
 			oauth2ClientPlatform.setAutoapprove("true");

@@ -216,7 +216,7 @@ public class TIMService {
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("SyncOtherMachine", 2);
 		hashMap.put("To_Account", mobiles);
-		hashMap.put("MsgRandom", nextInt);
+		hashMap.put("MsgRandom", Integer.valueOf(nextInt));
 		List elems = new ArrayList<TIMMsgElement>();
 		elems.add(element);
 		hashMap.put("MsgBody", elems);
@@ -245,7 +245,7 @@ public class TIMService {
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("SyncOtherMachine", 2);
 		hashMap.put("To_Account", mobiles);
-		hashMap.put("MsgRandom", nextInt);
+		hashMap.put("MsgRandom",  Integer.valueOf(nextInt));
 		List elems = new ArrayList<TIMMsgElement>();
 		elems.add(element);
 		hashMap.put("MsgBody", elems);
@@ -504,7 +504,7 @@ public class TIMService {
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("GroupId", groupId);
-		hashMap.put("Random", nextInt);
+		hashMap.put("Random", Integer.valueOf(nextInt));
 		List elems = new ArrayList<TIMMsgElement>();
 		elems.add(element);
 		hashMap.put("MsgBody", elems);
@@ -526,7 +526,7 @@ public class TIMService {
 				+ "&identifier=administrator&usersig=" + adminSig + "&random=" + nextInt + "&contenttype=json";
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("GroupId", groupId);
-		hashMap.put("Random", nextInt);
+		hashMap.put("Random",  Integer.valueOf(nextInt));
 		List elems = new ArrayList<TIMMsgElement>();
 		elems.add(element);
 		hashMap.put("MsgBody", elems);
