@@ -79,7 +79,7 @@ public class MenuService extends BaseService<Menu> {
 			HashSet<Role> hashSet = new HashSet<Role>();
 			for (Long role : roles) {
 				Optional<Role> findById3 = roleRepository.findById(role);
-				if(findById.isPresent()) {
+				if(findById3.isPresent()) {
 					hashSet.add(findById3.get());
 				}
 			}
